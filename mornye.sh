@@ -450,8 +450,29 @@ cmd_tunnel() {
             done
             journalctl --no-pager -u mornye-tunnel.service -n "$lines" $follow 2>/dev/null || true
             ;;
+        ""|help|--help|-h)
+            echo "=============================================================="
+            echo "             MORNYE TUNNEL MANAGEMENT USAGE"
+            echo "=============================================================="
+            echo "Permanent Tunnel Commands (Production):"
+            echo "  ./mornye.sh tunnel start        Start mornye-tunnel.service"
+            echo "  ./mornye.sh tunnel stop         Stop mornye-tunnel.service"
+            echo "  ./mornye.sh tunnel restart      Restart mornye-tunnel.service"
+            echo "  ./mornye.sh tunnel status       Check permanent tunnel telemetry & metrics"
+            echo "  ./mornye.sh tunnel test         Probe WAN endpoint reachability"
+            echo "  ./mornye.sh tunnel logs [-f]    View permanent tunnel service logs"
+            echo ""
+            echo "Cloudflare Quick Tunnel Commands (Ephemeral Testing):"
+            echo "  ./mornye.sh tunnel quick start  Start temporary trycloudflare.com tunnel"
+            echo "  ./mornye.sh tunnel quick status Check quick tunnel URL and WAN health"
+            echo "  ./mornye.sh tunnel quick stop   Terminate active quick tunnel"
+            echo "  ./mornye.sh tunnel quick logs   View quick tunnel output logs"
+            echo "=============================================================="
+            ;;
         *)
-            echo "Usage: ./mornye.sh tunnel [status|test|start|stop|restart|logs|quick]"
+            echo -e "${RED}[ERROR] Unknown tunnel command: '$sub'${NC}"
+            echo "Usage: ./mornye.sh tunnel [start|stop|restart|status|test|logs|quick]"
+            echo "Run './mornye.sh tunnel' or './mornye.sh tunnel help' for detailed usage."
             exit 1
             ;;
     esac
@@ -462,7 +483,7 @@ cmd_tunnel() {
 # ------------------------------------------------------------------------------
 
 cmd_tunnel_quick() {
-    local sub="${1:-status}"
+    local sub="$1"
     shift || true
 
     case "$sub" in
@@ -478,7 +499,19 @@ cmd_tunnel_quick() {
         logs)
             cmd_tunnel_quick_logs "$@"
             ;;
+        ""|help|--help|-h)
+            echo "=============================================================="
+            echo "          CLOUDFLARE QUICK TUNNEL (TEST MODE) USAGE"
+            echo "=============================================================="
+            echo "Commands:"
+            echo "  ./mornye.sh tunnel quick start [-y]  Start temporary trycloudflare.com tunnel"
+            echo "  ./mornye.sh tunnel quick status      Show quick tunnel URL and health status"
+            echo "  ./mornye.sh tunnel quick stop        Terminate active quick tunnel"
+            echo "  ./mornye.sh tunnel quick logs [-f]   View quick tunnel output logs"
+            echo "=============================================================="
+            ;;
         *)
+            echo -e "${RED}[ERROR] Unknown quick tunnel command: '$sub'${NC}"
             echo "Usage: ./mornye.sh tunnel quick [start|status|stop|logs]"
             exit 1
             ;;
@@ -901,3 +934,4 @@ main() {
 }
 
 main "$@"
+
