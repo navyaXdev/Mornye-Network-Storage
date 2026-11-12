@@ -4,6 +4,11 @@
 # ==============================================================================
 set -eo pipefail
 
+if [[ $# -gt 0 ]]; then
+    mkdir -p "${DATA_PATH:-/data}/cache" "${DATA_PATH:-/data}/tmp" "${DATA_PATH:-/data}/recycle_bin" "${STORAGE_PATH:-/storage}" "${LOG_PATH:-/logs}" 2>/dev/null || true
+    exec "$@"
+fi
+
 echo "[*] Mornye Container Bootstrapping..."
 echo "[*] Architecture: $(uname -m), Kernel: $(uname -r)"
 

@@ -16,6 +16,8 @@
 # Cloudflare Tunnel Private Credentials
 config/cloudflared.yml
 config/credentials.json
+config/*.env
+config/tunnel_info.env
 cloudflare/tunnel/credentials.json
 cloudflare/tunnel/*.json
 cloudflare/tunnel/*.pem

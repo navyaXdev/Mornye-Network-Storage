@@ -63,44 +63,47 @@
 
 ---
 
-## 3. Supported Linux Distributions
+## 3. Universal Linux Compatibility
 
-Mornye has been verified and tested on the following operating systems:
-- **Debian GNU/Linux** (12 Bookworm, testing)
-- **Ubuntu Server / Desktop** (22.04 LTS, 24.04 LTS)
-- **Kali GNU/Linux** (Rolling 2024+, 2026+)
-- **Fedora Workstation / Server** (39+)
-- **Arch Linux / Manjaro** (Rolling)
+Mornye features native package-manager awareness across all major Linux distributions:
+- **Debian / Ubuntu / Kali / Mint**: APT package manager (`installers/apt.sh`)
+- **Arch Linux / Manjaro / EndeavourOS**: Pacman package manager (`installers/pacman.sh`)
+- **Fedora / RHEL / Rocky / AlmaLinux**: DNF & YUM package managers (`installers/dnf.sh`, `installers/yum.sh`)
+- **openSUSE Leap / Tumbleweed**: Zypper package manager (`installers/zypper.sh`)
+- **Alpine Linux**: APK package manager with OpenRC support (`installers/apk.sh`)
 
-Hardware Architectures: `x86_64` (amd64), `aarch64` (ARM64), `armv7l`.
+Hardware Architectures: `x86_64` (amd64), `aarch64` (ARM64), `armv7l` (armhf).  
+All 8 distributions pass automated continuous container verification (100% pass rate). See [SUPPORTED_LINUX.md](docs/SUPPORTED_LINUX.md) for full details.
 
 ---
 
-## 4. Quick Start & Automated Installation
+## 4. One-Command Automated Installation
 
-The fastest way to install and configure Mornye Network Storage is via the automated installer `setup.sh`:
+Mornye installs with a single command on any supported Linux distribution:
 
 ```bash
-# 1. Clone the private repository
+# 1. Clone the repository
 git clone https://github.com/navyaXdev/Mornye-Network-Storage.git
 cd Mornye-Network-Storage
 
-# 2. Make scripts executable
+# 2. Make executable
 chmod +x setup.sh mornye.sh
 
-# 3. Execute automated setup
-./setup.sh
+# 3. Launch the 6-stage automated setup wizard
+./mornye.sh install
 ```
 
-`setup.sh` automatically:
-1. Detects Linux distribution and CPU architecture.
-2. Checks available disk space (minimum 2 GB required).
-3. Verifies Python 3, Docker, and utilities.
-4. Creates persistent directories (`database/`, `storage/`, `logs/`, `backups/`).
-5. Generates a cryptographically secure `.env` configuration from `.env.example`.
-6. Sets strict filesystem permissions (`chmod 700` for databases and backups).
-7. Validates Docker Compose configuration and offers image build.
-8. Runs end-to-end diagnostic probes.
+The universal installer (`setup.sh`) automatically:
+1. Detects distribution, package manager, architecture, and init system.
+2. Audits system resources (minimum 1 GB RAM, 2 GB disk).
+3. Installs missing packages, Docker Engine, Docker Compose plugin, and `cloudflared`.
+4. Provisions persistent volumes (`database/`, `storage/`, `logs/`, `backups/`, `config/`) with strict permission hardening (`chmod 700`).
+5. Generates cryptographically secure secrets in `.env`.
+6. Builds the production `mornye-webdav` container image.
+7. Offers interactive network selection (Local, Permanent Cloudflare Tunnel, or Ephemeral Quick Tunnel).
+8. Runs end-to-end health verification probes and exports a report.
+
+See [INSTALLATION.md](docs/INSTALLATION.md) for full options and non-interactive flags.
 
 ---
 
@@ -211,27 +214,41 @@ Quick Tunnel generates a temporary, public `*.trycloudflare.com` URL powered by 
 ### Mode B: Permanent Zero-Trust Tunnel (Production)
 For permanent production ingress under your custom domain:
 
-1. Create a Cloudflare Tunnel in the Cloudflare Zero-Trust Dashboard or via `cloudflared tunnel create <name>`.
-2. Copy `config/cloudflared.example.yml` to `config/cloudflared.yml` and provide your Tunnel UUID and credentials path:
-   ```yaml
-   tunnel: <your-tunnel-uuid>
-   credentials-file: /etc/cloudflared/credentials.json
+```bash
+# 1. Run guided setup or login
+./mornye.sh tunnel setup
+# Or step-by-step:
+./mornye.sh tunnel login
+./mornye.sh tunnel create mornye-storage
+./mornye.sh tunnel domain add storage.yourdomain.com
 
-   ingress:
-     - hostname: storage.yourdomain.com
-       service: http://127.0.0.1:8000
-     - service: http_status:404
-   ```
-3. Start the permanent tunnel daemon:
-   ```bash
-   ./mornye.sh tunnel start
-   ./mornye.sh tunnel status
-   ./mornye.sh tunnel test
-   ```
+# 2. Start and verify tunnel daemon
+./mornye.sh tunnel start
+./mornye.sh tunnel status
+./mornye.sh tunnel test
+```
+
+See [CLOUDFLARE_TUNNEL.md](docs/CLOUDFLARE_TUNNEL.md) and [CUSTOM_DOMAIN_SETUP.md](docs/CUSTOM_DOMAIN_SETUP.md) for full instructions.
 
 ---
 
-## 8. Client Connection Guide
+## 8. Documentation Index
+
+Comprehensive guides for operators and administrators:
+
+| Document | Description |
+|---|---|
+| [**docs/INSTALLATION.md**](docs/INSTALLATION.md) | Universal multi-distribution installation guide & 6-stage lifecycle wizard |
+| [**docs/SUPPORTED_LINUX.md**](docs/SUPPORTED_LINUX.md) | Distribution compatibility matrix (APT, Pacman, DNF, Zypper, APK) & test results |
+| [**docs/DOCKER_SETUP.md**](docs/DOCKER_SETUP.md) | Hardened container architecture, profiles, volume persistence, and security |
+| [**docs/CLOUDFLARE_TUNNEL.md**](docs/CLOUDFLARE_TUNNEL.md) | Zero-Trust network ingress, credentials, systemd/docker modes, and CLI commands |
+| [**docs/CUSTOM_DOMAIN_SETUP.md**](docs/CUSTOM_DOMAIN_SETUP.md) | Domain binding, Cloudflare DNS CNAME routing, and WebDAV client integration |
+| [**docs/TUNNEL_TROUBLESHOOTING.md**](docs/TUNNEL_TROUBLESHOOTING.md) | Error diagnosis (502, 1033, 1016, 524) and recovery playbooks |
+| [**docs/MORNYE_CLI_MANUAL.md**](docs/MORNYE_CLI_MANUAL.md) | Complete CLI reference manual for all `./mornye.sh` subcommands |
+
+---
+
+## 9. Client Connection Guide
 
 Connect your favorite audio player or file sync client to Mornye WebDAV:
 
