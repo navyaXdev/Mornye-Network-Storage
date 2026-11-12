@@ -609,6 +609,14 @@ audit_storage() {
         fi
     fi
 
+    # Check volume writability
+    for dir in "$DATA_DIR" "$STORAGE_DIR" "$LOG_DIR"; do
+        if [[ -d "$dir" && ! -w "$dir" ]]; then
+            perm_err=true
+            FINDINGS_ERRORS+=("VOLUME_NOT_WRITABLE|Persistent directory $(basename "$dir") ($dir) is not writable by execution user $(whoami) (UID: $(id -u)).|Adjust ownership via './mornye.sh doctor --fix' or 'sudo chown -R $(id -u):$(id -g) $dir'.")
+        fi
+    done
+
     # SQLite Integrity
     if [[ -f "$DATA_DIR/mornye.db" ]]; then
         if has_cmd sqlite3; then
@@ -728,7 +736,15 @@ audit_cloudflare() {
         CLOUDFLARE_INSTALLED=false
     fi
 
-    if [[ -f "$HOME/.cloudflared/cert.pem" || -f "/etc/cloudflared/cert.pem" ]]; then
+    local discovered_cert=""
+    if command -v compat_find_origin_cert &>/dev/null; then
+        discovered_cert="$(compat_find_origin_cert 2>/dev/null || true)"
+    fi
+    if [[ -z "$discovered_cert" && -f "$SCRIPTS_DIR/cloudflare_manager.sh" ]]; then
+        discovered_cert="$("$SCRIPTS_DIR/cloudflare_manager.sh" cert-check 2>/dev/null | grep -E '^Active origin certificate:' | cut -d: -f2- | tr -d ' ' || true)"
+    fi
+
+    if [[ -n "$discovered_cert" || -f "$HOME/.cloudflared/cert.pem" || -f "/etc/cloudflared/cert.pem" || -f "/root/.cloudflared/cert.pem" ]]; then
         CLOUDFLARE_AUTH_EXISTS=true
     else
         CLOUDFLARE_AUTH_EXISTS=false
@@ -842,7 +858,24 @@ execute_auto_repair() {
         fi
     done
 
-    # Fix 2: Insecure / Missing Directory Permissions
+    # Fix 2: Insecure / Missing Directory Permissions & Volume Writability
+    for err in "${FINDINGS_ERRORS[@]}"; do
+        if [[ "$err" == VOLUME_NOT_WRITABLE* ]]; then
+            echo -e "${BOLD}[Fix] Reconciling persistent volume ownership and permissions...${NC}"
+            local t_uid="$(id -u)"
+            local t_gid="$(id -g)"
+            if [[ "$IS_ROOT" == true ]]; then
+                chown -R "${t_uid}:${t_gid}" "$DATA_DIR" "$STORAGE_DIR" "$LOG_DIR" "$BACKUP_DIR" "$CONFIG_DIR" "$RUN_DIR" 2>/dev/null || true
+            else
+                sudo -n chown -R "${t_uid}:${t_gid}" "$DATA_DIR" "$STORAGE_DIR" "$LOG_DIR" "$BACKUP_DIR" "$CONFIG_DIR" "$RUN_DIR" 2>/dev/null || true
+            fi
+            chmod 750 "$DATA_DIR" "$BACKUP_DIR" "$CONFIG_DIR" 2>/dev/null || true
+            chmod 755 "$STORAGE_DIR" "$LOG_DIR" "$RUN_DIR" 2>/dev/null || true
+            ACTIONS_TAKEN+=("Reconciled directory ownership to UID:GID ${t_uid}:${t_gid} with modes 750/755.")
+            echo -e "${GREEN}[✔] Directory ownership and write permissions reconciled successfully.${NC}"
+        fi
+    done
+
     for warn in "${FINDINGS_WARNINGS[@]}"; do
         if [[ "$warn" == INSECURE_PERMS* ]]; then
             echo -e "${BOLD}[Fix] Hardening storage and database directory permissions...${NC}"

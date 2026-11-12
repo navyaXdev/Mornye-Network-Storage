@@ -35,10 +35,30 @@ Cloudflare Zero-Trust uses two fundamentally distinct cryptographic files:
 
 | Artifact | File Path | Format & Contents | Function | Restriction |
 |---|---|---|---|---|
-| **Origin / Account Certificate** | `~/.cloudflared/cert.pem` | PEM-encoded X.509 cert and RSA private key | Authorizes `cloudflared` CLI with Cloudflare account to create, list, and delete tunnels | **Never** pass as `credentials-file` or rename to `credentials.json` |
+| **Origin / Account Certificate** | `~/.cloudflared/cert.pem` | Base64 token (`BEGIN ARGO TUNNEL TOKEN`) or PEM (`BEGIN CERTIFICATE`) | Authorizes `cloudflared` CLI with Cloudflare account to create, list, and delete tunnels | **Never** pass as `credentials-file` or rename to `credentials.json` |
 | **Tunnel Credentials File** | `config/credentials.json` | JSON object: `AccountTag`, `TunnelSecret`, `TunnelID` | Cryptographically authenticates the tunnel daemon to Cloudflare edge routers | Must have mode `644` so container user `nonroot` can read it |
 | **Tunnel Metadata** | `config/tunnel_info.env` | Key-value shell environment | Stores Tunnel ID, Name, Custom Domain, and Mode | Hardened with mode `600` |
 | **Ingress Configuration** | `config/cloudflared.yml` | Structured YAML | Declares domain-to-origin routing rules and catch-all 404 | Mode `644` |
+
+### Origin Certificate Detection & Multi-Format Validation:
+Modern versions of `cloudflared tunnel login` generate origin certificates with headers:
+```text
+-----BEGIN ARGO TUNNEL TOKEN-----
+eyJ6b25lSUQiOi...
+-----END ARGO TUNNEL TOKEN-----
+```
+Mornye automatically detects and validates:
+1. Modern `BEGIN ARGO TUNNEL TOKEN` files
+2. Legacy `BEGIN CERTIFICATE` and `BEGIN PRIVATE KEY` PEM files
+3. Standard search locations: `~/.cloudflared/cert.pem`, `$SUDO_USER` home directory, `/root/.cloudflared/cert.pem`, `/etc/cloudflared/cert.pem`, and `config/cert.pem`
+4. Cross-user synchronization: If setup runs via `sudo`, Mornye synchronizes permissions between root and non-root users
+5. Explicit certificate override: pass `--cert /path/to/cert.pem` or export `CLOUDFLARE_CERT_PATH=/path/to/cert.pem`
+
+### Certificate Diagnostic Inspection:
+Run the diagnostic probe to audit certificate paths, owners, and cryptographic types:
+```bash
+./mornye.sh tunnel cert-check
+```
 
 ### Critical Credential Invariants:
 > [!IMPORTANT]

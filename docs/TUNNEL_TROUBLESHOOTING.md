@@ -115,21 +115,64 @@ The origin web server did not respond within the Cloudflare timeout window.
 ### Certificate / Authentication Errors (`cert.pem`)
 ```text
 Cannot find tunnel certificate at ~/.cloudflared/cert.pem
-Authentication error: failed to verify origin certificate
+Cloudflare login completed but cert.pem was not found in standard paths
 ```
-- **Root Cause**: The Cloudflare OAuth authentication certificate is missing or file permissions prevent the current user from reading it.
+- **Root Cause**:
+  1. Certificate generated with modern `-----BEGIN ARGO TUNNEL TOKEN-----` header instead of legacy `BEGIN CERTIFICATE`.
+  2. Setup was run with `sudo`, leaving `cert.pem` inside `/root/.cloudflared/cert.pem` with mode `600`, inaccessible to unprivileged host users.
+  3. `cert.pem` is corrupted, empty, or misconfigured as `credentials.json`.
 - **Resolution**:
-  1. Check if the certificate exists:
+  1. Run Mornye's certificate diagnostic probe:
      ```bash
-     ls -la ~/.cloudflared/cert.pem
+     ./mornye.sh tunnel cert-check
      ```
-  2. Correct permissions:
+  2. If the certificate is located at a custom path, supply it directly:
      ```bash
+     ./mornye.sh tunnel setup --cert /path/to/cert.pem
+     # or export the environment variable:
+     export CLOUDFLARE_CERT_PATH=/path/to/cert.pem
+     ```
+  3. If stored under `/root` and executing as non-root, synchronize permissions:
+     ```bash
+     sudo cp /root/.cloudflared/cert.pem ~/.cloudflared/cert.pem
+     sudo chown $(id -u):$(id -g) ~/.cloudflared/cert.pem
      chmod 600 ~/.cloudflared/cert.pem
      ```
-  3. If missing or invalid, re-run login:
+  4. If missing, authenticate with Cloudflare:
      ```bash
      ./mornye.sh tunnel login
+     ```
+
+---
+
+### Docker WebDAV Container: `mkdir: cannot create directory '/data': Permission denied`
+```text
+[*] Mornye Container Bootstrapping...
+[*] Architecture: x86_64, Kernel: 7.1.5+kali-amd64
+mkdir: cannot create directory '/data': Permission denied
+```
+- **Root Cause**:
+  Host persistent directory `./database/` was created by `sudo ./setup.sh` with `root:root` ownership and `700` (`drwx------`) mode. Because Docker Compose runs the container as unprivileged user `1000:1000` (or `${MORNYE_UID}:${MORNYE_GID}`), it cannot read or create directories in `/data`.
+- **Resolution**:
+  1. Reconcile host directory ownership and permissions:
+     ```bash
+     sudo chown -R 1000:1000 database storage logs backups config run
+     sudo chmod 750 database backups config
+     sudo chmod 755 storage logs run
+     ```
+  2. Or run Mornye's automated repair engine:
+     ```bash
+     ./mornye.sh repair
+     # or:
+     ./mornye.sh doctor --fix
+     ```
+  3. Verify `.env` contains matching `MORNYE_UID` and `MORNYE_GID`:
+     ```bash
+     grep -E 'MORNYE_UID|MORNYE_GID' .env
+     ```
+  4. Restart the WebDAV container stack:
+     ```bash
+     ./mornye.sh docker up
      ```
 
 ---

@@ -10,7 +10,7 @@ services:
     image: mornye-webdav:latest
     container_name: mornye-webdav
     restart: unless-stopped
-    user: "1000:1000"
+    user: "${MORNYE_UID:-1000}:${MORNYE_GID:-1000}"
     security_opt:
       - no-new-privileges:true
     cap_drop:

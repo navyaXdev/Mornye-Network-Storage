@@ -52,6 +52,7 @@ Options:
   --check-only                  Inspect host environment, hardware, and dependencies only
   --no-docker                   Skip Docker installation (assumes pre-installed Docker)
   --skip-cloudflared            Skip optional cloudflared installation
+  --cert <path>                 Path to existing Cloudflare origin certificate (cert.pem)
   --network-mode <mode>         Set networking mode: 'local', 'permanent', or 'quick'
   --domain <hostname>           Bind custom domain during installation (e.g. storage.example.com)
   -h, --help                    Display this help manual and exit
@@ -84,6 +85,11 @@ while [[ $# -gt 0 ]]; do
         --skip-cloudflared)
             SKIP_CLOUDFLARED=true
             shift
+            ;;
+        --cert)
+            CLOUDFLARE_CERT_PATH="$2"
+            export CLOUDFLARE_CERT_PATH
+            shift 2
             ;;
         --network-mode)
             NETWORKING_MODE="$2"
@@ -198,6 +204,17 @@ stage2_storage_setup() {
     fi
     log_step "[Stage 2/6] Provisioning Persistent Storage & Hardening Permissions..."
 
+    local target_user="${SUDO_USER:-$(whoami)}"
+    local target_uid target_gid
+
+    if [[ "$target_user" != "root" ]]; then
+        target_uid=$(id -u "$target_user" 2>/dev/null || echo 1000)
+        target_gid=$(id -g "$target_user" 2>/dev/null || echo 1000)
+    else
+        target_uid="${MORNYE_UID:-1000}"
+        target_gid="${MORNYE_GID:-1000}"
+    fi
+
     local dirs=(
         "$PROGRAM_DIR/database"
         "$PROGRAM_DIR/database/cache"
@@ -217,12 +234,24 @@ stage2_storage_setup() {
         fi
     done
 
+    # Ensure ownership belongs to target non-root container user
+    if [[ "$(id -u)" -eq 0 && -n "$target_uid" && -n "$target_gid" ]]; then
+        chown -R "${target_uid}:${target_gid}" \
+            "$PROGRAM_DIR/database" \
+            "$PROGRAM_DIR/storage" \
+            "$PROGRAM_DIR/logs" \
+            "$PROGRAM_DIR/backups" \
+            "$PROGRAM_DIR/run" \
+            "$PROGRAM_DIR/config" 2>/dev/null || true
+    fi
+
     # Security Permissions Hardening
-    chmod 700 "$PROGRAM_DIR/database" "$PROGRAM_DIR/backups" "$PROGRAM_DIR/config"
-    chmod 755 "$PROGRAM_DIR/storage" "$PROGRAM_DIR/logs" "$PROGRAM_DIR/run"
+    # 750 gives owner rwx, group rx, others none
+    chmod 750 "$PROGRAM_DIR/database" "$PROGRAM_DIR/backups" "$PROGRAM_DIR/config" 2>/dev/null || chmod 700 "$PROGRAM_DIR/database" 2>/dev/null || true
+    chmod 755 "$PROGRAM_DIR/storage" "$PROGRAM_DIR/logs" "$PROGRAM_DIR/run" 2>/dev/null || true
     chmod +x "$PROGRAM_DIR/mornye.sh" "$PROGRAM_DIR/docker/entrypoint.sh" "$PROGRAM_DIR/docker/healthcheck.sh" 2>/dev/null || true
 
-    log_ok "Storage permissions hardened: database/backups (700), storage/logs (755)."
+    log_ok "Storage permissions hardened: database/backups/config (750), storage/logs/run (755), owned by UID:GID ${target_uid}:${target_gid}."
 
     # Environment Configuration (.env)
     local port_8000_free=true
@@ -232,6 +261,13 @@ stage2_storage_setup() {
 
     if [[ -f "$PROGRAM_DIR/.env" ]]; then
         log_ok "Environment configuration (.env) preserved (Never overwritten)."
+        # Ensure MORNYE_UID and MORNYE_GID are defined
+        if ! grep -q "^MORNYE_UID=" "$PROGRAM_DIR/.env"; then
+            echo "MORNYE_UID=${target_uid}" >> "$PROGRAM_DIR/.env"
+        fi
+        if ! grep -q "^MORNYE_GID=" "$PROGRAM_DIR/.env"; then
+            echo "MORNYE_GID=${target_gid}" >> "$PROGRAM_DIR/.env"
+        fi
         if ! grep -q "^MORNYE_HOST_PORT=" "$PROGRAM_DIR/.env"; then
             local chosen_port="8001"
             if command -v port_resolve_host_port &>/dev/null; then
@@ -248,14 +284,17 @@ stage2_storage_setup() {
         local rand_key
         rand_key=$(head -c 32 /dev/urandom | od -A n -t x1 | tr -d ' \n' 2>/dev/null || date +%s%N | sha256sum | head -c 64)
         sed -i "s/SECRET_KEY=.*/SECRET_KEY=$rand_key/" "$PROGRAM_DIR/.env"
+        sed -i "s/^MORNYE_UID=.*/MORNYE_UID=$target_uid/" "$PROGRAM_DIR/.env" 2>/dev/null || echo "MORNYE_UID=$target_uid" >> "$PROGRAM_DIR/.env"
+        sed -i "s/^MORNYE_GID=.*/MORNYE_GID=$target_gid/" "$PROGRAM_DIR/.env" 2>/dev/null || echo "MORNYE_GID=$target_gid" >> "$PROGRAM_DIR/.env"
         if [[ "$port_8000_free" == false ]]; then
             sed -i "s/^MORNYE_HOST_PORT=.*/MORNYE_HOST_PORT=8001/" "$PROGRAM_DIR/.env" 2>/dev/null || echo "MORNYE_HOST_PORT=8001" >> "$PROGRAM_DIR/.env"
             log_ok "Port 8000 is occupied by existing service. Auto-assigned MORNYE_HOST_PORT=8001."
         fi
         chmod 600 "$PROGRAM_DIR/.env"
+        [[ "$(id -u)" -eq 0 && "$target_user" != "root" ]] && chown "${target_uid}:${target_gid}" "$PROGRAM_DIR/.env" 2>/dev/null || true
         log_ok "Generated cryptographically secure 64-character SECRET_KEY in .env."
     else
-        cat << "ENVEOF" > "$PROGRAM_DIR/.env"
+        cat << ENVEOF > "$PROGRAM_DIR/.env"
 APP_NAME="Mornye Network Storage"
 APP_ENV=production
 DEBUG=false
@@ -264,13 +303,16 @@ WEBDAV_HOST=0.0.0.0
 WEBDAV_PORT=8000
 MORNYE_HOST_BIND=127.0.0.1
 MORNYE_HOST_PORT=8001
+MORNYE_UID=${target_uid}
+MORNYE_GID=${target_gid}
 DEFAULT_STORAGE_QUOTA_BYTES=107374182400
 MAX_UPLOAD_SIZE_BYTES=2147483648
 STORAGE_HOSTNAME=storage.example.com
 PUBLIC_DOMAIN=example.com
 ENVEOF
         chmod 600 "$PROGRAM_DIR/.env"
-        log_ok "Default .env configuration created (MORNYE_HOST_PORT=8001)."
+        [[ "$(id -u)" -eq 0 && "$target_user" != "root" ]] && chown "${target_uid}:${target_gid}" "$PROGRAM_DIR/.env" 2>/dev/null || true
+        log_ok "Default .env configuration created (MORNYE_HOST_PORT=8001, MORNYE_UID=${target_uid}, MORNYE_GID=${target_gid})."
     fi
 }
 
@@ -339,6 +381,20 @@ stage3_dependencies_and_docker() {
     docker compose build --quiet || docker compose build
     log_ok "Container image built successfully."
 
+    # 4.1 Pre-flight volume writability & ownership reconciliation
+    local target_uid="${MORNYE_UID:-1000}"
+    local target_gid="${MORNYE_GID:-1000}"
+    if [[ -f "$PROGRAM_DIR/.env" ]]; then
+        target_uid=$(grep -E '^MORNYE_UID=' "$PROGRAM_DIR/.env" | cut -d= -f2 | tr -d '"' | tr -d "'" || echo "1000")
+        target_gid=$(grep -E '^MORNYE_GID=' "$PROGRAM_DIR/.env" | cut -d= -f2 | tr -d '"' | tr -d "'" || echo "1000")
+    fi
+    target_uid="${target_uid:-1000}"
+    target_gid="${target_gid:-1000}"
+
+    if [[ "$(id -u)" -eq 0 ]]; then
+        chown -R "${target_uid}:${target_gid}" "$PROGRAM_DIR/database" "$PROGRAM_DIR/storage" "$PROGRAM_DIR/logs" 2>/dev/null || true
+    fi
+
     # 5. Start Container Stack
     log_info "Starting Mornye containerized stack..."
     if [[ -f "$SCRIPTS_DIR/repair_engine.sh" ]]; then
@@ -346,7 +402,7 @@ stage3_dependencies_and_docker() {
         [[ "$NON_INTERACTIVE" == true ]] && r_args=(--yes preflight start)
         "$SCRIPTS_DIR/repair_engine.sh" "${r_args[@]}" || true
     fi
-    docker compose up -d webdav
+    MORNYE_UID="$target_uid" MORNYE_GID="$target_gid" docker compose up -d webdav
 
     # 6. Wait for WebDAV healthcheck
     local host_port="8001"
@@ -444,11 +500,13 @@ stage5_cloudflare_workflow() {
             "$SCRIPTS_DIR/repair_engine.sh" "${r_args[@]}" || true
         fi
         if [[ -f "$SCRIPTS_DIR/cloudflare_manager.sh" ]]; then
+            local cf_extra_args=()
+            [[ -n "${CLOUDFLARE_CERT_PATH:-}" ]] && cf_extra_args=("--cert" "$CLOUDFLARE_CERT_PATH")
             if [[ -n "$CHOSEN_DOMAIN" ]]; then
-                "$SCRIPTS_DIR/cloudflare_manager.sh" setup
-                "$SCRIPTS_DIR/cloudflare_manager.sh" domain add "$CHOSEN_DOMAIN"
+                "$SCRIPTS_DIR/cloudflare_manager.sh" "${cf_extra_args[@]}" setup
+                "$SCRIPTS_DIR/cloudflare_manager.sh" "${cf_extra_args[@]}" domain add "$CHOSEN_DOMAIN"
             else
-                "$SCRIPTS_DIR/cloudflare_manager.sh" setup
+                "$SCRIPTS_DIR/cloudflare_manager.sh" "${cf_extra_args[@]}" setup
             fi
         fi
     elif [[ "$NETWORKING_MODE" == "quick" ]]; then

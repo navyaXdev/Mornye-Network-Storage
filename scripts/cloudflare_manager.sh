@@ -87,23 +87,194 @@ check_webdav_health() {
     fi
 }
 
+# ------------------------------------------------------------------------------
+# 1.1 CERTIFICATE VALIDATION & DISCOVERY
+# ------------------------------------------------------------------------------
+
+validate_origin_certificate() {
+    local cert_file="$1"
+    if command -v compat_validate_origin_cert &>/dev/null; then
+        compat_validate_origin_cert "$cert_file"
+        return $?
+    fi
+
+    [[ -z "$cert_file" ]] && return 1
+    if [[ -f "$cert_file" && -r "$cert_file" ]]; then
+        [[ ! -s "$cert_file" ]] && return 1 # Reject empty files
+        if grep -q '"AccountTag"' "$cert_file" 2>/dev/null && grep -q '"TunnelSecret"' "$cert_file" 2>/dev/null; then
+            return 1
+        fi
+        if grep -qE "BEGIN (ARGO TUNNEL TOKEN|CERTIFICATE|PRIVATE KEY|RSA PRIVATE KEY)" "$cert_file" 2>/dev/null; then
+            return 0
+        fi
+        if grep -q '"apiToken"' "$cert_file" 2>/dev/null && grep -q '"accountID"' "$cert_file" 2>/dev/null; then
+            return 0
+        fi
+        return 1
+    fi
+
+    if command -v sudo &>/dev/null && sudo -n test -f "$cert_file" 2>/dev/null; then
+        local sz
+        sz=$(sudo -n wc -c < "$cert_file" 2>/dev/null || echo 0)
+        [[ "$sz" -eq 0 ]] && return 1
+        if sudo -n grep -q '"AccountTag"' "$cert_file" 2>/dev/null && sudo -n grep -q '"TunnelSecret"' "$cert_file" 2>/dev/null; then
+            return 1
+        fi
+        if sudo -n grep -qE "BEGIN (ARGO TUNNEL TOKEN|CERTIFICATE|PRIVATE KEY|RSA PRIVATE KEY)" "$cert_file" 2>/dev/null; then
+            return 0
+        fi
+        if sudo -n grep -q '"apiToken"' "$cert_file" 2>/dev/null && sudo -n grep -q '"accountID"' "$cert_file" 2>/dev/null; then
+            return 0
+        fi
+        return 1
+    fi
+    return 1
+}
+
 find_origin_certificate() {
+    local explicit="${CLOUDFLARE_CERT_PATH:-}"
+    if [[ -n "$explicit" ]]; then
+        if validate_origin_certificate "$explicit"; then
+            echo "$explicit"
+            return 0
+        else
+            echo -e "${RED}[ERROR] Specified certificate '$explicit' is invalid, corrupted, or unreadable.${NC}" >&2
+            return 1
+        fi
+    fi
+
     local candidates=(
         "${HOME}/.cloudflared/cert.pem"
+        "${REAL_USER_HOME:-}/.cloudflared/cert.pem"
         "/root/.cloudflared/cert.pem"
         "/etc/cloudflared/cert.pem"
-        "${REAL_USER_HOME:-}/.cloudflared/cert.pem"
+        "${CONFIG_DIR}/cert.pem"
     )
+
     for c in "${candidates[@]}"; do
-        if [[ -n "$c" && -f "$c" && ! -d "$c" ]]; then
-            # Verify file has PEM header
-            if grep -q "BEGIN CERTIFICATE" "$c" 2>/dev/null || grep -q "BEGIN PRIVATE KEY" "$c" 2>/dev/null; then
-                echo "$c"
-                return 0
+        if [[ -n "$c" ]] && validate_origin_certificate "$c"; then
+            # Cross-user sync: cert in /root/.cloudflared/cert.pem but executing as non-root
+            if [[ "$c" == "/root/.cloudflared/cert.pem" && "$(id -u)" -ne 0 ]]; then
+                if [[ ! -f "${HOME}/.cloudflared/cert.pem" ]] && command -v sudo &>/dev/null && sudo -n test -f "$c" 2>/dev/null; then
+                    mkdir -p "${HOME}/.cloudflared" 2>/dev/null || true
+                    if sudo -n cp "$c" "${HOME}/.cloudflared/cert.pem" 2>/dev/null && \
+                       sudo -n chown "$(id -u):$(id -g)" "${HOME}/.cloudflared/cert.pem" 2>/dev/null && \
+                       chmod 600 "${HOME}/.cloudflared/cert.pem" 2>/dev/null; then
+                        echo "${HOME}/.cloudflared/cert.pem"
+                        return 0
+                    fi
+                fi
             fi
+
+            # Cross-user sync: cert in user home but executing as root via sudo
+            if [[ "$c" == "${REAL_USER_HOME:-}/.cloudflared/cert.pem" && "$(id -u)" -eq 0 ]]; then
+                if [[ ! -f "/root/.cloudflared/cert.pem" ]]; then
+                    mkdir -p "/root/.cloudflared" 2>/dev/null || true
+                    cp "$c" "/root/.cloudflared/cert.pem" 2>/dev/null || true
+                    chmod 600 "/root/.cloudflared/cert.pem" 2>/dev/null || true
+                fi
+            fi
+
+            echo "$c"
+            return 0
         fi
     done
+
     return 1
+}
+
+print_cert_diagnostic_help() {
+    echo -e "\n${BOLD}${YELLOW}================================================================${NC}"
+    echo -e "${BOLD}${YELLOW}       CLOUDFLARE ORIGIN CERTIFICATE (cert.pem) NOT FOUND       ${NC}"
+    echo -e "${BOLD}${YELLOW}================================================================${NC}"
+    echo -e "Cloudflare Tunnel requires an origin certificate to authenticate tunnel creation."
+    echo ""
+    echo -e "${BOLD}Checked locations:${NC}"
+    echo -e "  1. Explicit path : ${CLOUDFLARE_CERT_PATH:-None specified}"
+    echo -e "  2. User store    : ${HOME}/.cloudflared/cert.pem"
+    [[ -n "${REAL_USER_HOME:-}" ]] && echo -e "  3. Sudo user     : ${REAL_USER_HOME}/.cloudflared/cert.pem"
+    echo -e "  4. Root store    : /root/.cloudflared/cert.pem"
+    echo -e "  5. System store  : /etc/cloudflared/cert.pem"
+    echo -e "  6. Mornye config : ${CONFIG_DIR}/cert.pem"
+    echo ""
+    echo -e "${BOLD}Actionable solutions:${NC}"
+    echo -e "  1. Authenticate with Cloudflare to generate cert.pem:"
+    echo -e "     ${CYAN}./mornye.sh tunnel login${NC}  (or: ${CYAN}cloudflared tunnel login${NC})"
+    echo ""
+    echo -e "  2. If cert.pem already exists at a custom path, specify it directly:"
+    echo -e "     ${CYAN}./mornye.sh tunnel setup --cert /path/to/cert.pem${NC}"
+    echo -e "     or export environment variable: ${CYAN}export CLOUDFLARE_CERT_PATH=/path/to/cert.pem${NC}"
+    echo ""
+    echo -e "  3. If cert.pem exists in /root/.cloudflared/ but you are running as non-root:"
+    echo -e "     ${CYAN}sudo cp /root/.cloudflared/cert.pem ~/.cloudflared/cert.pem && sudo chown \$(id -u):\$(id -g) ~/.cloudflared/cert.pem && chmod 600 ~/.cloudflared/cert.pem${NC}"
+    echo -e "${BOLD}${YELLOW}================================================================${NC}\n"
+}
+
+cmd_cert_check() {
+    echo "================================================================================"
+    echo "         MORNYE CLOUDFLARE ORIGIN CERTIFICATE DIAGNOSTIC INSPECTION             "
+    echo "================================================================================"
+    local found_valid=false
+    local active_cert=""
+
+    local paths=(
+        "${CLOUDFLARE_CERT_PATH:-}"
+        "${HOME}/.cloudflared/cert.pem"
+        "${REAL_USER_HOME:-}/.cloudflared/cert.pem"
+        "/root/.cloudflared/cert.pem"
+        "/etc/cloudflared/cert.pem"
+        "${CONFIG_DIR}/cert.pem"
+    )
+
+    for p in "${paths[@]}"; do
+        [[ -z "$p" ]] && continue
+        echo -n "Path: $p -> "
+        if [[ ! -e "$p" ]]; then
+            if command -v sudo &>/dev/null && sudo -n test -e "$p" 2>/dev/null; then
+                echo -e "${YELLOW}EXISTS (Root-only)${NC}"
+            else
+                echo -e "${RED}NOT FOUND${NC}"
+                continue
+            fi
+        else
+            echo -e "${GREEN}EXISTS${NC}"
+        fi
+
+        local perms owner
+        perms=$(stat -c "%a" "$p" 2>/dev/null || (command -v sudo &>/dev/null && sudo -n stat -c "%a" "$p" 2>/dev/null) || echo "???")
+        owner=$(stat -c "%U:%G" "$p" 2>/dev/null || (command -v sudo &>/dev/null && sudo -n stat -c "%U:%G" "$p" 2>/dev/null) || echo "???")
+        echo "      Permissions: $perms, Owner: $owner"
+
+        if validate_origin_certificate "$p"; then
+            echo -e "      Status     : ${GREEN}[✔] VALID CLOUDFLARE ORIGIN CERTIFICATE / TOKEN${NC}"
+            if [[ "$found_valid" == false ]]; then
+                found_valid=true
+                active_cert="$p"
+            fi
+        else
+            local is_cred=false
+            if grep -q '"AccountTag"' "$p" 2>/dev/null || (command -v sudo &>/dev/null && sudo -n grep -q '"AccountTag"' "$p" 2>/dev/null); then
+                is_cred=true
+            fi
+            if [[ "$is_cred" == true ]]; then
+                echo -e "      Status     : ${RED}[✘] INVALID (This is a tunnel credentials JSON file, NOT origin cert.pem!)${NC}"
+            else
+                echo -e "      Status     : ${RED}[✘] INVALID (Missing PEM header / ARGO TUNNEL TOKEN)${NC}"
+            fi
+        fi
+        echo ""
+    done
+
+    echo "================================================================================"
+    if [[ "$found_valid" == true ]]; then
+        echo -e "${GREEN}[✔] Active origin certificate: $active_cert${NC}"
+        echo "Ready for tunnel operations (login, create, domain add)."
+        return 0
+    else
+        echo -e "${RED}[✘] No valid Cloudflare origin certificate found.${NC}"
+        print_cert_diagnostic_help
+        return 1
+    fi
 }
 
 load_tunnel_metadata() {
@@ -173,6 +344,14 @@ ensure_credentials_file() {
         echo -e "[*] Attempting credentials recovery via Cloudflare tunnel token..."
         local raw_token
         raw_token=$($cf_bin tunnel token "$t_id" 2>/dev/null || $cf_bin tunnel token "$t_name" 2>/dev/null || true)
+
+        if [[ -z "$raw_token" ]]; then
+            local origin_cert
+            origin_cert="$(find_origin_certificate 2>/dev/null || true)"
+            if [[ -n "$origin_cert" ]]; then
+                raw_token=$($cf_bin tunnel --origincert "$origin_cert" token "$t_id" 2>/dev/null || $cf_bin tunnel --origincert "$origin_cert" token "$t_name" 2>/dev/null || true)
+            fi
+        fi
         
         if [[ -n "$raw_token" ]]; then
             python3 -c "
@@ -219,26 +398,35 @@ cmd_login() {
     cf_bin="$(get_cloudflared_bin)"
 
     local existing_cert
-    existing_cert="$(find_origin_certificate || true)"
+    existing_cert="$(find_origin_certificate 2>/dev/null || true)"
     if [[ -n "$existing_cert" ]]; then
         echo -e "${GREEN}[✔] Existing Cloudflare origin certificate detected: $existing_cert${NC}"
         echo -e "    Notice: cert.pem authorizes tunnel creation and token management."
-        read -p "Re-authenticate with Cloudflare in browser? [y/N]: " -r reauth
-        if [[ ! "$reauth" =~ ^[Yy]$ ]]; then
+        if [[ "${NON_INTERACTIVE:-false}" != true ]]; then
+            read -p "Re-authenticate with Cloudflare in browser? [y/N]: " -r reauth
+            if [[ ! "$reauth" =~ ^[Yy]$ ]]; then
+                return 0
+            fi
+        else
             return 0
         fi
     fi
 
     echo -e "${BOLD}[*] Launching Cloudflare browser authentication...${NC}"
     echo -e "    A browser link will appear. Select your domain zone in the Cloudflare Dashboard."
-    $cf_bin tunnel login
+    
+    local login_log="$LOG_DIR/cloudflared_login.log"
+    mkdir -p "$LOG_DIR"
+    $cf_bin tunnel login 2>&1 | tee "$login_log"
 
     local new_cert
-    new_cert="$(find_origin_certificate || true)"
+    new_cert="$(find_origin_certificate 2>/dev/null || true)"
     if [[ -n "$new_cert" ]]; then
         echo -e "${GREEN}[✔] Cloudflare certificate verified: $new_cert${NC}"
+        return 0
     else
         echo -e "${RED}[ERROR] Cloudflare login completed but cert.pem was not found in standard paths.${NC}"
+        print_cert_diagnostic_help
         return 1
     fi
 }
@@ -268,10 +456,18 @@ cmd_create() {
 
     # Create only if tunnel does not exist
     if [[ -z "$existing_id" ]]; then
+        local origin_cert
+        origin_cert="$(find_origin_certificate 2>/dev/null || true)"
+
         echo -e "[*] Creating new Cloudflare Tunnel: '$name'..."
-        if ! $cf_bin tunnel create "$name"; then
-            echo -e "${RED}[ERROR] Failed to create tunnel '$name'. Ensure login cert is present via './mornye.sh tunnel login'.${NC}"
-            return 1
+        if ! $cf_bin tunnel create "$name" 2>/dev/null; then
+            local cert_args=()
+            [[ -n "$origin_cert" ]] && cert_args=("--origincert" "$origin_cert")
+            if [[ ${#cert_args[@]} -eq 0 ]] || ! $cf_bin tunnel "${cert_args[@]}" create "$name"; then
+                echo -e "${RED}[ERROR] Failed to create tunnel '$name'. Ensure login cert is present via './mornye.sh tunnel login'.${NC}"
+                print_cert_diagnostic_help
+                return 1
+            fi
         fi
         list_output="$($cf_bin tunnel list 2>/dev/null || true)"
         existing_id=$(echo "$list_output" | grep -w "$name" | head -n1 | awk '{print $1}')
@@ -773,10 +969,29 @@ cmd_quick_logs() {
 # ------------------------------------------------------------------------------
 
 main() {
+    local parsed_args=()
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --cert|-c)
+                CLOUDFLARE_CERT_PATH="$2"
+                export CLOUDFLARE_CERT_PATH
+                shift 2
+                ;;
+            *)
+                parsed_args+=("$1")
+                shift
+                ;;
+        esac
+    done
+
+    set -- "${parsed_args[@]}"
     local cmd="${1:-}"
     shift || true
 
     case "$cmd" in
+        cert-check|cert_check)
+            cmd_cert_check "$@"
+            ;;
         setup)
             cmd_setup "$@"
             ;;
@@ -844,9 +1059,13 @@ main() {
             ;;
         ""|help|--help|-h)
             cat << "EOF"
-Usage: ./mornye.sh tunnel <command>
+Usage: ./mornye.sh tunnel <command> [options]
+
+Global Options:
+  --cert, -c <path>                   Explicit path to Cloudflare origin cert.pem
 
 Permanent Zero-Trust Tunnel Commands:
+  ./mornye.sh tunnel cert-check       Inspect and diagnose Cloudflare origin certificates
   ./mornye.sh tunnel setup            Interactive guided wizard for permanent tunnel + domain
   ./mornye.sh tunnel login            Authenticate with Cloudflare via browser login
   ./mornye.sh tunnel create [name]    Create named tunnel (default: mornye-storage)

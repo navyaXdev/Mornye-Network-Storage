@@ -60,15 +60,16 @@ flowchart TD
 - Free storage headroom verification ($\ge 2048 \text{ MB}$).
 
 ### Stage 2: Storage Provisioning & Permission Hardening
-Creates the required host-persisted directory layout with strict Unix permission boundaries:
-- `database/` (mode `700`) — SQLite database files and write-ahead logs.
-- `backups/` (mode `700`) — Hot online snapshots and disaster recovery archives.
-- `config/` (mode `700`) — Secret tokens, encryption keys, and Cloudflare credentials.
+Creates the required host-persisted directory layout with strict Unix permission boundaries and resolves non-root container ownership:
+- Resolves invoking user (`SUDO_USER` or current user) and target non-root container UID/GID (`MORNYE_UID`, `MORNYE_GID`).
+- `database/` (mode `750`) — SQLite database files and write-ahead logs, owned by container UID.
+- `backups/` (mode `750`) — Hot online snapshots and disaster recovery archives.
+- `config/` (mode `750`) — Secret tokens, encryption keys, and Cloudflare credentials.
 - `storage/` (mode `755`) — Physical audio files cataloged under RFC 4918 WebDAV.
 - `logs/` (mode `755`) — WebDAV access logs and daemon runtime logs.
 - `run/` (mode `755`) — Process IDs and ephemeral state sockets.
 
-Generates a cryptographically strong 256-bit URL-safe `SECRET_KEY` in `.env` if one does not already exist.
+Generates a cryptographically strong 256-bit URL-safe `SECRET_KEY` in `.env` if one does not already exist, and exports `MORNYE_UID` / `MORNYE_GID`.
 
 ### Stage 3: Universal Package & Docker Runtime Setup
 Detects the host package manager and installs missing dependencies automatically:

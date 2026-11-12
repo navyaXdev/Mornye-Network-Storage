@@ -480,6 +480,70 @@ Tighten directory permissions:
         "$verify_cmd"
 }
 
+# Handler 5b: Volume Writability & Ownership Reconciler
+repair_volume_writability() {
+    audit_storage
+    local unwritable=()
+    for dir in "$DATA_DIR" "$STORAGE_DIR" "$LOG_DIR"; do
+        if [[ -d "$dir" && ! -w "$dir" ]]; then
+            unwritable+=("$(basename "$dir")")
+        fi
+    done
+
+    if [[ ${#unwritable[@]} -eq 0 ]]; then
+        return 0
+    fi
+
+    local cur_user cur_uid cur_gid
+    cur_user="$(whoami)"
+    cur_uid="$(id -u)"
+    cur_gid="$(id -g)"
+
+    local what="Host volume directories (${unwritable[*]}) are not writable by execution user '${cur_user}' (UID: ${cur_uid})."
+    local why="When setup is run with root/sudo, directories may be owned by root, preventing the unprivileged container process from initializing /data."
+    local comp="Docker Volume Mounts & File Permissions"
+    local risk="LOW (Reconciles directory ownership to current user and sets standard 750/755 permissions)"
+    local sol="Change ownership of Mornye storage directories to '${cur_user}' (${cur_uid}:${cur_gid}) with mode 750/755."
+
+    local exact_changes="1. Execute 'chown -R ${cur_uid}:${cur_gid} database storage logs backups config run'
+2. Execute 'chmod 750 database backups config'
+3. Execute 'chmod 755 storage logs run'"
+
+    local fix_cmd="
+        if [[ \"\$(id -u)\" -eq 0 ]]; then
+            chown -R '${cur_uid}:${cur_gid}' '$DATA_DIR' '$STORAGE_DIR' '$LOG_DIR' '$BACKUP_DIR' '$CONFIG_DIR' '$RUN_DIR' 2>/dev/null || true
+        else
+            sudo -n chown -R '${cur_uid}:${cur_gid}' '$DATA_DIR' '$STORAGE_DIR' '$LOG_DIR' '$BACKUP_DIR' '$CONFIG_DIR' '$RUN_DIR' 2>/dev/null || true
+        fi
+        chmod 750 '$DATA_DIR' '$BACKUP_DIR' '$CONFIG_DIR' 2>/dev/null || true
+        chmod 755 '$STORAGE_DIR' '$LOG_DIR' '$RUN_DIR' 2>/dev/null || true
+    "
+
+    local manual_cmd="
+Reconcile volume permissions:
+  sudo chown -R ${cur_uid}:${cur_gid} database storage logs backups config run
+  chmod 750 database backups config
+  chmod 755 storage logs run
+"
+
+    local verify_cmd="
+        [[ -w '$DATA_DIR' && -w '$STORAGE_DIR' && -w '$LOG_DIR' ]]
+    "
+
+    prompt_interactive_error \
+        "ERR_VOLUME_NOT_WRITABLE" \
+        "Container Volume Mounts Not Writable" \
+        "$what" \
+        "$why" \
+        "$comp" \
+        "$risk" \
+        "$sol" \
+        "$exact_changes" \
+        "$fix_cmd" \
+        "$manual_cmd" \
+        "$verify_cmd"
+}
+
 # Handler 6: Missing Environment File (.env)
 repair_missing_env() {
     if [[ -f "$PROGRAM_DIR/.env" ]]; then
@@ -901,6 +965,7 @@ run_preflight_checks() {
             repair_port_conflict || rc=$?
             repair_missing_directories || rc=$?
             repair_insecure_permissions || rc=$?
+            repair_volume_writability || rc=$?
             repair_missing_env || rc=$?
             repair_default_secret_key || rc=$?
             ;;
@@ -917,6 +982,7 @@ run_preflight_checks() {
             repair_port_conflict || rc=$?
             repair_missing_directories || rc=$?
             repair_insecure_permissions || rc=$?
+            repair_volume_writability || rc=$?
             repair_missing_env || rc=$?
             repair_default_secret_key || rc=$?
             repair_unhealthy_container || rc=$?

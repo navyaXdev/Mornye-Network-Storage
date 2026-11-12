@@ -259,16 +259,108 @@ compat_detect_user() {
         if [[ -n "${SUDO_USER:-}" && "${SUDO_USER}" != "root" ]]; then
             REAL_USER="$SUDO_USER"
             REAL_USER_HOME="$(getent passwd "$SUDO_USER" 2>/dev/null | cut -d: -f6 || echo "/home/$SUDO_USER")"
+            REAL_UID="$(id -u "$SUDO_USER" 2>/dev/null || echo 1000)"
+            REAL_GID="$(id -g "$SUDO_USER" 2>/dev/null || echo 1000)"
+            TARGET_CONTAINER_UID="$REAL_UID"
+            TARGET_CONTAINER_GID="$REAL_GID"
         else
             REAL_USER="root"
             REAL_USER_HOME="${HOME:-/root}"
+            REAL_UID=0
+            REAL_GID=0
+            TARGET_CONTAINER_UID="${MORNYE_UID:-1000}"
+            TARGET_CONTAINER_GID="${MORNYE_GID:-1000}"
         fi
     else
         IS_ROOT=false
         SUDO_PREFIX="sudo"
         REAL_USER="$CURRENT_USER"
         REAL_USER_HOME="${HOME:-/home/$CURRENT_USER}"
+        REAL_UID="$CURRENT_UID"
+        REAL_GID="$CURRENT_GID"
+        TARGET_CONTAINER_UID="$CURRENT_UID"
+        TARGET_CONTAINER_GID="$CURRENT_GID"
     fi
+
+    export CURRENT_USER CURRENT_UID CURRENT_GID REAL_USER REAL_USER_HOME REAL_UID REAL_GID TARGET_CONTAINER_UID TARGET_CONTAINER_GID IS_ROOT SUDO_PREFIX
+}
+
+# ------------------------------------------------------------------------------
+# 2.1 CLOUDFLARE ORIGIN CERTIFICATE & TOKEN VALIDATION
+# ------------------------------------------------------------------------------
+
+# Validate Cloudflare Origin Certificate / Login Token
+# Returns 0 if valid origin cert / token, 1 otherwise
+compat_validate_origin_cert() {
+    local cert_file="$1"
+    [[ -z "$cert_file" ]] && return 1
+
+    # Check if readable directly
+    if [[ -f "$cert_file" && -r "$cert_file" ]]; then
+        [[ ! -s "$cert_file" ]] && return 1 # Reject empty files
+        # Strictly reject tunnel credentials JSON files
+        if grep -q '"AccountTag"' "$cert_file" 2>/dev/null && grep -q '"TunnelSecret"' "$cert_file" 2>/dev/null; then
+            return 1
+        fi
+        # Validate modern token or legacy PEM headers
+        if grep -qE "BEGIN (ARGO TUNNEL TOKEN|CERTIFICATE|PRIVATE KEY|RSA PRIVATE KEY)" "$cert_file" 2>/dev/null; then
+            return 0
+        fi
+        # Validate raw JSON token payload
+        if grep -q '"apiToken"' "$cert_file" 2>/dev/null && grep -q '"accountID"' "$cert_file" 2>/dev/null; then
+            return 0
+        fi
+        return 1
+    fi
+
+    # If file exists on host but requires root read privileges
+    if command -v sudo &>/dev/null && sudo -n test -f "$cert_file" 2>/dev/null; then
+        local sz
+        sz=$(sudo -n wc -c < "$cert_file" 2>/dev/null || echo 0)
+        [[ "$sz" -eq 0 ]] && return 1
+        if sudo -n grep -q '"AccountTag"' "$cert_file" 2>/dev/null && sudo -n grep -q '"TunnelSecret"' "$cert_file" 2>/dev/null; then
+            return 1
+        fi
+        if sudo -n grep -qE "BEGIN (ARGO TUNNEL TOKEN|CERTIFICATE|PRIVATE KEY|RSA PRIVATE KEY)" "$cert_file" 2>/dev/null; then
+            return 0
+        fi
+        if sudo -n grep -q '"apiToken"' "$cert_file" 2>/dev/null && sudo -n grep -q '"accountID"' "$cert_file" 2>/dev/null; then
+            return 0
+        fi
+        return 1
+    fi
+
+    return 1
+}
+
+# Search standard candidate locations for valid Cloudflare origin certificate
+compat_find_origin_cert() {
+    local explicit_path="${CLOUDFLARE_CERT_PATH:-}"
+    if [[ -n "$explicit_path" ]]; then
+        if compat_validate_origin_cert "$explicit_path"; then
+            echo "$explicit_path"
+            return 0
+        else
+            return 1
+        fi
+    fi
+
+    local candidates=(
+        "${HOME}/.cloudflared/cert.pem"
+        "${REAL_USER_HOME:-}/.cloudflared/cert.pem"
+        "/root/.cloudflared/cert.pem"
+        "/etc/cloudflared/cert.pem"
+        "${PROGRAM_DIR:-.}/config/cert.pem"
+    )
+
+    for c in "${candidates[@]}"; do
+        if [[ -n "$c" ]] && compat_validate_origin_cert "$c"; then
+            echo "$c"
+            return 0
+        fi
+    done
+
+    return 1
 }
 
 compat_check_root() {
