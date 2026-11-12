@@ -1,0 +1,76 @@
+# ==============================================================================
+# MORNYE NETWORK STORAGE — STRICT GIT IGNORE CONFIGURATION
+# Prevents accidental tracking of secrets, databases, audio, and runtime state
+# ==============================================================================
+
+# Environment files & Secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.crt
+*.pfx
+*.passwd
+
+# Cloudflare Tunnel Private Credentials
+config/cloudflared.yml
+config/credentials.json
+cloudflare/tunnel/credentials.json
+cloudflare/tunnel/*.json
+cloudflare/tunnel/*.pem
+cloudflare/tunnel/config.yml
+
+# Databases, WAL & Temporary Storage
+database/*.db
+database/*.db-wal
+database/*.db-shm
+database/*.sqlite*
+database/cache/*
+database/tmp/*
+database/recycle_bin/*
+
+# Physical Audio Storage (User music files)
+storage/*
+!storage/.gitkeep
+
+# Runtime Logs
+logs/*
+*.log
+!logs/.gitkeep
+
+# Backups & Archives
+backups/*
+!backups/.gitkeep
+*.tar.gz
+*.bak*
+
+# Process Runtime State (Quick Tunnel PID & temporary URLs)
+run/*
+!run/.gitkeep
+
+# Python Virtual Environments & Bytecode
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node & Build artifacts (Retired web assets)
+node_modules/
+dist/
+build/
+.npm/
+
+# OS and Editor Metadata
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*~

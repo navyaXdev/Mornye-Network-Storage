@@ -1,0 +1,68 @@
+# ==============================================================================
+# MORNYE NETWORK STORAGE — DOCKER COMPOSE CONFIGURATION
+# Production deployment for WebDAV Engine & Cloudflare Ingress Tunnel
+# ==============================================================================
+services:
+  webdav:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mornye-webdav:latest
+    container_name: mornye-webdav
+    restart: unless-stopped
+    user: "1000:1000"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    volumes:
+      # Persistent external host directories
+      - ${DATA_PATH:-./database}:/data
+      - ${STORAGE_PATH:-./storage}:/storage
+      - ${LOG_PATH:-./logs}:/logs
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - DEFAULT_STORAGE_QUOTA_BYTES=${DEFAULT_STORAGE_QUOTA_BYTES:-107374182400}
+      - APP_ENV=${APP_ENV:-production}
+      - DEBUG=${DEBUG:-false}
+      - WEBDAV_HOST=0.0.0.0
+      - WEBDAV_PORT=8000
+      - DATA_PATH=/data
+      - STORAGE_PATH=/storage
+      - LOG_PATH=/logs
+      - DATABASE_URL=sqlite+aiosqlite:////data/mornye.db
+    ports:
+      # Private loopback binding strictly (Never expose to public 0.0.0.0)
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test: ["CMD", "/app/docker/healthcheck.sh"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - mornye-net
+
+  # Optional permanent Cloudflare Tunnel service
+  # Run via: docker compose --profile tunnel up -d
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: mornye-tunnel
+    restart: unless-stopped
+    user: "nonroot"
+    command: tunnel --no-autoupdate --config /etc/cloudflared/config.yml run
+    volumes:
+      - ./config/cloudflared.yml:/etc/cloudflared/config.yml:ro
+      - ./config/credentials.json:/etc/cloudflared/credentials.json:ro
+    depends_on:
+      webdav:
+        condition: service_healthy
+    networks:
+      - mornye-net
+    profiles:
+      - tunnel
+
+networks:
+  mornye-net:
+    name: mornye-net
+    driver: bridge

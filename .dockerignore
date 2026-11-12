@@ -1,0 +1,39 @@
+# ==============================================================================
+# MORNYE NETWORK STORAGE — DOCKER BUILD IGNORE CONFIGURATION
+# Minimizes image context and prevents leaking host credentials or state
+# ==============================================================================
+
+# Version Control
+.git
+.gitignore
+
+# Environment & Secrets
+.env
+.env.*
+*.key
+*.pem
+*.crt
+config/credentials.json
+config/cloudflared.yml
+
+# Databases & Backups
+database/*.db*
+database/cache/*
+database/tmp/*
+database/recycle_bin/*
+backups/
+
+# Storage & Logs
+storage/*
+logs/*
+run/*
+*.log
+
+# Host Environments & Caches
+venv/
+.venv/
+__pycache__/
+*.pyc
+node_modules/
+dist/
+.pytest_cache/

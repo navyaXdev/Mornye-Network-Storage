@@ -1,0 +1,14 @@
+# ==============================================================================
+# CLOUDFLARE ZERO-TRUST TUNNEL — EXAMPLE CONFIGURATION TEMPLATE
+# Copy to config/cloudflared.yml and add your own Tunnel UUID and credentials.
+# ==============================================================================
+tunnel: 00000000-0000-0000-0000-000000000000
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  # Public WebDAV ingress for Mornye clients
+  - hostname: storage.example.com
+    service: http://webdav:8000
+
+  # Default catch-all (strictly reject unmapped hostnames)
+  - service: http_status:404
