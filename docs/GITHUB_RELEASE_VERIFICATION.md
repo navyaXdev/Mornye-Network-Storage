@@ -195,15 +195,25 @@ python3 scripts/secret_scan.py
 
 ---
 
-## 8. GitHub Remote & Upload Instructions
+## 8. GitHub Remote & Upload Verification
 
-The repository is configured for remote:
-`https://github.com/navyaXdev/Mornye-Network-Storage.git`
+The clean release has been successfully pushed and verified on the private remote repository:
+- **Remote Origin**: `https://github.com/navyaXdev/Mornye-Network-Storage.git`
+- **Repository Visibility**: **PRIVATE** (verified via `gh repo view`)
+- **Default Branch**: `main`
+- **Release Commit SHA**: `ff3f5e02c9cbee975d760f61ab16605125e941fa`
+- **Commit Message**: `feat: initial clean release v3.0.0 of Mornye Network Storage`
+- **Tracked Files**: 83 files (9,038 insertions)
+- **Push Output**: `To https://github.com/navyaXdev/Mornye-Network-Storage.git * [new branch] main -> main`
 
-To upload the clean release to the private GitHub repository:
+### Post-Upload Clone & Isolation Test
+The release was independently cloned into an ephemeral test directory (`/tmp/mornye_verify_clone`) directly from GitHub:
+1. `python3 scripts/secret_scan.py` -> **0 secrets detected** across all 83 files.
+2. Excluded files audit (`find . -type f | grep -E "node_modules|\.env$|\.db$|control_center|frontend"`): **Zero excluded files found**.
+3. Automated test suite execution (`pytest`): **4 passed in 0.51s**.
+4. Ephemeral directory wiped immediately post-verification.
 
-```bash
-cd /home/spidyno/.song/Mornye-Network-Storage
-git remote add origin https://github.com/navyaXdev/Mornye-Network-Storage.git
-git push -u origin main
-```
+### Production Isolation & Non-Interference
+- Production root `/home/spidyno/.song/program` remained completely untouched.
+- Production storage `/home/spidyno/.song/storage` and database `mornye.db` untouched.
+- Production systemd units `mornye-storage.service` and `mornye-tunnel.service` remained running without interruption.
