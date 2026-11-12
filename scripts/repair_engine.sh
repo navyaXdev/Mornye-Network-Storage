@@ -696,10 +696,8 @@ repair_cloudflare_ingress_mismatch() {
         local ts=\$(date +%Y%m%d_%H%M%S)
         cp '$CONFIG_DIR/cloudflared.yml' '$CONFIG_DIR/cloudflared.yml.bak_\$ts'
         sed -i -E \"s|service:[[:space:]]+http://[^[:space:]]+|service: ${expected}|\" '$CONFIG_DIR/cloudflared.yml'
-        if [[ '$CLOUDFLARE_RUNTIME_MODE' == 'docker' ]]; then
+        if docker ps --format '{{.Names}}' 2>/dev/null | grep -qw 'mornye-tunnel'; then
             docker compose restart tunnel 2>/dev/null || true
-        elif [[ '$CLOUDFLARE_RUNTIME_MODE' == 'systemd' ]]; then
-            sudo systemctl restart mornye-tunnel.service 2>/dev/null || true
         fi
     "
 
@@ -752,8 +750,8 @@ repair_private_port_exposed() {
         local ts=\$(date +%Y%m%d_%H%M%S)
         cp '$CONFIG_DIR/cloudflared.yml' '$CONFIG_DIR/cloudflared.yml.bak_\$ts'
         sed -i -E '/:(8080|9000|2375|2376)/d' '$CONFIG_DIR/cloudflared.yml'
-        if systemctl is-active --quiet mornye-tunnel.service 2>/dev/null; then
-            sudo systemctl restart mornye-tunnel.service 2>/dev/null || true
+        if docker ps --format '{{.Names}}' 2>/dev/null | grep -qw 'mornye-tunnel'; then
+            docker compose restart tunnel 2>/dev/null || true
         fi
     "
 
@@ -767,6 +765,64 @@ Remove private port rules from config/cloudflared.yml:
     prompt_interactive_error \
         "ERR_PRIVATE_PORT_EXPOSED" \
         "CRITICAL: Private Management Port Exposed in Ingress" \
+        "$what" \
+        "$why" \
+        "$comp" \
+        "$risk" \
+        "$sol" \
+        "$exact_changes" \
+        "$fix_cmd" \
+        "$manual_cmd" \
+        "$verify_cmd"
+}
+
+# Handler 10b: Cloudflare Credentials Recovery
+repair_cloudflare_credentials() {
+    if [[ ! -f "$CONFIG_DIR/cloudflared.yml" ]]; then
+        return 0
+    fi
+
+    # Check if credentials.json is valid
+    if [[ -f "$CONFIG_DIR/credentials.json" && ! -d "$CONFIG_DIR/credentials.json" ]]; then
+        if grep -q '"AccountTag"' "$CONFIG_DIR/credentials.json" 2>/dev/null && grep -q '"TunnelSecret"' "$CONFIG_DIR/credentials.json" 2>/dev/null; then
+            return 0
+        fi
+    fi
+
+    local t_id=""
+    t_id=$(grep -E '^tunnel:[[:space:]]+' "$CONFIG_DIR/cloudflared.yml" | head -n1 | awk '{print $2}' || true)
+
+    local what="Tunnel configuration exists at config/cloudflared.yml, but credentials file (config/credentials.json) is missing or invalid."
+    local why="A tunnel credentials JSON file is required for cloudflared to authenticate. Note: cert.pem is an origin certificate used for creating tunnels and cannot be renamed or passed directly as credentials.json."
+    local comp="Cloudflare Zero-Trust Credentials (config/credentials.json)"
+    local risk="LOW (Reconstructs credentials JSON from token or searches local .cloudflared stores)"
+    local sol="Extract credentials JSON via cloudflared tunnel token or local store with mode 644."
+
+    local exact_changes="1. Remove directory artifact if config/credentials.json was auto-created as directory
+2. Query 'cloudflared tunnel token ${t_id}'
+3. Decode base64 payload and synthesize valid JSON credentials
+4. Apply mode 644 (readable by container user nonroot)"
+
+    local fix_cmd="
+        if [[ -f '$PROGRAM_DIR/scripts/cloudflare_manager.sh' ]]; then
+            '$PROGRAM_DIR/scripts/cloudflare_manager.sh' create mornye-storage 2>/dev/null || true
+        fi
+    "
+
+    local manual_cmd="
+Extract credentials via token:
+  cloudflared tunnel token ${t_id}
+Or re-run:
+  ./mornye.sh tunnel setup
+"
+
+    local verify_cmd="
+        [[ -f '$CONFIG_DIR/credentials.json' && ! -d '$CONFIG_DIR/credentials.json' ]] && grep -q '\"AccountTag\"' '$CONFIG_DIR/credentials.json'
+    "
+
+    prompt_interactive_error \
+        "ERR_CLOUDFLARE_CREDS_MISSING" \
+        "Cloudflare Tunnel Credentials Missing or Invalid" \
         "$what" \
         "$why" \
         "$comp" \
@@ -854,6 +910,7 @@ run_preflight_checks() {
         tunnel)
             repair_private_port_exposed || rc=$?
             repair_cloudflare_ingress_mismatch || rc=$?
+            repair_cloudflare_credentials || rc=$?
             ;;
         runtime|all|*)
             repair_docker_daemon || rc=$?
@@ -865,6 +922,7 @@ run_preflight_checks() {
             repair_unhealthy_container || rc=$?
             repair_cloudflare_ingress_mismatch || rc=$?
             repair_private_port_exposed || rc=$?
+            repair_cloudflare_credentials || rc=$?
             ;;
     esac
 

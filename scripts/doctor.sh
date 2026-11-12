@@ -740,10 +740,10 @@ audit_cloudflare() {
     # Detect execution mode
     if docker ps --format '{{.Names}}' 2>/dev/null | grep -qw "mornye-tunnel"; then
         CLOUDFLARE_RUNTIME_MODE="docker"
-    elif systemctl is-active --quiet mornye-tunnel.service 2>/dev/null; then
-        CLOUDFLARE_RUNTIME_MODE="systemd"
-    elif pgrep -x cloudflared &>/dev/null; then
-        CLOUDFLARE_RUNTIME_MODE="standalone_process"
+    elif [[ -f "$CONFIG_DIR/tunnel_info.env" ]] && grep -q '^TUNNEL_MODE="host"' "$CONFIG_DIR/tunnel_info.env" 2>/dev/null; then
+        CLOUDFLARE_RUNTIME_MODE="host"
+    elif [[ -f "$CONFIG_DIR/cloudflared.yml" ]]; then
+        CLOUDFLARE_RUNTIME_MODE="configured_inactive"
     else
         CLOUDFLARE_RUNTIME_MODE="inactive"
     fi
@@ -758,7 +758,7 @@ audit_cloudflare() {
             if [[ "$target" != "http://webdav:8000"* ]]; then
                 FINDINGS_WARNINGS+=("TUNNEL_ORIGIN_MISMATCH|Docker tunnel ingress points to '$target' instead of 'http://webdav:8000'.|Update ingress service to 'http://webdav:8000' in config/cloudflared.yml.")
             fi
-        elif [[ "$CLOUDFLARE_RUNTIME_MODE" == "systemd" ]]; then
+        elif [[ "$CLOUDFLARE_RUNTIME_MODE" == "host" || "$CLOUDFLARE_RUNTIME_MODE" == "systemd" ]]; then
             if [[ "$target" != *"127.0.0.1:${MORNYE_HOST_PORT}"* && "$target" != *"localhost:${MORNYE_HOST_PORT}"* ]]; then
                 FINDINGS_WARNINGS+=("TUNNEL_ORIGIN_MISMATCH|Host tunnel ingress points to '$target' instead of 'http://127.0.0.1:${MORNYE_HOST_PORT}'.|Update ingress target in config/cloudflared.yml to match host port $MORNYE_HOST_PORT.")
             fi

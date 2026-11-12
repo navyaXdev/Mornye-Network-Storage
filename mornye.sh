@@ -20,8 +20,19 @@ BACKUP_DIR="$PROGRAM_DIR/backups"
 RUN_DIR="$PROGRAM_DIR/run"
 CONFIG_DIR="$PROGRAM_DIR/config"
 SCRIPTS_DIR="$PROGRAM_DIR/scripts"
+LIB_DIR="$PROGRAM_DIR/scripts/lib"
 
 mkdir -p "$LOG_DIR" "$RUN_DIR" "$DATA_DIR" "$STORAGE_DIR" "$BACKUP_DIR" "$CONFIG_DIR"
+
+# Source compatibility engine and port manager if available
+if [[ -f "$LIB_DIR/compat.sh" ]]; then
+    # shellcheck disable=SC1091
+    source "$LIB_DIR/compat.sh"
+fi
+if [[ -f "$LIB_DIR/port_manager.sh" ]]; then
+    # shellcheck disable=SC1091
+    source "$LIB_DIR/port_manager.sh"
+fi
 
 # Source environment configuration for configurable host port and host binding
 load_env() {
@@ -276,9 +287,12 @@ cmd_status() {
         echo -e "Mornye Tunnel Container : $tunnel_container_status"
     fi
 
-    # 2. Systemd Tunnel Status (if applicable)
+    # 2. Host Protected Services Overview
     if systemctl is-active --quiet mornye-tunnel.service 2>/dev/null; then
-        echo -e "Systemd Tunnel Service  : ${GREEN}ACTIVE (mornye-tunnel.service)${NC}"
+        echo -e "Protected Host Tunnel   : ${GREEN}ACTIVE (mornye-tunnel.service on port 20241 - Untouched)${NC}"
+    fi
+    if systemctl is-active --quiet mornye-storage.service 2>/dev/null; then
+        echo -e "Protected Host Service  : ${GREEN}ACTIVE (mornye-storage.service on port 8000 - Untouched)${NC}"
     fi
 
     # 3. Permanent Tunnel Info

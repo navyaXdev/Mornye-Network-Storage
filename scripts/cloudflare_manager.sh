@@ -12,8 +12,19 @@ PROGRAM_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONFIG_DIR="$PROGRAM_DIR/config"
 RUN_DIR="$PROGRAM_DIR/run"
 LOG_DIR="$PROGRAM_DIR/logs"
+LIB_DIR="$PROGRAM_DIR/scripts/lib"
 
 mkdir -p "$CONFIG_DIR" "$RUN_DIR" "$LOG_DIR"
+
+# Source compatibility engine and port manager
+if [[ -f "$LIB_DIR/compat.sh" ]]; then
+    # shellcheck disable=SC1091
+    source "$LIB_DIR/compat.sh"
+fi
+if [[ -f "$LIB_DIR/port_manager.sh" ]]; then
+    # shellcheck disable=SC1091
+    source "$LIB_DIR/port_manager.sh"
+fi
 
 if [[ -f "$PROGRAM_DIR/.env" ]]; then
     # shellcheck disable=SC1090
@@ -43,23 +54,56 @@ has_cmd() {
     command -v "$1" &>/dev/null
 }
 
+get_cloudflared_bin() {
+    if has_cmd cloudflared; then
+        echo "cloudflared"
+    elif [[ -x /usr/local/bin/cloudflared ]]; then
+        echo "/usr/local/bin/cloudflared"
+    else
+        echo ""
+    fi
+}
+
 check_cloudflared() {
-    if ! has_cmd cloudflared && [[ ! -x /usr/local/bin/cloudflared ]]; then
+    local bin
+    bin="$(get_cloudflared_bin)"
+    if [[ -z "$bin" ]]; then
         echo -e "${RED}[ERROR] 'cloudflared' CLI binary is not installed.${NC}"
-        echo -e "Install via: ./mornye.sh install  or download from Cloudflare."
+        echo -e "Install via: ./setup.sh or download from Cloudflare."
         return 1
     fi
     return 0
 }
 
 check_webdav_health() {
+    local host_port="${MORNYE_HOST_PORT:-8001}"
+    local host_bind="${MORNYE_HOST_BIND:-127.0.0.1}"
     local code
-    code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 "http://${MORNYE_HOST_BIND}:${MORNYE_HOST_PORT}/health" 2>/dev/null || echo "000")
+    code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 "http://${host_bind}:${host_port}/health" 2>/dev/null || echo "000")
     if [[ "$code" == "200" ]]; then
         return 0
     else
         return 1
     fi
+}
+
+find_origin_certificate() {
+    local candidates=(
+        "${HOME}/.cloudflared/cert.pem"
+        "/root/.cloudflared/cert.pem"
+        "/etc/cloudflared/cert.pem"
+        "${REAL_USER_HOME:-}/.cloudflared/cert.pem"
+    )
+    for c in "${candidates[@]}"; do
+        if [[ -n "$c" && -f "$c" && ! -d "$c" ]]; then
+            # Verify file has PEM header
+            if grep -q "BEGIN CERTIFICATE" "$c" 2>/dev/null || grep -q "BEGIN PRIVATE KEY" "$c" 2>/dev/null; then
+                echo "$c"
+                return 0
+            fi
+        fi
+    done
+    return 1
 }
 
 load_tunnel_metadata() {
@@ -82,15 +126,103 @@ EOF
 }
 
 # ------------------------------------------------------------------------------
-# 2. AUTHENTICATION & LOGIN
+# 2. CREDENTIAL RECOVERY & PERMISSION MANAGEMENT
+# ------------------------------------------------------------------------------
+
+# Ensures config/credentials.json is a valid regular JSON file with readable permissions
+ensure_credentials_file() {
+    local t_id="$1"
+    local t_name="${2:-mornye-storage}"
+    local cf_bin
+    cf_bin="$(get_cloudflared_bin)"
+
+    # If target is accidentally a directory (Docker mount artifact), remove it safely
+    if [[ -d "$CREDENTIALS_FILE" ]]; then
+        echo -e "${YELLOW}[!] Warning: $CREDENTIALS_FILE was created as a directory. Correcting...${NC}"
+        rmdir "$CREDENTIALS_FILE" 2>/dev/null || rm -rf "$CREDENTIALS_FILE"
+    fi
+
+    # Check if file already exists and is valid JSON
+    if [[ -f "$CREDENTIALS_FILE" && ! -d "$CREDENTIALS_FILE" ]]; then
+        if grep -q '"AccountTag"' "$CREDENTIALS_FILE" 2>/dev/null && grep -q '"TunnelSecret"' "$CREDENTIALS_FILE" 2>/dev/null; then
+            chmod 644 "$CREDENTIALS_FILE"
+            return 0
+        fi
+    fi
+
+    # Search local candidate paths
+    local search_paths=(
+        "${HOME}/.cloudflared/${t_id}.json"
+        "/root/.cloudflared/${t_id}.json"
+        "/etc/cloudflared/${t_id}.json"
+        "${REAL_USER_HOME:-}/.cloudflared/${t_id}.json"
+    )
+    for sp in "${search_paths[@]}"; do
+        if [[ -n "$sp" && -f "$sp" && ! -d "$sp" ]]; then
+            if grep -q '"AccountTag"' "$sp" 2>/dev/null; then
+                cp "$sp" "$CREDENTIALS_FILE"
+                chmod 644 "$CREDENTIALS_FILE"
+                echo -e "${GREEN}[✔] Sourced credentials JSON from $sp${NC}"
+                return 0
+            fi
+        fi
+    done
+
+    # Recovery via cloudflared tunnel token
+    if [[ -n "$cf_bin" && -n "$t_id" ]]; then
+        echo -e "[*] Attempting credentials recovery via Cloudflare tunnel token..."
+        local raw_token
+        raw_token=$($cf_bin tunnel token "$t_id" 2>/dev/null || $cf_bin tunnel token "$t_name" 2>/dev/null || true)
+        
+        if [[ -n "$raw_token" ]]; then
+            python3 -c "
+import sys, base64, json
+try:
+    token = '''$raw_token'''.strip()
+    pad = len(token) % 4
+    if pad:
+        token += '=' * (4 - pad)
+    data = json.loads(base64.b64decode(token).decode('utf-8'))
+    creds = {
+        'AccountTag': data.get('a', ''),
+        'TunnelID': data.get('t', ''),
+        'TunnelSecret': data.get('s', '')
+    }
+    if creds['AccountTag'] and creds['TunnelSecret']:
+        with open('$CREDENTIALS_FILE', 'w') as f:
+            json.dump(creds, f, indent=2)
+        print('SUCCESS')
+        sys.exit(0)
+    sys.exit(1)
+except Exception as e:
+    sys.exit(1)
+" 2>/dev/null
+            if [[ $? -eq 0 && -f "$CREDENTIALS_FILE" ]]; then
+                chmod 644 "$CREDENTIALS_FILE"
+                echo -e "${GREEN}[✔] Successfully reconstructed credentials JSON via token.${NC}"
+                return 0
+            fi
+        fi
+    fi
+
+    echo -e "${YELLOW}[!] Warning: Could not automatically locate or reconstruct credentials.json.${NC}"
+    return 1
+}
+
+# ------------------------------------------------------------------------------
+# 3. AUTHENTICATION & LOGIN
 # ------------------------------------------------------------------------------
 
 cmd_login() {
     check_cloudflared || return 1
+    local cf_bin
+    cf_bin="$(get_cloudflared_bin)"
 
-    local cert_file="$HOME/.cloudflared/cert.pem"
-    if [[ -f "$cert_file" ]]; then
-        echo -e "${GREEN}[✔] Existing Cloudflare certificate detected at $cert_file${NC}"
+    local existing_cert
+    existing_cert="$(find_origin_certificate || true)"
+    if [[ -n "$existing_cert" ]]; then
+        echo -e "${GREEN}[✔] Existing Cloudflare origin certificate detected: $existing_cert${NC}"
+        echo -e "    Notice: cert.pem authorizes tunnel creation and token management."
         read -p "Re-authenticate with Cloudflare in browser? [y/N]: " -r reauth
         if [[ ! "$reauth" =~ ^[Yy]$ ]]; then
             return 0
@@ -99,39 +231,50 @@ cmd_login() {
 
     echo -e "${BOLD}[*] Launching Cloudflare browser authentication...${NC}"
     echo -e "    A browser link will appear. Select your domain zone in the Cloudflare Dashboard."
-    cloudflared tunnel login
-    if [[ -f "$HOME/.cloudflared/cert.pem" ]]; then
-        echo -e "${GREEN}[✔] Cloudflare certificate generated successfully: $HOME/.cloudflared/cert.pem${NC}"
+    $cf_bin tunnel login
+
+    local new_cert
+    new_cert="$(find_origin_certificate || true)"
+    if [[ -n "$new_cert" ]]; then
+        echo -e "${GREEN}[✔] Cloudflare certificate verified: $new_cert${NC}"
     else
-        echo -e "${RED}[ERROR] Cloudflare login failed or cert.pem not found.${NC}"
+        echo -e "${RED}[ERROR] Cloudflare login completed but cert.pem was not found in standard paths.${NC}"
         return 1
     fi
 }
 
 # ------------------------------------------------------------------------------
-# 3. TUNNEL CREATION
+# 4. TUNNEL CREATION & EXISTING TUNNEL REUSE
 # ------------------------------------------------------------------------------
 
 cmd_create() {
     check_cloudflared || return 1
     local name="${1:-mornye-storage}"
+    local cf_bin
+    cf_bin="$(get_cloudflared_bin)"
 
     load_tunnel_metadata
 
-    echo -e "${BOLD}[*] Checking existing Cloudflare tunnels for '$name'...${NC}"
+    echo -e "${BOLD}[*] Inspecting existing Cloudflare tunnels for '$name'...${NC}"
     local existing_id=""
-    if cloudflared tunnel list 2>/dev/null | grep -qw "$name"; then
-        existing_id=$(cloudflared tunnel list 2>/dev/null | grep -w "$name" | head -n1 | awk '{print $1}')
-        echo -e "${GREEN}[✔] Found existing tunnel '$name' (UUID: $existing_id)${NC}"
+    local list_output
+    list_output="$($cf_bin tunnel list 2>/dev/null || true)"
+
+    if echo "$list_output" | grep -qw "$name"; then
+        existing_id=$(echo "$list_output" | grep -w "$name" | head -n1 | awk '{print $1}')
+        echo -e "${GREEN}[✔] Found existing Cloudflare tunnel '$name' (UUID: $existing_id)${NC}"
+        echo -e "    Reusing existing tunnel without creating duplicates."
     fi
 
+    # Create only if tunnel does not exist
     if [[ -z "$existing_id" ]]; then
         echo -e "[*] Creating new Cloudflare Tunnel: '$name'..."
-        if ! cloudflared tunnel create "$name"; then
-            echo -e "${RED}[ERROR] Failed to create tunnel '$name'. Ensure you are logged in via './mornye.sh tunnel login'.${NC}"
+        if ! $cf_bin tunnel create "$name"; then
+            echo -e "${RED}[ERROR] Failed to create tunnel '$name'. Ensure login cert is present via './mornye.sh tunnel login'.${NC}"
             return 1
         fi
-        existing_id=$(cloudflared tunnel list 2>/dev/null | grep -w "$name" | head -n1 | awk '{print $1}')
+        list_output="$($cf_bin tunnel list 2>/dev/null || true)"
+        existing_id=$(echo "$list_output" | grep -w "$name" | head -n1 | awk '{print $1}')
     fi
 
     if [[ -z "$existing_id" ]]; then
@@ -141,29 +284,22 @@ cmd_create() {
 
     TUNNEL_NAME="$name"
     TUNNEL_ID="$existing_id"
-
-    # Copy credential JSON to project config
-    local src_cred="$HOME/.cloudflared/${TUNNEL_ID}.json"
-    if [[ -f "$src_cred" ]]; then
-        cp "$src_cred" "$CREDENTIALS_FILE"
-        chmod 600 "$CREDENTIALS_FILE"
-        echo -e "${GREEN}[✔] Tunnel credentials secured at $CREDENTIALS_FILE${NC}"
-    elif [[ -f "$CREDENTIALS_FILE" ]]; then
-        echo -e "${GREEN}[✔] Existing project credentials file preserved at $CREDENTIALS_FILE${NC}"
-    else
-        echo -e "${YELLOW}[!] Warning: Credentials JSON not found in ~/.cloudflared or $CREDENTIALS_FILE${NC}"
-    fi
-
     save_tunnel_metadata
+
+    # Retrieve and secure credentials JSON
+    ensure_credentials_file "$TUNNEL_ID" "$TUNNEL_NAME" || true
+
     echo -e "${GREEN}[✔] Tunnel configured: Name='$TUNNEL_NAME', UUID='$TUNNEL_ID'${NC}"
 }
 
 # ------------------------------------------------------------------------------
-# 4. CUSTOM DOMAIN ROUTING (ADD / REMOVE)
+# 5. CUSTOM DOMAIN ROUTING (STRUCTURAL YAML MANAGEMENT)
 # ------------------------------------------------------------------------------
 
 cmd_domain_add() {
     check_cloudflared || return 1
+    local cf_bin
+    cf_bin="$(get_cloudflared_bin)"
     load_tunnel_metadata
 
     local domain="$1"
@@ -183,26 +319,28 @@ cmd_domain_add() {
     fi
 
     if [[ -z "$TUNNEL_ID" ]]; then
-        echo -e "${YELLOW}[!] Tunnel not created yet. Initializing tunnel first...${NC}"
+        echo -e "${YELLOW}[!] Tunnel not initialized. Initializing tunnel '$TUNNEL_NAME'...${NC}"
         cmd_create "${TUNNEL_NAME:-mornye-storage}" || return 1
     fi
 
     echo -e "${BOLD}[*] Routing DNS CNAME for '$domain' to Tunnel '$TUNNEL_ID'...${NC}"
-    if cloudflared tunnel route dns "$TUNNEL_ID" "$domain"; then
+    if $cf_bin tunnel route dns "$TUNNEL_ID" "$domain" 2>/dev/null; then
         echo -e "${GREEN}[✔] Cloudflare DNS CNAME route created: $domain -> ${TUNNEL_ID}.cfargotunnel.com${NC}"
     else
-        echo -e "${YELLOW}[!] Note: DNS route may already exist in your Cloudflare zone or requires manual check.${NC}"
+        echo -e "${YELLOW}[!] Note: DNS route may already exist in your Cloudflare zone or require zone access.${NC}"
     fi
 
-    # Update cloudflared.yml ingress configuration
     CUSTOM_DOMAIN="$domain"
     save_tunnel_metadata
 
+    # Target origin configuration:
+    # Inside docker network, tunnel reaches webdav container directly
     local target_origin="http://webdav:8000"
-    if [[ "${TUNNEL_MODE:-}" == "systemd" ]]; then
+    if [[ "${TUNNEL_MODE:-}" == "host" || "${TUNNEL_MODE:-}" == "systemd" ]]; then
         target_origin="http://${MORNYE_HOST_BIND}:${MORNYE_HOST_PORT}"
     fi
 
+    # Write structural cloudflared.yml
     cat << YMLEOF > "$TUNNEL_CONFIG"
 # ==============================================================================
 # MORNYE ZERO-TRUST WEBDAV INGRESS CONFIGURATION
@@ -221,8 +359,11 @@ ingress:
   # Default catch-all (strictly reject unmapped domains or path traversal)
   - service: http_status:404
 YMLEOF
-    chmod 600 "$TUNNEL_CONFIG"
-    echo -e "${GREEN}[✔] Ingress configuration generated at $TUNNEL_CONFIG${NC}"
+    chmod 644 "$TUNNEL_CONFIG"
+    echo -e "${GREEN}[✔] Structural ingress configuration written to $TUNNEL_CONFIG${NC}"
+
+    # Ensure credentials file is ready for container mount
+    ensure_credentials_file "$TUNNEL_ID" "$TUNNEL_NAME" || true
 
     # Update .env STORAGE_HOSTNAME
     if [[ -f "$PROGRAM_DIR/.env" ]]; then
@@ -247,19 +388,18 @@ cmd_domain_remove() {
 
     echo -e "${YELLOW}==============================================================${NC}"
     echo -e "${BOLD}CONFIRM CUSTOM DOMAIN REMOVAL${NC}"
-    echo -e "Domain to remove: ${RED}$domain${NC}"
-    echo -e "Tunnel UUID     : $TUNNEL_ID"
-    echo -e "Notice: This will disassociate the hostname from Mornye WebDAV."
+    echo -e "Domain to decouple : ${RED}$domain${NC}"
+    echo -e "Tunnel UUID        : $TUNNEL_ID"
+    echo -e "Notice: Decouples hostname routing for Mornye WebDAV."
     echo -e "        The Cloudflare zone and permanent tunnel will NOT be deleted."
     echo -e "${YELLOW}==============================================================${NC}"
 
-    read -p "Proceed with removing domain '$domain'? [y/N]: " -r confirm
+    read -p "Proceed with decoupling domain '$domain'? [y/N]: " -r confirm
     if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
         echo -e "[*] Removal aborted by operator."
         return 0
     fi
 
-    echo -e "[*] Updating local ingress rules..."
     cat << YMLEOF > "$TUNNEL_CONFIG"
 tunnel: ${TUNNEL_ID}
 credentials-file: /etc/cloudflared/credentials.json
@@ -267,7 +407,7 @@ credentials-file: /etc/cloudflared/credentials.json
 ingress:
   - service: http_status:404
 YMLEOF
-    chmod 600 "$TUNNEL_CONFIG"
+    chmod 644 "$TUNNEL_CONFIG"
 
     CUSTOM_DOMAIN=""
     save_tunnel_metadata
@@ -275,7 +415,7 @@ YMLEOF
 }
 
 # ------------------------------------------------------------------------------
-# 5. PERMANENT TUNNEL SETUP (GUIDED WIZARD)
+# 6. PERMANENT TUNNEL SETUP (GUIDED WIZARD)
 # ------------------------------------------------------------------------------
 
 cmd_setup() {
@@ -289,12 +429,14 @@ EOF
 
     check_cloudflared || return 1
 
-    # 1. WebDAV local check
+    # 1. Local WebDAV service verification
+    local h_port="${MORNYE_HOST_PORT:-8001}"
+    local h_bind="${MORNYE_HOST_BIND:-127.0.0.1}"
     echo -e "${BOLD}[1/5] Checking Local WebDAV Service...${NC}"
     if check_webdav_health; then
-        echo -e "  - Local WebDAV : ${GREEN}[✔] Healthy (http://127.0.0.1:8000/health: 200 OK)${NC}"
+        echo -e "  - Local WebDAV : ${GREEN}[✔] Healthy (http://${h_bind}:${h_port}/health: 200 OK)${NC}"
     else
-        echo -e "  - Local WebDAV : ${YELLOW}[!] Container not running on port 8000.${NC}"
+        echo -e "  - Local WebDAV : ${YELLOW}[!] WebDAV not responding on http://${h_bind}:${h_port}/health.${NC}"
         echo -e "    Starting Mornye Docker stack now..."
         (cd "$PROGRAM_DIR" && docker compose up -d webdav)
         sleep 3
@@ -302,10 +444,12 @@ EOF
 
     # 2. Authentication check
     echo -e "\n${BOLD}[2/5] Verifying Cloudflare Authentication...${NC}"
-    if [[ ! -f "$HOME/.cloudflared/cert.pem" ]]; then
+    local existing_cert
+    existing_cert="$(find_origin_certificate || true)"
+    if [[ -z "$existing_cert" ]]; then
         cmd_login || return 1
     else
-        echo -e "  - Cloudflare Cert : ${GREEN}[✔] Authenticated ($HOME/.cloudflared/cert.pem)${NC}"
+        echo -e "  - Cloudflare Cert : ${GREEN}[✔] Authenticated ($existing_cert)${NC}"
     fi
 
     # 3. Tunnel Name & Creation
@@ -322,7 +466,7 @@ EOF
     fi
 
     # 5. Service Launch
-    echo -e "\n${BOLD}[5/5] Launching Permanent Tunnel...${NC}"
+    echo -e "\n${BOLD}[5/5] Launching Permanent Tunnel Container...${NC}"
     cmd_start
 
     echo ""
@@ -330,7 +474,7 @@ EOF
 }
 
 # ------------------------------------------------------------------------------
-# 6. LIFECYCLE MANAGEMENT (START / STOP / RESTART / STATUS / LOGS / TEST)
+# 7. LIFECYCLE MANAGEMENT (START / STOP / RESTART / STATUS / LOGS / TEST)
 # ------------------------------------------------------------------------------
 
 cmd_start() {
@@ -341,8 +485,16 @@ cmd_start() {
         return 1
     fi
 
-    if [[ ! -f "$TUNNEL_CONFIG" ]] || [[ ! -f "$CREDENTIALS_FILE" ]]; then
-        echo -e "${RED}[ERROR] Missing tunnel configuration or credentials in config/.${NC}"
+    # Verify and ensure credentials exist BEFORE launching container
+    if ! ensure_credentials_file "$TUNNEL_ID" "$TUNNEL_NAME"; then
+        echo -e "${RED}[ERROR] Missing tunnel credentials file ($CREDENTIALS_FILE).${NC}"
+        echo -e "        Run './mornye.sh tunnel create' or ensure cert.pem is available for token recovery."
+        return 1
+    fi
+
+    if [[ ! -f "$TUNNEL_CONFIG" ]]; then
+        echo -e "${RED}[ERROR] Missing ingress configuration at $TUNNEL_CONFIG.${NC}"
+        echo -e "        Run './mornye.sh tunnel domain add <hostname>' to generate."
         return 1
     fi
 
@@ -354,12 +506,7 @@ cmd_start() {
 cmd_stop() {
     echo -e "[*] Stopping permanent Cloudflare Tunnel container..."
     (cd "$PROGRAM_DIR" && docker compose --profile tunnel stop tunnel 2>/dev/null || true)
-    
-    # Also stop systemd unit if it was running on host
-    if command -v systemctl &>/dev/null; then
-        sudo systemctl stop mornye-tunnel.service 2>/dev/null || true
-    fi
-    echo -e "${GREEN}[✔] Permanent tunnel stopped.${NC}"
+    echo -e "${GREEN}[✔] Permanent tunnel container stopped.${NC}"
 }
 
 cmd_restart() {
@@ -378,14 +525,19 @@ cmd_status() {
     echo -e "Tunnel UUID           : ${TUNNEL_ID:-Not configured}"
     echo -e "Custom Domain         : ${CUSTOM_DOMAIN:-None (Local only)}"
     
-    local container_state="STOPPED"
-    if (cd "$PROGRAM_DIR" && docker ps --format '{{.Names}}' | grep -qw "mornye-tunnel"); then
+    local container_state="STOPPED / INACTIVE"
+    if (cd "$PROGRAM_DIR" && docker ps --format '{{.Names}}' 2>/dev/null | grep -qw "mornye-tunnel"); then
         container_state="RUNNING (Container: mornye-tunnel)"
         echo -e "Service Mode          : ${GREEN}$container_state${NC}"
-    elif command -v systemctl &>/dev/null && systemctl is-active mornye-tunnel.service &>/dev/null; then
-        echo -e "Service Mode          : ${GREEN}RUNNING (Host systemd unit)${NC}"
     else
-        echo -e "Service Mode          : ${YELLOW}STOPPED / INACTIVE${NC}"
+        echo -e "Service Mode          : ${YELLOW}$container_state${NC}"
+    fi
+
+    # Display credentials status
+    if [[ -f "$CREDENTIALS_FILE" && ! -d "$CREDENTIALS_FILE" ]]; then
+        echo -e "Credentials JSON      : ${GREEN}[✔] Valid ($CREDENTIALS_FILE)${NC}"
+    else
+        echo -e "Credentials JSON      : ${RED}[✘] Missing${NC}"
     fi
 
     if [[ -n "$CUSTOM_DOMAIN" ]]; then
@@ -408,12 +560,10 @@ cmd_logs() {
         fi
     done
 
-    if (cd "$PROGRAM_DIR" && docker ps --format '{{.Names}}' | grep -qw "mornye-tunnel"); then
+    if (cd "$PROGRAM_DIR" && docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qw "mornye-tunnel"); then
         (cd "$PROGRAM_DIR" && docker compose logs -n "$lines" $follow tunnel)
-    elif command -v journalctl &>/dev/null; then
-        journalctl --no-pager -u mornye-tunnel.service -n "$lines" $follow 2>/dev/null || echo "No logs found."
     else
-        echo "No active tunnel service found."
+        echo "No mornye-tunnel container found."
     fi
 }
 
@@ -437,11 +587,13 @@ cmd_test() {
 }
 
 # ------------------------------------------------------------------------------
-# 7. QUICK TUNNEL MANAGEMENT (EPHEMERAL TEST MODE)
+# 8. QUICK TUNNEL MANAGEMENT (EPHEMERAL TEST MODE)
 # ------------------------------------------------------------------------------
 
 cmd_quick_start() {
     check_cloudflared || return 1
+    local cf_bin
+    cf_bin="$(get_cloudflared_bin)"
 
     # Check if already running
     if [[ -f "$RUN_DIR/quick_tunnel.pid" ]]; then
@@ -498,7 +650,7 @@ cmd_quick_start() {
     rm -f "$log_file" "$RUN_DIR/quick_tunnel.url"
 
     echo -e "[*] Requesting temporary Quick Tunnel via trycloudflare.com..."
-    nohup cloudflared tunnel --url "http://${MORNYE_HOST_BIND}:${MORNYE_HOST_PORT}" --no-autoupdate > "$log_file" 2>&1 &
+    nohup "$cf_bin" tunnel --url "http://${MORNYE_HOST_BIND}:${MORNYE_HOST_PORT}" --no-autoupdate > "$log_file" 2>&1 &
     local q_pid=$!
     echo "$q_pid" > "$RUN_DIR/quick_tunnel.pid"
 
@@ -581,7 +733,6 @@ cmd_quick_stop() {
     local pid
     pid=$(cat "$RUN_DIR/quick_tunnel.pid" 2>/dev/null || true)
     if [[ -n "$pid" ]]; then
-        # Check process ownership to avoid broad/unsafe killing
         local proc_cmd
         proc_cmd=$(ps -p "$pid" -o comm= 2>/dev/null || true)
         if [[ "$proc_cmd" == *"cloudflared"* ]]; then
@@ -701,9 +852,9 @@ Permanent Zero-Trust Tunnel Commands:
   ./mornye.sh tunnel create [name]    Create named tunnel (default: mornye-storage)
   ./mornye.sh tunnel domain add <dom> Bind custom domain & route DNS CNAME (e.g. storage.example.com)
   ./mornye.sh tunnel domain remove    Safely disconnect custom domain routing
-  ./mornye.sh tunnel start            Start permanent Cloudflare Tunnel service
-  ./mornye.sh tunnel stop             Stop permanent Cloudflare Tunnel service
-  ./mornye.sh tunnel restart          Restart permanent Cloudflare Tunnel service
+  ./mornye.sh tunnel start            Start permanent Cloudflare Tunnel container
+  ./mornye.sh tunnel stop             Stop permanent Cloudflare Tunnel container
+  ./mornye.sh tunnel restart          Restart permanent Cloudflare Tunnel container
   ./mornye.sh tunnel status           Display tunnel health, metrics, and domain routing
   ./mornye.sh tunnel logs [-f] [N]    View tunnel runtime logs
   ./mornye.sh tunnel test             Verify WAN reachability and auth boundary
@@ -723,5 +874,6 @@ EOF
     esac
 }
 
-main "$@"
-
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi

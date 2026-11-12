@@ -233,14 +233,13 @@ stage2_storage_setup() {
     if [[ -f "$PROGRAM_DIR/.env" ]]; then
         log_ok "Environment configuration (.env) preserved (Never overwritten)."
         if ! grep -q "^MORNYE_HOST_PORT=" "$PROGRAM_DIR/.env"; then
-            if [[ "$port_8000_free" == false ]]; then
-                echo "MORNYE_HOST_PORT=8001" >> "$PROGRAM_DIR/.env"
-                echo "MORNYE_HOST_BIND=127.0.0.1" >> "$PROGRAM_DIR/.env"
-                log_ok "Port 8000 occupied by existing service (SONG Bridge). Configured MORNYE_HOST_PORT=8001."
-            else
-                echo "MORNYE_HOST_PORT=8000" >> "$PROGRAM_DIR/.env"
-                echo "MORNYE_HOST_BIND=127.0.0.1" >> "$PROGRAM_DIR/.env"
+            local chosen_port="8001"
+            if command -v port_resolve_host_port &>/dev/null; then
+                chosen_port="$(port_resolve_host_port "$PROGRAM_DIR/.env")"
             fi
+            echo "MORNYE_HOST_PORT=${chosen_port}" >> "$PROGRAM_DIR/.env"
+            echo "MORNYE_HOST_BIND=127.0.0.1" >> "$PROGRAM_DIR/.env"
+            log_ok "Configured MORNYE_HOST_PORT=${chosen_port} (Isolated from protected host services)."
         fi
     elif [[ -f "$PROGRAM_DIR/.env.example" ]]; then
         log_info "Creating .env from template .env.example..."

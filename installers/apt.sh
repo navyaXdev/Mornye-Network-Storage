@@ -94,7 +94,7 @@ mod_install_docker() {
         $SUDO_PREFIX chmod a+r /etc/apt/keyrings/docker.asc
         
         local repo_codename="${OS_CODENAME:-bookworm}"
-        if [[ "$OS_ID" =~ ^(kali|parrot)$ ]]; then
+        if [[ "$OS_ID" =~ ^(kali|parrot)$ || "$repo_codename" =~ ^(trixie|sid|testing|unstable)$ ]]; then
             repo_codename="bookworm"
         fi
         echo "deb [arch=${DEB_ARCH} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/${distro_base} ${repo_codename} stable" | \

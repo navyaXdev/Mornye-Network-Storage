@@ -18,6 +18,12 @@ CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m'
 
+PROGRAM_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if [[ -f "$PROGRAM_DIR/scripts/lib/compat.sh" ]]; then
+    # shellcheck disable=SC1091
+    source "$PROGRAM_DIR/scripts/lib/compat.sh"
+fi
+
 # Telemetry Globals
 OS_ID="unknown"
 OS_ID_LIKE=""
