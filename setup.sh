@@ -174,6 +174,11 @@ stage1_welcome_and_audit() {
     # shellcheck disable=SC1090
     source "$pkg_module"
 
+    if [[ "$CHECK_ONLY" == true ]]; then
+        log_ok "System audit and distribution compatibility check completed successfully."
+        return 0
+    fi
+
     if [[ "$NON_INTERACTIVE" != true ]]; then
         read -p "  Proceed with Mornye installation on this system? [Y/n]: " -r confirm_stage1
         if [[ "$confirm_stage1" =~ ^[Nn]$ ]]; then
@@ -188,6 +193,9 @@ stage1_welcome_and_audit() {
 # ------------------------------------------------------------------------------
 
 stage2_storage_setup() {
+    if [[ "$CHECK_ONLY" == true ]]; then
+        return 0
+    fi
     log_step "[Stage 2/6] Provisioning Persistent Storage & Hardening Permissions..."
 
     local dirs=(
@@ -217,8 +225,23 @@ stage2_storage_setup() {
     log_ok "Storage permissions hardened: database/backups (700), storage/logs (755)."
 
     # Environment Configuration (.env)
+    local port_8000_free=true
+    if (echo > "/dev/tcp/127.0.0.1/8000") 2>/dev/null; then
+        port_8000_free=false
+    fi
+
     if [[ -f "$PROGRAM_DIR/.env" ]]; then
         log_ok "Environment configuration (.env) preserved (Never overwritten)."
+        if ! grep -q "^MORNYE_HOST_PORT=" "$PROGRAM_DIR/.env"; then
+            if [[ "$port_8000_free" == false ]]; then
+                echo "MORNYE_HOST_PORT=8001" >> "$PROGRAM_DIR/.env"
+                echo "MORNYE_HOST_BIND=127.0.0.1" >> "$PROGRAM_DIR/.env"
+                log_ok "Port 8000 occupied by existing service (SONG Bridge). Configured MORNYE_HOST_PORT=8001."
+            else
+                echo "MORNYE_HOST_PORT=8000" >> "$PROGRAM_DIR/.env"
+                echo "MORNYE_HOST_BIND=127.0.0.1" >> "$PROGRAM_DIR/.env"
+            fi
+        fi
     elif [[ -f "$PROGRAM_DIR/.env.example" ]]; then
         log_info "Creating .env from template .env.example..."
         cp "$PROGRAM_DIR/.env.example" "$PROGRAM_DIR/.env"
@@ -226,6 +249,10 @@ stage2_storage_setup() {
         local rand_key
         rand_key=$(head -c 32 /dev/urandom | od -A n -t x1 | tr -d ' \n' 2>/dev/null || date +%s%N | sha256sum | head -c 64)
         sed -i "s/SECRET_KEY=.*/SECRET_KEY=$rand_key/" "$PROGRAM_DIR/.env"
+        if [[ "$port_8000_free" == false ]]; then
+            sed -i "s/^MORNYE_HOST_PORT=.*/MORNYE_HOST_PORT=8001/" "$PROGRAM_DIR/.env" 2>/dev/null || echo "MORNYE_HOST_PORT=8001" >> "$PROGRAM_DIR/.env"
+            log_ok "Port 8000 is occupied by existing service. Auto-assigned MORNYE_HOST_PORT=8001."
+        fi
         chmod 600 "$PROGRAM_DIR/.env"
         log_ok "Generated cryptographically secure 64-character SECRET_KEY in .env."
     else
@@ -236,13 +263,15 @@ DEBUG=false
 SECRET_KEY=mornye-production-secret-must-be-changed-in-production
 WEBDAV_HOST=0.0.0.0
 WEBDAV_PORT=8000
+MORNYE_HOST_BIND=127.0.0.1
+MORNYE_HOST_PORT=8001
 DEFAULT_STORAGE_QUOTA_BYTES=107374182400
 MAX_UPLOAD_SIZE_BYTES=2147483648
 STORAGE_HOSTNAME=storage.example.com
 PUBLIC_DOMAIN=example.com
 ENVEOF
         chmod 600 "$PROGRAM_DIR/.env"
-        log_ok "Default .env configuration created."
+        log_ok "Default .env configuration created (MORNYE_HOST_PORT=8001)."
     fi
 }
 
@@ -313,15 +342,28 @@ stage3_dependencies_and_docker() {
 
     # 5. Start Container Stack
     log_info "Starting Mornye containerized stack..."
+    if [[ -f "$SCRIPTS_DIR/repair_engine.sh" ]]; then
+        local r_args=(preflight start)
+        [[ "$NON_INTERACTIVE" == true ]] && r_args=(--yes preflight start)
+        "$SCRIPTS_DIR/repair_engine.sh" "${r_args[@]}" || true
+    fi
     docker compose up -d webdav
 
     # 6. Wait for WebDAV healthcheck
-    log_info "Waiting for Mornye WebDAV container healthcheck (port 8000)..."
+    local host_port="8001"
+    local host_bind="127.0.0.1"
+    if [[ -f "$PROGRAM_DIR/.env" ]]; then
+        host_port=$(grep -E '^MORNYE_HOST_PORT=' "$PROGRAM_DIR/.env" | cut -d= -f2 | tr -d '"' | tr -d "'" || echo "8001")
+        host_bind=$(grep -E '^MORNYE_HOST_BIND=' "$PROGRAM_DIR/.env" | cut -d= -f2 | tr -d '"' | tr -d "'" || echo "127.0.0.1")
+    fi
+    host_port="${host_port:-8001}"
+    host_bind="${host_bind:-127.0.0.1}"
+    log_info "Waiting for Mornye WebDAV container healthcheck (port $host_port)..."
     local healthy=false
     for i in {1..20}; do
         sleep 1
         local code
-        code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 "http://127.0.0.1:8000/health" 2>/dev/null || echo "000")
+        code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 "http://${host_bind}:${host_port}/health" 2>/dev/null || echo "000")
         if [[ "$code" == "200" ]]; then
             healthy=true
             break
@@ -329,10 +371,15 @@ stage3_dependencies_and_docker() {
     done
 
     if [[ "$healthy" == true ]]; then
-        log_ok "Mornye WebDAV is active and responding (HTTP 200 OK)."
+        log_ok "Mornye WebDAV is active and responding (HTTP 200 OK on port $host_port)."
     else
-        log_warn "Healthcheck timed out. Checking container logs..."
+        log_warn "Healthcheck timed out on port $host_port. Checking container logs..."
         docker compose logs --tail 20 webdav
+        if [[ -f "$SCRIPTS_DIR/repair_engine.sh" ]]; then
+            local r_args=(preflight health)
+            [[ "$NON_INTERACTIVE" == true ]] && r_args=(--yes preflight health)
+            "$SCRIPTS_DIR/repair_engine.sh" "${r_args[@]}" || true
+        fi
     fi
 }
 
@@ -352,8 +399,12 @@ stage4_networking_mode() {
         return 0
     fi
 
+    local h_port="8001"
+    [[ -f "$PROGRAM_DIR/.env" ]] && h_port=$(grep -E '^MORNYE_HOST_PORT=' "$PROGRAM_DIR/.env" | cut -d= -f2 | tr -d '"' | tr -d "'" || echo "8001")
+    h_port="${h_port:-8001}"
+
     echo -e "Select how you would like to expose Mornye Network Storage:"
-    echo -e "  ${BOLD}1)${NC} ${CYAN}Local-Only Mode${NC} (Private LAN / Localhost: http://127.0.0.1:8000/dav/)"
+    echo -e "  ${BOLD}1)${NC} ${CYAN}Local-Only Mode${NC} (Private LAN / Localhost: http://127.0.0.1:${h_port}/dav/)"
     echo -e "  ${BOLD}2)${NC} ${CYAN}Permanent Cloudflare Tunnel + Custom Domain${NC} (e.g. storage.example.com)"
     echo -e "  ${BOLD}3)${NC} ${CYAN}Ephemeral Quick Tunnel${NC} (Temporary trycloudflare.com testing link)"
     echo ""
@@ -388,6 +439,11 @@ stage5_cloudflare_workflow() {
 
     if [[ "$NETWORKING_MODE" == "permanent" ]]; then
         log_step "[Stage 5/6] Configuring Permanent Cloudflare Tunnel..."
+        if [[ -f "$SCRIPTS_DIR/repair_engine.sh" ]]; then
+            local r_args=(preflight tunnel)
+            [[ "$NON_INTERACTIVE" == true ]] && r_args=(--yes preflight tunnel)
+            "$SCRIPTS_DIR/repair_engine.sh" "${r_args[@]}" || true
+        fi
         if [[ -f "$SCRIPTS_DIR/cloudflare_manager.sh" ]]; then
             if [[ -n "$CHOSEN_DOMAIN" ]]; then
                 "$SCRIPTS_DIR/cloudflare_manager.sh" setup
@@ -402,8 +458,10 @@ stage5_cloudflare_workflow() {
             "$SCRIPTS_DIR/cloudflare_manager.sh" quick start --yes
         fi
     else
+        local summary_port="8001"
+        [[ -f "$PROGRAM_DIR/.env" ]] && summary_port=$(grep -E '^MORNYE_HOST_PORT=' "$PROGRAM_DIR/.env" | cut -d= -f2 | tr -d '"' | tr -d "'" || echo "8001")
         log_step "[Stage 5/6] Local-Only Mode Active (Cloudflare setup skipped)..."
-        log_info "WebDAV is bound locally to 127.0.0.1:8000."
+        log_info "WebDAV is bound locally to 127.0.0.1:${summary_port:-8001}."
     fi
 }
 
@@ -413,6 +471,15 @@ stage5_cloudflare_workflow() {
 
 stage6_report_and_summary() {
     log_step "[Stage 6/6] Generating Installation Report & Final Summary..."
+
+    local summary_port="8001"
+    local summary_bind="127.0.0.1"
+    if [[ -f "$PROGRAM_DIR/.env" ]]; then
+        summary_port=$(grep -E '^MORNYE_HOST_PORT=' "$PROGRAM_DIR/.env" | cut -d= -f2 | tr -d '"' | tr -d "'" || echo "8001")
+        summary_bind=$(grep -E '^MORNYE_HOST_BIND=' "$PROGRAM_DIR/.env" | cut -d= -f2 | tr -d '"' | tr -d "'" || echo "127.0.0.1")
+    fi
+    summary_port="${summary_port:-8001}"
+    summary_bind="${summary_bind:-127.0.0.1}"
 
     local report_file="$PROGRAM_DIR/docs/SETUP_DEPENDENCY_INSTALLATION_REPORT.md"
     mkdir -p "$(dirname "$report_file")"
@@ -463,8 +530,8 @@ stage6_report_and_summary() {
 ## 3. Networking & Ingress Status
 
 - **Selected Networking Mode**: ${NETWORKING_MODE}
-- **Local WebDAV Target**: http://127.0.0.1:8000/dav/
-- **Local Healthcheck**: http://127.0.0.1:8000/health
+- **Local WebDAV Target**: http://${summary_bind:-127.0.0.1}:${summary_port:-8001}/dav/
+- **Local Healthcheck**: http://${summary_bind:-127.0.0.1}:${summary_port:-8001}/health
 - **Public Ingress**: $( [[ -n "$CHOSEN_DOMAIN" ]] && echo "https://${CHOSEN_DOMAIN}/dav/" || echo "Local-only / Ephemeral" )
 
 ---
@@ -489,8 +556,8 @@ REPORTEOF
     echo ""
     echo -e "${BOLD}APPLICATION:${NC}"
     echo -e "  - Container Stack   : ${GREEN}Active & Healthy (mornye-webdav)${NC}"
-    echo -e "  - WebDAV Endpoint   : ${CYAN}http://127.0.0.1:8000/dav/${NC}"
-    echo -e "  - Health Probe      : ${CYAN}http://127.0.0.1:8000/health${NC}"
+    echo -e "  - WebDAV Endpoint   : ${CYAN}http://${summary_bind:-127.0.0.1}:${summary_port:-8001}/dav/${NC}"
+    echo -e "  - Health Probe      : ${CYAN}http://${summary_bind:-127.0.0.1}:${summary_port:-8001}/health${NC}"
     echo -e "  - Persistent Path   : ${GREEN}$PROGRAM_DIR/storage${NC}"
     echo ""
     echo -e "${BOLD}CLOUDFLARE INGRESS:${NC}"

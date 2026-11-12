@@ -38,7 +38,8 @@ from sqlalchemy import select, delete
 
 TEST_USER = "test_live_verify"
 TEST_PASS = "LiveVerifyPass2026!"
-BASE_URL = "http://127.0.0.1:8000"
+BASE_PORT = os.environ.get("MORNYE_HOST_PORT", "8001")
+BASE_URL = f"http://127.0.0.1:{BASE_PORT}"
 
 def create_valid_wav_bytes(duration_ms=100) -> bytes:
     sample_rate = 44100

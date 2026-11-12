@@ -1,69 +1,47 @@
-# MORNYE NETWORK STORAGE — DEPENDENCY INSTALLATION REPORT
-**Generated automatically by setup.sh on 2026-11-12 08:24:49Z**
+# MORNYE NETWORK STORAGE — MASTER INSTALLATION & RECONCILIATION REPORT
+**Generated automatically on 2026-11-12 09:59:22Z**
 
 ---
 
-## 1. Host Platform & Environment Telemetry
+## 1. System Telemetry & Platform Audit
 
-| Parameter | Value |
-| :--- | :--- |
-| **Operating System** | Kali GNU/Linux (kali-rolling) |
-| **OS Distribution ID** | kali (2026.3) |
-| **CPU Architecture** | x86_64 (Debian package arch: amd64) |
-| **Kernel Version** | 7.1.5+kali-amd64 |
-| **Execution User** | spidyno (UID: 1000) |
-| **Working Directory** | /home/spidyno/.song/Mornye-Network-Storage |
-| **Internet Reachability** | Online (Verified) |
+| Parameter | Value | Verification Status |
+| :--- | :--- | :--- |
+| **Operating System** | Kali GNU/Linux Rolling | **CONFIRMED** |
+| **Distribution ID** | kali (Family: debian, Codename: kali-rolling) | **CONFIRMED** |
+| **Package Manager** | apt | **CONFIRMED** |
+| **Init System** | systemd | **CONFIRMED** |
+| **CPU Architecture** | x86_64 (Kernel: 7.1.5+kali-amd64) | **CONFIRMED** |
+| **Compute Hardware** | 4 Cores, 7905 MB RAM | **CONFIRMED** |
+| **Free Storage** | 207206 MB | **CONFIRMED** |
+| **Execution User** | spidyno (UID: 1000) | **CONFIRMED** |
 
 ---
 
-## 2. Dependency Audit & Package Status
+## 2. Universal Package & Runtime Audit
 
 | Component | Status | Detected Version / Details |
 | :--- | :--- | :--- |
-| **Python 3 Engine** | **PASSED** | 3.14.8 |
-| **Python Virtualenv** | **PASSED** | /home/spidyno/.song/Mornye-Network-Storage/venv |
-| **Git Version Control** | **PASSED** | git version 2.53.0 |
-| **SQLite3 CLI** | **PASSED** | SQLite 3.53.4 |
-| **cURL HTTP Utility** | **PASSED** | curl 8.22.0 |
-| **OpenSSL Cryptography** | **PASSED** | OpenSSL 3.6.5 |
-| **CA Certificates** | **PASSED** | /etc/ssl/certs/ca-certificates.crt |
-| **Core Utilities** | **PASSED** | bash, procps, util-linux, rsync, jq |
 | **Docker Engine** | **PASSED** | Docker version 28.5.2+dfsg4, build 9cc6dea35e9a963f281434761c656fba4ac43aed |
 | **Docker Compose v2** | **PASSED** | Docker Compose version 2.40.3-3 |
-| **cloudflared (Opt)** | **PASSED** | cloudflared version 2026.10.7 (built 2026-10-30-17:05 UTC) |
+| **Base System Tools** | **PASSED** | curl, git, jq, openssl, rsync, ca-certificates, procps |
+| **cloudflared CLI** | **PASSED** | cloudflared version 2026.10.7 (built 2026-10-30-17:05 UTC) |
+| **WebDAV Container** | **PASSED** | Image: mornye-webdav:latest (HTTP 200 at /health) |
+| **Storage Paths** | **PASSED** | database/ (700), storage/ (755), backups/ (700) |
+| **Environment Config** | **PASSED** | .env (600, Cryptographic SECRET_KEY) |
 
 ---
 
-## 3. Installed Packages During Setup
+## 3. Networking & Ingress Status
 
-No new packages required installation (all prerequisites pre-installed).
-
----
-
-## 4. Docker Service & Daemon Configuration
-
-- **Docker Service Active**: active
-- **Docker Group Membership**: Active (UID in docker group)
-- **Compose Version**: Docker Compose version 2.40.3-3
-- **Security Check**: Docker socket permissions preserved securely.
+- **Selected Networking Mode**: local
+- **Local WebDAV Target**: http://127.0.0.1:8001/dav/
+- **Local Healthcheck**: http://127.0.0.1:8001/health
+- **Public Ingress**: Local-only / Ephemeral
 
 ---
 
-## 5. Application Database & Storage Preservation
+## 4. Final Verdict
 
-- **Storage Directory**: `/home/spidyno/.song/Mornye-Network-Storage/storage` (Permissions: 755)
-- **Database Directory**: `/home/spidyno/.song/Mornye-Network-Storage/database` (Permissions: 700)
-- **Database Status**: Preserved & Intact (Never overwritten)
-- **Environment Configuration**: `/home/spidyno/.song/Mornye-Network-Storage/.env` (Permissions: 600, Random 64-char SECRET_KEY)
-- **Physical Music Files**: 100% preserved.
-- **Recycle Bin Records**: 100% preserved.
-
----
-
-## 6. Final Reconciliation Verdict
-
-- **Required Dependency Errors**: 0
-- **Optional Warnings**: 0
-- **Overall Setup Status**: **PASSED & READY**
-
+- **Overall Status**: **PASSED & PRODUCTION READY**
+- **Runtime Mode**: 100% Docker-based container stack (No host python venv required)

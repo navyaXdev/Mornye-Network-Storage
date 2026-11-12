@@ -115,21 +115,44 @@ The installer supports non-interactive execution for continuous deployment or au
 
 ---
 
-## 5. Post-Installation Verification
+## 5. Post-Installation Verification & Universal Diagnostics
 
-Once installation is complete, verify the operational state using the CLI:
+Once installation is complete, verify the operational state using Mornye's diagnostic suite:
 
 ```bash
-# Run system diagnostic doctor
+# 1. Run complete universal system diagnostic audit
 ./mornye.sh doctor
 
-# Check unified infrastructure overview
+# 2. Output machine-readable JSON telemetry for monitoring systems
+./mornye.sh doctor --json
+
+# 3. Safely auto-repair detected permission, port, or environment issues
+./mornye.sh doctor --fix
+
+# 4. Inspect port bindings and detect conflicts without terminating services
+./mornye.sh ports
+
+# 5. Measure endpoint responsiveness and latency (/health and /dav/)
+./mornye.sh health
+
+# 6. Validate configuration files (.env, compose.yaml, ingress)
+./mornye.sh config validate
+
+# 7. Check unified infrastructure overview
 ./mornye.sh status
 
-# Probe WebDAV storage endpoint
+# 8. Probe WebDAV storage endpoint
 ./mornye.sh webdav test
-
-# Inspect real-time storage metrics
-./mornye.sh music stats
 ```
+
+---
+
+## 6. Port Management & Service Coexistence Architecture
+
+Mornye is engineered for safe coexistence with pre-existing host services (such as SONG Bridge, Navidrome, Nginx, or legacy units):
+
+- **Internal Container WebDAV Port**: `8000` (strict RFC 4918 specification).
+- **Configurable Host Binding**: `MORNYE_HOST_BIND=127.0.0.1` and `MORNYE_HOST_PORT=8001` (configured via `.env`).
+- **Coexistence Guarantee**: If port 8000 is occupied by an existing process (e.g., SONG Bridge), Mornye maps `127.0.0.1:8001:8000`. Both services run simultaneously on the host with zero port collision and zero downtime.
+- **Service Protection Policy**: Mornye's diagnostic and repair engine **never** terminates, stops, or modifies unrelated host processes. In case of port conflict, it identifies the occupying process (PID, cgroup unit, working directory) and offers automatic safe reassignment to an alternative free port in the 8001–8099 range.
 

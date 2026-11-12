@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # MORNYE NETWORK STORAGE — UNIFIED INFRASTRUCTURE & MANAGEMENT CLI
-# Version: 3.1.0
+# Version: 3.2.0
 # Description: Authoritative management console for containerized WebDAV storage,
-#              Cloudflare Zero-Trust ingress, Quick Tunnels, Docker, and backups.
+#              system diagnostics, conflict detection, Cloudflare Zero-Trust
+#              ingress, Quick Tunnels, Docker, and backups.
 # ==============================================================================
 
 set -eo pipefail
@@ -21,6 +22,17 @@ CONFIG_DIR="$PROGRAM_DIR/config"
 SCRIPTS_DIR="$PROGRAM_DIR/scripts"
 
 mkdir -p "$LOG_DIR" "$RUN_DIR" "$DATA_DIR" "$STORAGE_DIR" "$BACKUP_DIR" "$CONFIG_DIR"
+
+# Source environment configuration for configurable host port and host binding
+load_env() {
+    if [[ -f "$PROGRAM_DIR/.env" ]]; then
+        # shellcheck disable=SC1090
+        source "$PROGRAM_DIR/.env" 2>/dev/null || true
+    fi
+    MORNYE_HOST_PORT="${MORNYE_HOST_PORT:-8001}"
+    MORNYE_HOST_BIND="${MORNYE_HOST_BIND:-127.0.0.1}"
+}
+load_env
 
 # Python execution resolution (Host fallback only; container is primary)
 PYTHON_BIN="python3"
@@ -48,7 +60,7 @@ print_banner() {
 | |\/| | |  | |    _/| . ` | \   / |  __| 
 | |  | | |__| | |\ \ | |\  |  | |  | |___ 
 |_|  |_|\____/|_| \_\|_| \_|  |_|  |_____|
-Network Storage & RFC 4918 WebDAV Infrastructure v3.1
+Network Storage & RFC 4918 WebDAV Infrastructure v3.2
 ==========================================================
 EOF
     echo -e "${NC}"
@@ -89,12 +101,18 @@ cmd_help() {
     echo -e "  ${CYAN}stop${NC}                        Gracefully stop Mornye services and containers"
     echo -e "  ${CYAN}restart${NC}                     Gracefully restart container stack"
     echo -e "  ${CYAN}update${NC}                      Backup database, pull changes, rebuild container & restart"
-    echo -e "  ${CYAN}uninstall${NC}                   Remove containers and configs (preserves database/storage)"
+    echo -e "  ${CYAN}uninstall [--purge] [--dry-run]${NC} Remove containers & services (Safe by default, --purge removes data)"
     echo ""
-    echo -e "${BOLD}OBSERVABILITY & DIAGNOSTICS:${NC}"
+    echo -e "${BOLD}OBSERVABILITY & INTELLIGENT DIAGNOSTICS:${NC}"
+    echo -e "  ${CYAN}doctor [--json] [--fix] [-y]${NC} Universal diagnostic collector & interactive error auto-repair"
+    echo -e "  ${CYAN}repair${NC}                      Intelligent interactive error detection and resolution engine"
+    echo -e "  ${CYAN}runtime-check${NC}               One-shot runtime health, storage, and integrity inspection"
+    echo -e "  ${CYAN}ports${NC}                       Audit port usage, process owners, and detect service conflicts"
+    echo -e "  ${CYAN}health${NC}                      Execute fast HTTP /health and WebDAV endpoint readiness probe"
+    echo -e "  ${CYAN}config validate${NC}             Validate .env, compose.yaml, cloudflared.yml, and permissions"
     echo -e "  ${CYAN}status${NC}                      Show unified status of containers, endpoints, tunnel & disk"
-    echo -e "  ${CYAN}doctor${NC}                      Comprehensive diagnostic probe (distro, docker, network, DB)"
     echo -e "  ${CYAN}dashboard${NC}                   Interactive real-time terminal monitoring dashboard"
+    echo -e "  ${CYAN}monitor [--watch]${NC}           Real-time system telemetry and bounded recovery monitor"
     echo -e "  ${CYAN}version${NC}                     Display release version, commit hash, and container state"
     echo -e "  ${CYAN}help${NC}                        Show this comprehensive command manual"
     echo ""
@@ -108,7 +126,7 @@ cmd_help() {
     echo -e "  ${CYAN}docker health${NC}               Run Docker container health probe"
     echo ""
     echo -e "${BOLD}WEBDAV STORAGE ENGINE:${NC}"
-    echo -e "  ${CYAN}webdav status${NC}               Inspect WebDAV port 8000 state and protocol configuration"
+    echo -e "  ${CYAN}webdav status${NC}               Inspect WebDAV port state and protocol configuration"
     echo -e "  ${CYAN}webdav test${NC}                 Execute live PROPFIND probe verifying auth boundary"
     echo -e "  ${CYAN}webdav logs [-f] [N]${NC}        View recent WebDAV access logs (default: 50 lines)"
     echo ""
@@ -159,9 +177,10 @@ cmd_version() {
         git_rev=$(git rev-parse --short HEAD 2>/dev/null || echo "release")
     fi
     echo -e "${BOLD}Mornye Network Storage Platform${NC}"
-    echo -e "Version     : 3.1.0 (${CYAN}${git_rev}${NC})"
+    echo -e "Version     : 3.2.0 (${CYAN}${git_rev}${NC})"
     echo -e "Architecture: $(uname -m), Kernel: $(uname -r)"
     echo -e "Runtime     : Docker-Only (Host-Independent, Zero Host Python)"
+    echo -e "Host Port   : ${CYAN}${MORNYE_HOST_PORT}${NC} (Binding: ${MORNYE_HOST_BIND})"
     if has_cmd docker; then
         echo -e "Docker      : $(docker --version 2>/dev/null || echo 'Not installed')"
         echo -e "Compose     : $(docker compose version 2>/dev/null || echo 'Compose plugin not found')"
@@ -169,127 +188,83 @@ cmd_version() {
 }
 
 cmd_doctor() {
-    echo -e "${BOLD}==============================================================${NC}"
-    echo -e "${BOLD}          MORNYE INFRASTRUCTURE DIAGNOSTIC DOCTOR             ${NC}"
-    echo -e "${BOLD}==============================================================${NC}"
-    
-    # 1. Host OS & Distro Detection
-    if [[ -f /etc/os-release ]]; then
-        local os_name
-        os_name=$(grep -E '^PRETTY_NAME=' /etc/os-release | cut -d= -f2 | tr -d '"')
-        echo -e "Host OS             : ${GREEN}[✔] $os_name${NC}"
-    else
-        echo -e "Host OS             : ${YELLOW}[!] Unknown Linux distribution${NC}"
-    fi
-    echo -e "Kernel Release      : $(uname -r) ($(uname -m))"
-    echo -e "Operator Context    : $(whoami) (UID: $(id -u), GID: $(id -g))"
-
-    # 2. Package Manager
-    local detected_pm="none"
-    for pm in apt pacman dnf yum zypper apk; do
-        if has_cmd "$pm"; then
-            detected_pm="$pm"
-            break
-        fi
-    done
-    echo -e "Package Manager     : ${GREEN}[✔] $detected_pm${NC}"
-
-    # 3. Docker Engine & Compose
-    if has_cmd docker; then
-        if docker info &>/dev/null; then
-            echo -e "Docker Engine       : ${GREEN}[✔] Running ($(docker --version))${NC}"
-        else
-            echo -e "Docker Engine       : ${YELLOW}[!] Installed but daemon is not responding${NC}"
-        fi
-    else
-        echo -e "Docker Engine       : ${RED}[✘] Missing (Run './mornye.sh install')${NC}"
-    fi
-
-    if docker compose version &>/dev/null; then
-        echo -e "Docker Compose V2   : ${GREEN}[✔] $(docker compose version)${NC}"
-    else
-        echo -e "Docker Compose V2   : ${YELLOW}[!] Compose plugin missing${NC}"
-    fi
-
-    # 4. Cloudflare CLI
-    if has_cmd cloudflared; then
-        echo -e "Cloudflare Binary   : ${GREEN}[✔] $(cloudflared --version 2>/dev/null | head -n1)${NC}"
-    elif [[ -x /usr/local/bin/cloudflared ]]; then
-        echo -e "Cloudflare Binary   : ${GREEN}[✔] $(/usr/local/bin/cloudflared --version 2>/dev/null | head -n1)${NC}"
-    else
-        echo -e "Cloudflare Binary   : ${YELLOW}[!] cloudflared not installed on host${NC}"
-    fi
-
-    # 5. Cloudflare Auth Certificate
-    if [[ -f "$HOME/.cloudflared/cert.pem" ]]; then
-        echo -e "Cloudflare Auth     : ${GREEN}[✔] Certificate present ($HOME/.cloudflared/cert.pem)${NC}"
-    else
-        echo -e "Cloudflare Auth     : ${YELLOW}[!] No cert.pem found (Login via './mornye.sh tunnel login')${NC}"
-    fi
-
-    # 6. Persistent Directories & Permissions
-    echo "--------------------------------------------------------------"
-    echo -e "${BOLD}Storage Paths & Permissions Audit:${NC}"
-    for dir in "$DATA_DIR" "$STORAGE_DIR" "$BACKUP_DIR" "$LOG_DIR" "$CONFIG_DIR"; do
-        if [[ -d "$dir" ]]; then
-            local perms
-            perms=$(stat -c "%a" "$dir" 2>/dev/null || stat -f "%OLp" "$dir" 2>/dev/null || echo "???")
-            echo -e "  $(basename "$dir") Path : ${GREEN}[✔] Accessible (${dir}, mode: $perms)${NC}"
-        else
-            echo -e "  $(basename "$dir") Path : ${YELLOW}[!] Missing (${dir})${NC}"
-        fi
+    local is_fix=false
+    local is_yes=false
+    for arg in "$@"; do
+        [[ "$arg" == "--fix" ]] && is_fix=true
+        [[ "$arg" == "-y" || "$arg" == "--yes" ]] && is_yes=true
     done
 
-    # 7. Database Integrity
-    echo "--------------------------------------------------------------"
-    echo -e "${BOLD}Database Integrity Audit:${NC}"
-    if [[ -f "$DATA_DIR/mornye.db" ]]; then
-        local chk
-        chk=$(run_cli_op "backup_ops.py" verify "$DATA_DIR/mornye.db" 2>/dev/null | grep -E "PRAGMA Integrity" || echo "")
-        if [[ -n "$chk" ]]; then
-            echo -e "  Database File     : ${GREEN}[✔] $chk${NC}"
+    if [[ "$is_fix" == true && -f "$SCRIPTS_DIR/repair_engine.sh" ]]; then
+        if [[ "$is_yes" == true ]]; then
+            "$SCRIPTS_DIR/repair_engine.sh" --yes
         else
-            echo -e "  Database File     : ${GREEN}[✔] File present ($DATA_DIR/mornye.db)${NC}"
+            "$SCRIPTS_DIR/repair_engine.sh"
+        fi
+        return $?
+    elif [[ -f "$SCRIPTS_DIR/doctor.sh" ]]; then
+        exec "$SCRIPTS_DIR/doctor.sh" "$@"
+    else
+        echo -e "${RED}[ERROR] scripts/doctor.sh not found.${NC}"
+        exit 1
+    fi
+}
+
+cmd_ports() {
+    if [[ -f "$SCRIPTS_DIR/doctor.sh" ]]; then
+        exec "$SCRIPTS_DIR/doctor.sh" --ports "$@"
+    else
+        echo -e "${RED}[ERROR] scripts/doctor.sh not found.${NC}"
+        exit 1
+    fi
+}
+
+cmd_health() {
+    if [[ -f "$SCRIPTS_DIR/doctor.sh" ]]; then
+        if ! "$SCRIPTS_DIR/doctor.sh" --health "$@"; then
+            echo -e "\n${YELLOW}[!] Health failure detected. Engaging interactive error repair engine...${NC}"
+            if [[ -f "$SCRIPTS_DIR/repair_engine.sh" ]]; then
+                "$SCRIPTS_DIR/repair_engine.sh" preflight health
+            fi
+            return 1
         fi
     else
-        echo -e "  Database File     : ${YELLOW}[!] Database not yet created ($DATA_DIR/mornye.db)${NC}"
+        echo -e "${RED}[ERROR] scripts/doctor.sh not found.${NC}"
+        exit 1
     fi
+}
 
-    # 8. WebDAV Endpoint Health
-    echo "--------------------------------------------------------------"
-    echo -e "${BOLD}Local Network Reachability:${NC}"
-    local webdav_code
-    webdav_code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 "http://127.0.0.1:8000/health" 2>/dev/null || echo "000")
-    if [[ "$webdav_code" == "200" ]]; then
-        echo -e "  WebDAV Loopback   : ${GREEN}[✔] Healthy (HTTP 200 on 127.0.0.1:8000/health)${NC}"
-    else
-        echo -e "  WebDAV Loopback   : ${YELLOW}[!] Offline or unreachable (HTTP $webdav_code)${NC}"
-    fi
-
-    # 9. Cloudflare Edge WAN reachability
-    local cf_edge
-    cf_edge=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 3 "https://1.1.1.1" 2>/dev/null || echo "000")
-    if [[ "$cf_edge" =~ ^[23] ]]; then
-        echo -e "  WAN Edge Reach    : ${GREEN}[✔] Internet & Cloudflare Edge reachability OK${NC}"
-    else
-        echo -e "  WAN Edge Reach    : ${YELLOW}[!] WAN connectivity probe returned HTTP $cf_edge${NC}"
-    fi
-
-    echo "=============================================================="
-    echo -e "${GREEN}[✔] Diagnostics complete.${NC}"
+cmd_config() {
+    local sub="${1:-validate}"
+    shift || true
+    case "$sub" in
+        validate)
+            if [[ -f "$SCRIPTS_DIR/doctor.sh" ]]; then
+                exec "$SCRIPTS_DIR/doctor.sh" --validate-config "$@"
+            else
+                echo -e "${RED}[ERROR] scripts/doctor.sh not found.${NC}"
+                exit 1
+            fi
+            ;;
+        *)
+            echo "Usage: ./mornye.sh config validate"
+            exit 1
+            ;;
+    esac
 }
 
 cmd_status() {
     print_banner
     echo -e "${BOLD}INFRASTRUCTURE STATUS OVERVIEW:${NC}"
     echo "----------------------------------------------------------"
+    echo -e "Configured Host Port    : ${CYAN}${MORNYE_HOST_PORT}${NC} (Binding: ${MORNYE_HOST_BIND})"
     
     # 1. Docker Containers
     if has_cmd docker; then
         local webdav_status="STOPPED"
         if docker ps --format '{{.Names}}' 2>/dev/null | grep -qw "mornye-webdav"; then
             local health
-            health=$(docker inspect --format='{{.State.Health.Status}}' mornye-webdav 2>/dev/null || echo "running")
+            health=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}running{{end}}' mornye-webdav 2>/dev/null || echo "running")
             webdav_status="${GREEN}RUNNING (${health})${NC}"
         fi
         echo -e "Mornye WebDAV Container : $webdav_status"
@@ -331,21 +306,21 @@ cmd_status() {
     echo ""
     echo -e "${BOLD}Active Port Listeners:${NC}"
     if has_cmd ss; then
-        ss -tulpn | grep -E '8000|20241|20242' || echo "  No Mornye listeners detected on host ports."
+        ss -tulpn | grep -E "${MORNYE_HOST_PORT}|8000|20241|20242" || echo "  No Mornye listeners detected on host ports."
     elif has_cmd netstat; then
-        netstat -tulpn | grep -E '8000|20241|20242' || echo "  No Mornye listeners detected on host ports."
+        netstat -tulpn | grep -E "${MORNYE_HOST_PORT}|8000|20241|20242" || echo "  No Mornye listeners detected on host ports."
     fi
 
     # 6. WebDAV Probe
     echo ""
     local webdav_code
-    webdav_code=$(curl -s -o /dev/null -w "%{http_code}" -X PROPFIND -H "Depth: 0" "http://127.0.0.1:8000/dav/" 2>/dev/null || echo "000")
+    webdav_code=$(curl -s -o /dev/null -w "%{http_code}" -X PROPFIND -H "Depth: 0" "http://${MORNYE_HOST_BIND}:${MORNYE_HOST_PORT}/dav/" 2>/dev/null || echo "000")
     if [[ "$webdav_code" =~ ^(207|401)$ ]]; then
-        echo -e "WebDAV Endpoint Health  : ${GREEN}ONLINE (HTTP $webdav_code Auth Protected)${NC}"
+        echo -e "WebDAV Endpoint Health  : ${GREEN}ONLINE (HTTP $webdav_code Auth Protected)${NC} [http://${MORNYE_HOST_BIND}:${MORNYE_HOST_PORT}/dav/]"
     elif [[ "$webdav_code" == "000" ]]; then
-        echo -e "WebDAV Endpoint Health  : ${RED}OFFLINE${NC}"
+        echo -e "WebDAV Endpoint Health  : ${RED}OFFLINE${NC} [http://${MORNYE_HOST_BIND}:${MORNYE_HOST_PORT}/dav/]"
     else
-        echo -e "WebDAV Endpoint Health  : ${YELLOW}HTTP $webdav_code${NC}"
+        echo -e "WebDAV Endpoint Health  : ${YELLOW}HTTP $webdav_code${NC} [http://${MORNYE_HOST_BIND}:${MORNYE_HOST_PORT}/dav/]"
     fi
 
     # 7. Storage & Quota Stats
@@ -377,6 +352,15 @@ cmd_start() {
         exit 1
     fi
 
+    # 1. Pre-start interactive error detection and resolution
+    if [[ -f "$SCRIPTS_DIR/repair_engine.sh" ]]; then
+        if ! "$SCRIPTS_DIR/repair_engine.sh" preflight start; then
+            echo -e "${YELLOW}[!] Pre-start repair was aborted or unresolved. Service startup cancelled.${NC}"
+            exit 1
+        fi
+        load_env
+    fi
+
     # Check for docker tunnel profile
     local compose_args=()
     if [[ -f "$CONFIG_DIR/tunnel_info.env" ]]; then
@@ -389,24 +373,33 @@ cmd_start() {
     fi
 
     echo -e "[*] Launching container stack via Docker Compose..."
-    docker compose "${compose_args[@]}" up -d
+    if ! docker compose "${compose_args[@]}" up -d; then
+        echo -e "${RED}[ERROR] Container startup failed.${NC}"
+        if [[ -f "$SCRIPTS_DIR/repair_engine.sh" ]]; then
+            "$SCRIPTS_DIR/repair_engine.sh" preflight start
+        fi
+        exit 1
+    fi
 
-    echo -e "[*] Awaiting WebDAV container readiness..."
+    echo -e "[*] Awaiting WebDAV container readiness on port ${MORNYE_HOST_PORT}..."
     local healthy=false
+    local code="000"
     for i in {1..20}; do
         sleep 1
-        local status
-        status=$(docker inspect --format='{{.State.Health.Status}}' mornye-webdav 2>/dev/null || echo "starting")
-        if [[ "$status" == "healthy" ]]; then
+        code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 "http://${MORNYE_HOST_BIND}:${MORNYE_HOST_PORT}/health" 2>/dev/null || echo "000")
+        if [[ "$code" == "200" ]]; then
             healthy=true
             break
         fi
     done
 
     if [[ "$healthy" == true ]]; then
-        echo -e "${GREEN}[✔] Mornye WebDAV Engine is ONLINE and HEALTHY (http://127.0.0.1:8000/dav/).${NC}"
+        echo -e "${GREEN}[✔] Mornye WebDAV Engine is ONLINE and HEALTHY (http://${MORNYE_HOST_BIND}:${MORNYE_HOST_PORT}/dav/).${NC}"
     else
-        echo -e "${YELLOW}[!] Mornye WebDAV container started (status: ${status:-unknown}).${NC}"
+        echo -e "${RED}[✘] Mornye WebDAV container healthcheck timed out (probe returned HTTP ${code}).${NC}"
+        if [[ -f "$SCRIPTS_DIR/repair_engine.sh" ]]; then
+            "$SCRIPTS_DIR/repair_engine.sh" preflight health
+        fi
     fi
 
     # If tunnel mode is systemd, start systemd service
@@ -488,7 +481,7 @@ cmd_update() {
     echo -e "${BOLD}[Stage 5/5] Auditing schema and health status...${NC}"
     sleep 2
     local code
-    code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 3 "http://127.0.0.1:8000/health" 2>/dev/null || echo "000")
+    code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 3 "http://${MORNYE_HOST_BIND}:${MORNYE_HOST_PORT}/health" 2>/dev/null || echo "000")
     if [[ "$code" == "200" ]]; then
         echo -e "${GREEN}[✔] Update completed successfully! Mornye WebDAV is healthy.${NC}"
     else
@@ -497,41 +490,12 @@ cmd_update() {
 }
 
 cmd_uninstall() {
-    echo -e "${RED}${BOLD}==============================================================${NC}"
-    echo -e "${RED}${BOLD}               MORNYE UNINSTALLATION WIZARD                   ${NC}"
-    echo -e "${RED}${BOLD}==============================================================${NC}"
-    echo -e "${YELLOW}This procedure will remove Mornye container instances and runtime state.${NC}"
-    echo -e "${GREEN}${BOLD}YOUR MUSIC STORAGE, DATABASE, AND BACKUPS WILL BE PRESERVED.${NC}"
-    echo ""
-    read -p "Are you sure you want to uninstall Mornye services? [y/N]: " -r confirm
-    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-        echo "[*] Uninstallation cancelled by operator."
-        exit 0
+    if [[ -f "$PROGRAM_DIR/delete.sh" ]]; then
+        exec "$PROGRAM_DIR/delete.sh" "$@"
+    else
+        echo -e "${RED}[ERROR] delete.sh not found in $PROGRAM_DIR.${NC}" >&2
+        exit 1
     fi
-
-    echo -e "[*] Stopping running services and containers..."
-    cmd_stop
-
-    if has_cmd docker; then
-        echo -e "[*] Removing Docker Compose stack and networks..."
-        docker compose --profile tunnel down -v --remove-orphans 2>/dev/null || true
-
-        read -p "Remove Mornye Docker images from local storage? [y/N]: " -r rm_img
-        if [[ "$rm_img" =~ ^[Yy]$ ]]; then
-            docker rmi -f mornye-webdav:latest 2>/dev/null || true
-            echo -e "${GREEN}[✔] Docker image mornye-webdav:latest removed.${NC}"
-        fi
-    fi
-
-    # Remove temporary run files
-    rm -rf "$RUN_DIR"/* 2>/dev/null || true
-    echo -e "${GREEN}==============================================================${NC}"
-    echo -e "${GREEN}[✔] Mornye services successfully uninstalled.${NC}"
-    echo -e "User data preserved at:"
-    echo -e "  - Storage Directory : $STORAGE_DIR"
-    echo -e "  - Database Directory: $DATA_DIR"
-    echo -e "  - Backups Directory : $BACKUP_DIR"
-    echo -e "${GREEN}==============================================================${NC}"
 }
 
 # ------------------------------------------------------------------------------
@@ -735,6 +699,15 @@ cmd_backup() {
 cmd_monitor() {
     local sub="${1:-all}"
     shift || true
+    if [[ "$sub" == "--watch" || "$sub" == "watch" ]]; then
+        if [[ -f "$SCRIPTS_DIR/repair_engine.sh" ]]; then
+            exec "$SCRIPTS_DIR/repair_engine.sh" watch "$@"
+        fi
+    elif [[ "$sub" == "check" || "$sub" == "runtime" ]]; then
+        if [[ -f "$SCRIPTS_DIR/repair_engine.sh" ]]; then
+            exec "$SCRIPTS_DIR/repair_engine.sh" runtime-check "$@"
+        fi
+    fi
     run_cli_op "system_ops.py" "$sub" "$@"
 }
 
@@ -811,7 +784,32 @@ main() {
             cmd_version
             ;;
         doctor)
-            cmd_doctor
+            cmd_doctor "$@"
+            ;;
+        repair)
+            if [[ -f "$SCRIPTS_DIR/repair_engine.sh" ]]; then
+                exec "$SCRIPTS_DIR/repair_engine.sh" "$@"
+            else
+                echo -e "${RED}[ERROR] scripts/repair_engine.sh not found.${NC}"
+                exit 1
+            fi
+            ;;
+        runtime-check)
+            if [[ -f "$SCRIPTS_DIR/repair_engine.sh" ]]; then
+                exec "$SCRIPTS_DIR/repair_engine.sh" runtime-check "$@"
+            else
+                echo -e "${RED}[ERROR] scripts/repair_engine.sh not found.${NC}"
+                exit 1
+            fi
+            ;;
+        ports)
+            cmd_ports "$@"
+            ;;
+        health)
+            cmd_health "$@"
+            ;;
+        config)
+            cmd_config "$@"
             ;;
         status)
             cmd_status

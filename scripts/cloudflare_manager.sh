@@ -15,6 +15,13 @@ LOG_DIR="$PROGRAM_DIR/logs"
 
 mkdir -p "$CONFIG_DIR" "$RUN_DIR" "$LOG_DIR"
 
+if [[ -f "$PROGRAM_DIR/.env" ]]; then
+    # shellcheck disable=SC1090
+    source "$PROGRAM_DIR/.env" 2>/dev/null || true
+fi
+MORNYE_HOST_PORT="${MORNYE_HOST_PORT:-8001}"
+MORNYE_HOST_BIND="${MORNYE_HOST_BIND:-127.0.0.1}"
+
 # ANSI Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -47,7 +54,7 @@ check_cloudflared() {
 
 check_webdav_health() {
     local code
-    code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 "http://127.0.0.1:8000/health" 2>/dev/null || echo "000")
+    code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 "http://${MORNYE_HOST_BIND}:${MORNYE_HOST_PORT}/health" 2>/dev/null || echo "000")
     if [[ "$code" == "200" ]]; then
         return 0
     else
@@ -191,6 +198,11 @@ cmd_domain_add() {
     CUSTOM_DOMAIN="$domain"
     save_tunnel_metadata
 
+    local target_origin="http://webdav:8000"
+    if [[ "${TUNNEL_MODE:-}" == "systemd" ]]; then
+        target_origin="http://${MORNYE_HOST_BIND}:${MORNYE_HOST_PORT}"
+    fi
+
     cat << YMLEOF > "$TUNNEL_CONFIG"
 # ==============================================================================
 # MORNYE ZERO-TRUST WEBDAV INGRESS CONFIGURATION
@@ -201,7 +213,7 @@ credentials-file: /etc/cloudflared/credentials.json
 ingress:
   # Public WebDAV endpoint mapped exclusively
   - hostname: ${domain}
-    service: http://webdav:8000
+    service: ${target_origin}
     originRequest:
       connectTimeout: 30s
       noTLSVerify: true
@@ -446,7 +458,7 @@ cmd_quick_start() {
 
     # Verify WebDAV availability
     if ! check_webdav_health; then
-        echo -e "${RED}[ERROR] Local WebDAV engine (127.0.0.1:8000) is not responding.${NC}"
+        echo -e "${RED}[ERROR] Local WebDAV engine (${MORNYE_HOST_BIND}:${MORNYE_HOST_PORT}) is not responding.${NC}"
         echo -e "Please start Mornye WebDAV first via: ./mornye.sh start"
         return 1
     fi
@@ -464,10 +476,10 @@ cmd_quick_start() {
     echo "               CLOUDFLARE QUICK TUNNEL WARNING"
     echo "=============================================================="
     echo "Quick Tunnel exposes your local Mornye WebDAV service"
-    echo "(127.0.0.1:8000) publicly via a temporary trycloudflare.com URL."
+    echo "(${MORNYE_HOST_BIND}:${MORNYE_HOST_PORT}) publicly via a temporary trycloudflare.com URL."
     echo ""
     echo "Security Status:"
-    echo "  - Target Origin      : http://127.0.0.1:8000/dav/"
+    echo "  - Target Origin      : http://${MORNYE_HOST_BIND}:${MORNYE_HOST_PORT}/dav/"
     echo "  - Authentication     : HTTP Basic Auth (Argon2id) ACTIVE"
     echo "  - Management Ports   : Port 8080/9000 strictly CLOSED / unexposed"
     echo "  - Permanence         : EPHEMERAL (Temporary test session only)"
@@ -486,7 +498,7 @@ cmd_quick_start() {
     rm -f "$log_file" "$RUN_DIR/quick_tunnel.url"
 
     echo -e "[*] Requesting temporary Quick Tunnel via trycloudflare.com..."
-    nohup cloudflared tunnel --url http://127.0.0.1:8000 --no-autoupdate > "$log_file" 2>&1 &
+    nohup cloudflared tunnel --url "http://${MORNYE_HOST_BIND}:${MORNYE_HOST_PORT}" --no-autoupdate > "$log_file" 2>&1 &
     local q_pid=$!
     echo "$q_pid" > "$RUN_DIR/quick_tunnel.pid"
 
@@ -515,7 +527,7 @@ cmd_quick_start() {
         echo "--------------------------------------------------------------"
         echo -e "Temporary Public URL : ${CYAN}${tunnel_url}/dav/${NC}"
         echo -e "Process ID (PID)     : ${q_pid}"
-        echo -e "Target Origin        : http://127.0.0.1:8000"
+        echo -e "Target Origin        : http://${MORNYE_HOST_BIND}:${MORNYE_HOST_PORT}"
         echo -e "Auth Protection      : Argon2id Basic Authentication"
         echo -e "Session Status       : ACTIVE & ROUTING"
         echo "--------------------------------------------------------------"
@@ -554,7 +566,7 @@ cmd_quick_status() {
     echo "=============================================================="
     echo -e "Process State         : ${GREEN}ACTIVE${NC} (PID: $pid)"
     echo -e "Temporary Public URL  : ${CYAN}${url}/dav/${NC}"
-    echo -e "Target Local Origin   : http://127.0.0.1:8000"
+    echo -e "Target Local Origin   : http://${MORNYE_HOST_BIND}:${MORNYE_HOST_PORT}"
     echo -e "WAN Endpoint Status   : HTTP $http_code (Auth Boundary Active)"
     echo -e "Mode                  : Ephemeral / Non-permanent testing"
     echo "=============================================================="

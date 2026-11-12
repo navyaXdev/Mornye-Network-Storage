@@ -140,19 +140,28 @@ Persistent data directories are mounted from the host:
 
 Mornye includes a comprehensive, human-readable terminal CLI interface:
 
-### General & Diagnostics
+### Universal System Diagnostics & Self-Healing
 ```bash
-./mornye.sh doctor       # Run deep diagnostic audit on dependencies and disk
-./mornye.sh status       # Display infrastructure status, ports, and quota
-./mornye.sh dashboard    # Interactive real-time updating terminal dashboard
-./mornye.sh version      # Show version, commit hash, and kernel details
+./mornye.sh doctor                 # Run full 11-category system & conflict diagnostic
+./mornye.sh doctor --json          # Output machine-readable JSON telemetry
+./mornye.sh doctor --fix           # Interactively auto-repair permissions, ports, & config
+./mornye.sh doctor --fix -y        # Non-interactive auto-repair with automatic pre-change backups
+./mornye.sh ports                  # Inspect port occupancy, PID, process owner, & conflicts
+./mornye.sh health                 # Probe container /health & /dav/ HTTP response & latency
+./mornye.sh config validate        # Validate .env, compose.yaml security, & Cloudflare ingress
+./mornye.sh status                 # Display infrastructure status, host port, & quota
+./mornye.sh dashboard              # Interactive real-time updating terminal dashboard
+./mornye.sh version                # Show version, commit hash, and kernel details
 ```
+
+### Port Configuration & Protected Coexistence
+Mornye binds its host port according to `.env` (`MORNYE_HOST_PORT=8001`, default `127.0.0.1`), while the container internal WebDAV port remains strictly on `8000`. This allows Mornye to run simultaneously alongside existing services on port 8000 (such as SONG Bridge or legacy daemons) with zero interference and zero service termination.
 
 ### WebDAV Engine
 ```bash
-./mornye.sh webdav status      # Inspect loopback port 8000 state
-./mornye.sh webdav test        # Execute live PROPFIND auth boundary probe
-./mornye.sh webdav logs 50     # View recent 50 lines of WebDAV access logs
+./mornye.sh webdav status          # Inspect loopback port binding and container state
+./mornye.sh webdav test            # Execute live PROPFIND auth boundary probe
+./mornye.sh webdav logs 50         # View recent 50 lines of WebDAV access logs
 ```
 
 ### Music Catalog & Quota
@@ -275,23 +284,95 @@ Connect your favorite audio player or file sync client to Mornye WebDAV:
 
 ---
 
-## 10. Automated Testing
+## 10. Uninstallation & Data Purge (`delete.sh`)
 
-Mornye includes a comprehensive automated test suite powered by `pytest`:
+Mornye includes a dedicated root-level uninstaller (`delete.sh`) engineered with strict resource isolation to cleanly tear down Mornye services while guaranteeing foreign applications and services remain 100% operational.
+
+### A. Safe Uninstall (Default Mode)
+Stops and removes Mornye Docker containers, images, bridge networks, and services while **preserving all user music, databases, and backups**:
 
 ```bash
-# Run all tests
-pytest tests/ -v
+# Interactive Safe Uninstall
+sudo ./delete.sh
 
-# Run live WebDAV RFC 4918 verification
+# Or via Mornye CLI
+./mornye.sh uninstall
+```
+
+- **What Gets Removed**: Container `mornye-webdav`, network `mornye-net`, image `mornye-webdav:latest`, Mornye background workers, temporary runtime files (`run/*`, caches).
+- **What Gets Preserved**:
+  - `database/`: SQLite database file `mornye.db` and WAL journals.
+  - `storage/`: All uploaded audio tracks and metadata.
+  - `backups/`: Historical backup archives.
+  - `config/` & `.env`: All configuration settings and Cloudflare credentials.
+- **Reinstalling**: Run `./mornye.sh start` to instantly redeploy the container stack over existing data.
+
+### B. Complete Purge Mode (`--purge`)
+Permanently removes all Mornye-owned resources including data volumes, storage, and databases:
+
+```bash
+sudo ./delete.sh --purge
+```
+
+- **Strict Confirmation Gate**: Destructive purge cannot be triggered by accident. You must type the exact confirmation string:
+  ```
+  DELETE MORNYE DATA
+  ```
+  *(Simple `y` / `yes` answers are rejected).*
+- **What Gets Deleted**:
+  - Databases (`database/`)
+  - Music storage (`storage/`)
+  - Backups (`backups/`)
+  - Configuration (`config/`, `.env`, `.env.bak_*`)
+  - Logs (`logs/`)
+  - Mornye Docker volumes and images.
+- **Pre-Purge Safety Backup**: Before purging, `delete.sh` prompts to create an archive of your data. You can also create a standalone archive anytime:
+  ```bash
+  sudo ./delete.sh --backup /path/to/archive.tar.gz
+  ```
+- **Recovery Limitations**: Purged data cannot be recovered once deleted unless a pre-purge backup archive was generated.
+
+### C. Dry-Run Simulation Mode (`--dry-run`)
+Inspect the complete uninstallation plan without modifying anything on your system:
+
+```bash
+sudo ./delete.sh --dry-run
+# Or in purge mode
+sudo ./delete.sh --purge --dry-run
+```
+
+### D. Strict Resource Isolation & Safety Guarantees
+- **SONG Bridge (`mornye-storage.service` on port 8000)**: 100% PROTECTED. Never terminated or altered.
+- **Foreign Services & Applications**: Navidrome, Nginx, Apache, Caddy, PostgreSQL, MySQL, and existing Cloudflare tunnels are isolated and untouched.
+- **Foreign Docker Containers**: Unrelated containers, images, and volumes are preserved. `docker system prune` is never executed.
+- **System Roots Protection**: Strict boundary checks reject deletion of system paths (`/`, `/home`, `/etc`, `/var`, `/usr`, `/opt`).
+- **Symlink Escape Protection**: Symbolic links are removed without following or altering external targets.
+
+---
+
+## 11. Automated Testing
+
+Mornye includes a comprehensive automated test suite powered by `pytest` and dedicated bash harnesses:
+
+```bash
+# 1. Run uninstaller isolation and purge test suite (15 scenarios)
+bash tests/test_uninstaller.sh
+
+# 2. Run runtime error auto-repair test suite (15 scenarios)
+bash tests/test_interactive_repair.sh
+
+# 3. Run universal system diagnostics test suite (16 scenarios)
+bash tests/test_diagnostics.sh
+
+# 4. Run live WebDAV RFC 4918 verification (14 live steps)
 python3 scripts/verify_live_service.py
 
-# Run secret scanning audit
+# 5. Run secret scanning audit
 python3 scripts/secret_scan.py
 ```
 
 ---
 
-## 11. License
+## 12. License
 
 Mornye Network Storage is open-source software licensed under the [MIT License](LICENSE).

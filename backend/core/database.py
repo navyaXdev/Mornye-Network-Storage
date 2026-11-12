@@ -137,17 +137,27 @@ class AuditLog(Base):
     details: Mapped[str] = mapped_column(Text, nullable=True)
 
 class StagedUpload(Base):
+    """Tracks active in-flight temporary staged uploads (.part files) with their virtual folder mapping."""
     __tablename__ = "staged_uploads"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    upload_id: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
-    virtual_path: Mapped[str] = mapped_column(String(512), nullable=False)
-    staged_filename: Mapped[str] = mapped_column(String(255), nullable=False)
-    file_size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    sha256_checksum: Mapped[str] = mapped_column(String(64), nullable=False)
-    owner_username: Mapped[str] = mapped_column(String(64), nullable=False)
+    virtual_path: Mapped[str] = mapped_column(String(512), index=True, nullable=False)
+    virtual_parent_dir: Mapped[str] = mapped_column(String(512), index=True, nullable=False, default="/")
+    filename: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    physical_temp_filename: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    file_size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
+    sha256_checksum: Mapped[str] = mapped_column(String(64), nullable=True)
+    owner_username: Mapped[str] = mapped_column(String(64), index=True, nullable=False)
+    upload_id: Mapped[str] = mapped_column(String(64), index=True, nullable=True)
+    staged_filename: Mapped[str] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
-    expires_at: Mapped[datetime.datetime] = mapped_column(DateTime, nullable=False)
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime,
+        default=lambda: datetime.datetime.now(datetime.timezone.utc),
+        onupdate=lambda: datetime.datetime.now(datetime.timezone.utc),
+        nullable=True
+    )
+    expires_at: Mapped[datetime.datetime] = mapped_column(DateTime, nullable=True)
 
 class RequestMetric(Base):
     """Origin-side WebDAV aggregated request metrics per minute."""
@@ -189,6 +199,28 @@ async def init_db() -> None:
         await conn.exec_driver_sql("PRAGMA journal_mode=WAL;")
         await conn.exec_driver_sql("PRAGMA synchronous=NORMAL;")
         await conn.exec_driver_sql("PRAGMA foreign_keys=ON;")
+
+        # Automatic schema migration for staged_uploads table if needed
+        try:
+            res = await conn.exec_driver_sql("PRAGMA table_info(staged_uploads);")
+            cols = {row[1] for row in res.fetchall()}
+            if cols:
+                if "virtual_parent_dir" not in cols:
+                    await conn.exec_driver_sql("ALTER TABLE staged_uploads ADD COLUMN virtual_parent_dir VARCHAR(512) DEFAULT '/';")
+                if "filename" not in cols:
+                    await conn.exec_driver_sql("ALTER TABLE staged_uploads ADD COLUMN filename VARCHAR(255) DEFAULT '';")
+                if "physical_temp_filename" not in cols:
+                    await conn.exec_driver_sql("ALTER TABLE staged_uploads ADD COLUMN physical_temp_filename VARCHAR(255) DEFAULT '';")
+                if "updated_at" not in cols:
+                    await conn.exec_driver_sql("ALTER TABLE staged_uploads ADD COLUMN updated_at DATETIME;")
+                if "upload_id" not in cols:
+                    await conn.exec_driver_sql("ALTER TABLE staged_uploads ADD COLUMN upload_id VARCHAR(64);")
+                if "staged_filename" not in cols:
+                    await conn.exec_driver_sql("ALTER TABLE staged_uploads ADD COLUMN staged_filename VARCHAR(255);")
+                if "expires_at" not in cols:
+                    await conn.exec_driver_sql("ALTER TABLE staged_uploads ADD COLUMN expires_at DATETIME;")
+        except Exception:
+            pass
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Dependency for obtaining async database session."""

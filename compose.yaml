@@ -33,7 +33,7 @@ services:
       - DATABASE_URL=sqlite+aiosqlite:////data/mornye.db
     ports:
       # Private loopback binding strictly (Never expose to public 0.0.0.0)
-      - "127.0.0.1:8000:8000"
+      - "${MORNYE_HOST_BIND:-127.0.0.1}:${MORNYE_HOST_PORT:-8001}:8000"
     healthcheck:
       test: ["CMD", "/app/docker/healthcheck.sh"]
       interval: 20s
