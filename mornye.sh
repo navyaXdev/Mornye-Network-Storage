@@ -311,7 +311,13 @@ cmd_status() {
         echo -e "${BOLD}Permanent Tunnel Configuration:${NC}"
         echo -e "  Tunnel Name   : ${CYAN}${TUNNEL_NAME:-mornye-storage}${NC}"
         echo -e "  Tunnel UUID   : ${CYAN}${TUNNEL_ID:-None}${NC}"
+        if [[ -n "${ROOT_DOMAIN:-}" ]]; then
+            echo -e "  Root Domain   : ${CYAN}${ROOT_DOMAIN}${NC}"
+        fi
         echo -e "  Custom Domain : ${CYAN}${CUSTOM_DOMAIN:-None configured}${NC}"
+        if [[ -n "${CUSTOM_DOMAIN:-}" ]]; then
+            echo -e "  Public URL    : ${CYAN}https://${CUSTOM_DOMAIN}/dav/${NC}"
+        fi
         echo -e "  Runtime Mode  : ${TUNNEL_MODE:-docker}"
     fi
 
@@ -433,6 +439,9 @@ cmd_start() {
                 sudo systemctl start mornye-tunnel.service 2>/dev/null || true
                 echo -e "${GREEN}[✔] Cloudflare Tunnel (systemd) started.${NC}"
             fi
+        fi
+        if [[ -n "${CUSTOM_DOMAIN:-}" ]]; then
+            echo -e "${GREEN}[✔] Mornye Public URL: https://${CUSTOM_DOMAIN}/dav/${NC}"
         fi
     fi
 }

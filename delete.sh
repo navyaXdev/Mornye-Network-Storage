@@ -59,6 +59,17 @@ CONFIRM_TOKEN=""
 BACKUP_DEST=""
 SKIP_BACKUP=false
 
+# Cloudflare Tunnel Cleanup State Flags
+CLOUDFLARE_ACTION="" # "prompt" | "keep" | "remove" | "cancel"
+CF_CONFIRM_TOKEN=""
+CF_TUNNEL_DETECTED=false
+CF_TUNNEL_ID=""
+CF_TUNNEL_NAME=""
+CF_CUSTOM_DOMAIN=""
+CF_REMOVAL_STATUS="none"
+CF_DNS_ACTION="none"
+CF_REMOVAL_NOTES=""
+
 # Telemetry & Audit Arrays
 DISCOVERED_SERVICES=()
 DISCOVERED_CONTAINERS=()
@@ -104,6 +115,10 @@ Options:
   --backup [DEST]         Create safety backup archive (.tar.gz) before proceeding.
                           Optional DEST path (defaults to /tmp/mornye_backup_<timestamp>.tar.gz).
   --skip-backup           Skip the interactive backup prompt in purge mode.
+  --keep-tunnel           Preserve Cloudflare Tunnel and DNS configuration during uninstall.
+  --remove-tunnel         Request removal of Mornye's Cloudflare Tunnel and DNS route.
+  --cf-token=STRING       Pass confirmation token non-interactively ('DELETE MORNYE TUNNEL').
+  --confirm-cf=STRING     Alias for --cf-token.
   -y, --yes               Non-interactive mode for Safe Uninstall.
   --confirm=STRING        Pass confirmation token non-interactively ('DELETE MORNYE DATA').
   -h, --help              Display this help manual and exit.
@@ -146,6 +161,36 @@ while [[ $# -gt 0 ]]; do
         --skip-backup)
             SKIP_BACKUP=true
             shift
+            ;;
+        --keep-tunnel)
+            CLOUDFLARE_ACTION="keep"
+            shift
+            ;;
+        --remove-tunnel)
+            CLOUDFLARE_ACTION="remove"
+            shift
+            ;;
+        --cf-token=*)
+            CF_CONFIRM_TOKEN="${1#*=}"
+            shift
+            ;;
+        --cf-token)
+            shift
+            if [[ $# -gt 0 && ! "$1" =~ ^-- ]]; then
+                CF_CONFIRM_TOKEN="$1"
+                shift
+            fi
+            ;;
+        --confirm-cf=*)
+            CF_CONFIRM_TOKEN="${1#*=}"
+            shift
+            ;;
+        --confirm-cf)
+            shift
+            if [[ $# -gt 0 && ! "$1" =~ ^-- ]]; then
+                CF_CONFIRM_TOKEN="$1"
+                shift
+            fi
             ;;
         -y|--yes)
             AUTO_CONFIRM=true
@@ -247,6 +292,12 @@ validate_safe_path() {
     if [[ "$target_canonical" == "$HOME" || "$target_canonical" == "/home/$CURRENT_USER" || "$target_canonical" == "/home/$REAL_USER" || \
           "$fully_resolved" == "$HOME" || "$fully_resolved" == "/home/$CURRENT_USER" || "$fully_resolved" == "/home/$REAL_USER" ]]; then
         echo -e "${RED}[CRITICAL SAFETY] Refusing to delete user home directory: $target${NC}" >&2
+        return 1
+    fi
+
+    # Refuse Cloudflare account origin certificate (cert.pem)
+    if [[ "$target_name" == "cert.pem" || "$target_canonical" == *"cert.pem"* || "$fully_resolved" == *"cert.pem"* ]]; then
+        echo -e "${RED}[CRITICAL SAFETY] Refusing to delete Cloudflare account origin certificate: $target${NC}" >&2
         return 1
     fi
 
@@ -670,6 +721,20 @@ display_plan() {
         echo -e "  ${GREEN}[PRESERVED]${NC} Configuration      : $CONFIG_DIR and $PROGRAM_DIR/.env"
         echo -e "  ${YELLOW}[CLEANED]${NC}   Temporary & Cache   : $RUN_DIR, .pytest_cache, __pycache__"
     fi
+
+    if [[ "$CF_TUNNEL_DETECTED" == true ]]; then
+        echo -e "\n${BOLD}${CYAN}4. DETECTED CLOUDFLARE TUNNEL INTEGRATION:${NC}"
+        echo -e "  Tunnel Name : $CF_TUNNEL_NAME"
+        echo -e "  Tunnel UUID : $CF_TUNNEL_ID"
+        [[ -n "$CF_CUSTOM_DOMAIN" ]] && echo -e "  Hostname    : $CF_CUSTOM_DOMAIN"
+        if [[ "$CLOUDFLARE_ACTION" == "keep" ]]; then
+            echo -e "  Action      : ${GREEN}PRESERVE TUNNEL & DNS (--keep-tunnel)${NC}"
+        elif [[ "$CLOUDFLARE_ACTION" == "remove" ]]; then
+            echo -e "  Action      : ${RED}REMOVE TUNNEL & DNS (--remove-tunnel)${NC}"
+        else
+            echo -e "  Action      : Prompt operator during execution"
+        fi
+    fi
     echo -e "${BOLD}======================================================================${NC}"
 }
 
@@ -761,11 +826,503 @@ create_backup() {
     return 0
 }
 
+# ------------------------------------------------------------------------------
+# 5b. CLOUDFLARE TUNNEL CLEANUP HELPERS
+# ------------------------------------------------------------------------------
+
+get_cloudflared_bin() {
+    if [[ -n "${CLOUDFLARED_BIN:-}" ]]; then
+        echo "$CLOUDFLARED_BIN"
+        return 0
+    fi
+    if command -v cloudflared &>/dev/null; then
+        command -v cloudflared
+        return 0
+    fi
+    for p in /usr/local/bin/cloudflared /usr/bin/cloudflared /opt/cloudflared/cloudflared; do
+        if [[ -x "$p" ]]; then
+            echo "$p"
+            return 0
+        fi
+    done
+    echo "cloudflared"
+}
+
+validate_origin_certificate() {
+    local cert_file="$1"
+    [[ -z "$cert_file" || ! -f "$cert_file" ]] && return 1
+    local sz
+    sz=$(wc -c < "$cert_file" 2>/dev/null || echo 0)
+    [[ "$sz" -eq 0 ]] && return 1
+    # Reject tunnel credentials JSON
+    if grep -q '"AccountTag"' "$cert_file" 2>/dev/null && grep -q '"TunnelSecret"' "$cert_file" 2>/dev/null; then
+        return 1
+    fi
+    if grep -qE "BEGIN (ARGO TUNNEL TOKEN|CERTIFICATE|PRIVATE KEY|RSA PRIVATE KEY)" "$cert_file" 2>/dev/null; then
+        return 0
+    fi
+    if grep -q '"apiToken"' "$cert_file" 2>/dev/null && grep -q '"accountID"' "$cert_file" 2>/dev/null; then
+        return 0
+    fi
+    return 1
+}
+
+find_origin_certificate() {
+    local explicit="${CLOUDFLARE_CERT_PATH:-}"
+    if [[ -n "$explicit" ]]; then
+        if validate_origin_certificate "$explicit"; then
+            echo "$explicit"
+            return 0
+        else
+            return 1
+        fi
+    fi
+
+    local candidates=(
+        "${CLOUDFLARED_ORIGINCERT:-}"
+        "${HOME}/.cloudflared/cert.pem"
+        "/home/${REAL_USER:-$CURRENT_USER}/.cloudflared/cert.pem"
+        "/root/.cloudflared/cert.pem"
+        "/etc/cloudflared/cert.pem"
+        "${CONFIG_DIR}/cert.pem"
+    )
+
+    for c in "${candidates[@]}"; do
+        if [[ -n "$c" && -f "$c" ]] && validate_origin_certificate "$c"; then
+            echo "$c"
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+detect_mornye_cloudflare_tunnel() {
+    CF_TUNNEL_DETECTED=false
+    CF_TUNNEL_ID=""
+    CF_TUNNEL_NAME=""
+    CF_CUSTOM_DOMAIN=""
+
+    local tid="" tname="" tdomain=""
+
+    # 1. Check config/tunnel_info.env
+    if [[ -f "$CONFIG_DIR/tunnel_info.env" ]]; then
+        tid="$(grep -E '^TUNNEL_ID=' "$CONFIG_DIR/tunnel_info.env" 2>/dev/null | cut -d'=' -f2 | tr -d '"'"' " || echo '')"
+        tname="$(grep -E '^TUNNEL_NAME=' "$CONFIG_DIR/tunnel_info.env" 2>/dev/null | cut -d'=' -f2 | tr -d '"'"' " || echo '')"
+        tdomain="$(grep -E '^CUSTOM_DOMAIN=' "$CONFIG_DIR/tunnel_info.env" 2>/dev/null | cut -d'=' -f2 | tr -d '"'"' " || echo '')"
+    fi
+
+    # 2. Check config/cloudflared.yml
+    if [[ -z "$tid" && -f "$CONFIG_DIR/cloudflared.yml" ]]; then
+        tid="$(grep -E '^tunnel:' "$CONFIG_DIR/cloudflared.yml" 2>/dev/null | awk '{print $2}' | tr -d '"'"' " || echo '')"
+        if [[ -z "$tdomain" ]]; then
+            tdomain="$(grep -E 'hostname:' "$CONFIG_DIR/cloudflared.yml" 2>/dev/null | head -n1 | sed -e 's/.*hostname:[[:space:]]*//' | tr -d '"'"' \r\n" || echo '')"
+        fi
+    fi
+
+    # 3. Check config/credentials.json
+    if [[ -z "$tid" && -f "$CONFIG_DIR/credentials.json" ]]; then
+        tid="$(grep -oE '"TunnelID":\s*"[^"]+"' "$CONFIG_DIR/credentials.json" 2>/dev/null | cut -d'"' -f4 || echo '')"
+    fi
+
+    # 4. Check .env
+    if [[ -z "$tid" && -f "$PROGRAM_DIR/.env" ]]; then
+        tid="$(grep -E '^CLOUDFLARE_TUNNEL_ID=' "$PROGRAM_DIR/.env" 2>/dev/null | cut -d'=' -f2 | tr -d '"'"' " || echo '')"
+        [[ -z "$tname" ]] && tname="$(grep -E '^CLOUDFLARE_TUNNEL_NAME=' "$PROGRAM_DIR/.env" 2>/dev/null | cut -d'=' -f2 | tr -d '"'"' " || echo '')"
+        [[ -z "$tdomain" ]] && tdomain="$(grep -E '^(CLOUDFLARE_DOMAIN|CUSTOM_DOMAIN)=' "$PROGRAM_DIR/.env" 2>/dev/null | head -n1 | cut -d'=' -f2 | tr -d '"'"' " || echo '')"
+    fi
+
+    # Validate UUID pattern: 8-4-4-4-12 hex characters
+    if [[ -n "$tid" && "$tid" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]]; then
+        CF_TUNNEL_DETECTED=true
+        CF_TUNNEL_ID="$tid"
+        CF_TUNNEL_NAME="${tname:-mornye-storage}"
+        CF_CUSTOM_DOMAIN="$tdomain"
+        return 0
+    fi
+
+    return 1
+}
+
+verify_mornye_tunnel_ownership() {
+    local tid="$1"
+    [[ -z "$tid" ]] && return 1
+
+    # Must be valid UUID syntax
+    if [[ ! "$tid" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]]; then
+        echo -e "${RED}[CRITICAL SAFETY] Invalid Tunnel UUID syntax: '$tid'. Refusing deletion!${NC}" >&2
+        return 1
+    fi
+
+    # Must be confirmed by Mornye local configuration files
+    local confirmed=false
+    if [[ -f "$CONFIG_DIR/tunnel_info.env" ]] && grep -q "$tid" "$CONFIG_DIR/tunnel_info.env" 2>/dev/null; then
+        confirmed=true
+    elif [[ -f "$CONFIG_DIR/cloudflared.yml" ]] && grep -q "$tid" "$CONFIG_DIR/cloudflared.yml" 2>/dev/null; then
+        confirmed=true
+    elif [[ -f "$CONFIG_DIR/credentials.json" ]] && grep -q "$tid" "$CONFIG_DIR/credentials.json" 2>/dev/null; then
+        confirmed=true
+    elif [[ -f "$PROGRAM_DIR/.env" ]] && grep -q "$tid" "$PROGRAM_DIR/.env" 2>/dev/null; then
+        confirmed=true
+    fi
+
+    if [[ "$confirmed" != true ]]; then
+        echo -e "${RED}[CRITICAL SAFETY] Tunnel ID $tid cannot be verified against Mornye local configuration. Refusing remote deletion.${NC}" >&2
+        return 1
+    fi
+
+    return 0
+}
+
+cleanup_cloudflare_dns_route() {
+    local domain="$1"
+    local tunnel_id="$2"
+    local cert_file="$3"
+
+    if [[ -z "$domain" || -z "$tunnel_id" ]]; then
+        return 0
+    fi
+
+    echo -e "${CYAN}[*] Verifying and removing DNS route for '$domain'...${NC}"
+
+    # Allow custom mock handler for testing
+    if [[ -n "${MOCK_CF_DNS_HANDLER:-}" && -x "$MOCK_CF_DNS_HANDLER" ]]; then
+        "$MOCK_CF_DNS_HANDLER" "$domain" "$tunnel_id" "$cert_file"
+        CF_DNS_ACTION="removed"
+        return $?
+    fi
+
+    if ! has_cmd python3; then
+        echo -e "${YELLOW}[!] python3 not found. Skipping automated DNS route deletion.${NC}"
+        echo -e "${YELLOW}[!] Please remove DNS CNAME record for '$domain' pointing to '${tunnel_id}.cfargotunnel.com' manually.${NC}"
+        CF_DNS_ACTION="manual_removal_required"
+        return 0
+    fi
+
+    local py_status=0
+    python3 - "$domain" "$tunnel_id" "$cert_file" << 'PYEOF' || py_status=$?
+import sys, os, base64, json, re
+import urllib.request, urllib.error, urllib.parse
+
+domain = sys.argv[1].strip()
+tunnel_id = sys.argv[2].strip()
+cert_file = sys.argv[3].strip()
+
+try:
+    with open(cert_file, 'r', encoding='utf-8') as f:
+        cert_content = f.read()
+except Exception as e:
+    print(f"  [!] Could not read cert file: {e}")
+    sys.exit(1)
+
+token_match = re.search(r'-----BEGIN ARGO TUNNEL TOKEN-----(.*?)-----END ARGO TUNNEL TOKEN-----', cert_content, re.DOTALL)
+if not token_match:
+    print("  [!] ARGO TUNNEL TOKEN block not found in cert.pem; DNS route must be removed manually.")
+    sys.exit(2)
+
+try:
+    b64_data = "".join(token_match.group(1).split())
+    token_json = json.loads(base64.b64decode(b64_data).decode('utf-8'))
+    api_token = token_json.get("apiToken")
+    zone_id = token_json.get("zoneID")
+except Exception as e:
+    print(f"  [!] Failed to parse ARGO TUNNEL TOKEN: {e}")
+    sys.exit(3)
+
+if not api_token or not zone_id:
+    print("  [!] Missing apiToken or zoneID in origin certificate.")
+    sys.exit(4)
+
+api_base = os.environ.get("CLOUDFLARE_API_ENDPOINT", "https://api.cloudflare.com/client/v4")
+query_url = f"{api_base}/zones/{zone_id}/dns_records?type=CNAME&name={urllib.parse.quote(domain)}"
+req = urllib.request.Request(query_url, headers={
+    "Authorization": f"Bearer {api_token}",
+    "Content-Type": "application/json"
+})
+
+try:
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        resp_data = json.loads(resp.read().decode('utf-8'))
+except Exception as e:
+    print(f"  [!] Cloudflare API DNS query failed: {e}")
+    sys.exit(5)
+
+records = resp_data.get("result", [])
+if not records:
+    print(f"  [*] No CNAME record found for '{domain}'.")
+    sys.exit(0)
+
+expected_target = f"{tunnel_id}.cfargotunnel.com".lower()
+deleted_count = 0
+
+for rec in records:
+    rec_id = rec.get("id")
+    rec_content = str(rec.get("content", "")).strip().rstrip(".").lower()
+    
+    if rec_content == expected_target:
+        del_url = f"{api_base}/zones/{zone_id}/dns_records/{rec_id}"
+        del_req = urllib.request.Request(del_url, headers={
+            "Authorization": f"Bearer {api_token}",
+            "Content-Type": "application/json"
+        }, method="DELETE")
+        try:
+            with urllib.request.urlopen(del_req, timeout=10) as del_resp:
+                del_result = json.loads(del_resp.read().decode('utf-8'))
+                if del_result.get("success"):
+                    print(f"  [✔] Deleted Cloudflare DNS route: {domain} -> {rec_content}")
+                    deleted_count += 1
+                else:
+                    print(f"  [!] Cloudflare API returned failure deleting record {rec_id}: {del_result.get('errors')}")
+        except Exception as e:
+            print(f"  [!] Failed to delete DNS record {rec_id}: {e}")
+    else:
+        print(f"  [SAFETY PRESERVED] DNS record for '{domain}' points to '{rec_content}', NOT Mornye tunnel '{tunnel_id}'. Preserving record.")
+
+sys.exit(0)
+PYEOF
+
+    if [[ $py_status -eq 0 ]]; then
+        CF_DNS_ACTION="removed_or_not_present"
+    else
+        echo -e "${YELLOW}[!] DNS route could not be automatically deleted via API (exit code $py_status).${NC}"
+        echo -e "${YELLOW}[!] Please remove the DNS CNAME record manually in your Cloudflare dashboard:${NC}"
+        echo -e "    Type: CNAME | Hostname: $domain | Target: ${tunnel_id}.cfargotunnel.com"
+        CF_DNS_ACTION="manual_removal_required"
+    fi
+    return 0
+}
+
+prompt_cloudflare_cleanup() {
+    if [[ "$CF_TUNNEL_DETECTED" != true ]]; then
+        return 0
+    fi
+
+    # CLI option: --keep-tunnel
+    if [[ "$CLOUDFLARE_ACTION" == "keep" ]]; then
+        CF_REMOVAL_STATUS="kept"
+        CF_REMOVAL_NOTES="Preserved by --keep-tunnel CLI flag."
+        PRESERVED_RESOURCES+=("Cloudflare Tunnel: $CF_TUNNEL_NAME ($CF_TUNNEL_ID) [Kept by --keep-tunnel]")
+        echo -e "${GREEN}[✔] Keeping Cloudflare Tunnel and DNS configuration (--keep-tunnel).${NC}"
+        return 0
+    fi
+
+    # CLI option: --remove-tunnel
+    if [[ "$CLOUDFLARE_ACTION" == "remove" ]]; then
+        if [[ "$CF_CONFIRM_TOKEN" == "DELETE MORNYE TUNNEL" ]]; then
+            echo -e "${GREEN}[✔] Confirmation token validated for --remove-tunnel: 'DELETE MORNYE TUNNEL'.${NC}"
+            return 0
+        elif [[ "$AUTO_CONFIRM" == true || ! -t 0 ]]; then
+            echo -e "${YELLOW}[!] --remove-tunnel specified without valid confirmation token (--cf-token='DELETE MORNYE TUNNEL').${NC}"
+            echo -e "${YELLOW}[*] Cloudflare Tunnel will be PRESERVED to prevent unintended remote deletion.${NC}"
+            CLOUDFLARE_ACTION="keep"
+            CF_REMOVAL_STATUS="preserved_unconfirmed"
+            CF_REMOVAL_NOTES="--remove-tunnel lacked valid confirmation token; preserved for safety."
+            PRESERVED_RESOURCES+=("Cloudflare Tunnel: $CF_TUNNEL_NAME ($CF_TUNNEL_ID) [Preserved unconfirmed]")
+            return 0
+        else
+            echo -e "\n${RED}${BOLD}======================================================================${NC}"
+            echo -e "${RED}${BOLD}          CONFIRMATION REQUIRED: REMOVE CLOUDFLARE TUNNEL            ${NC}"
+            echo -e "${RED}${BOLD}======================================================================${NC}"
+            echo -e "${YELLOW}You have requested removal of Mornye's Cloudflare Tunnel:${NC}"
+            echo -e "  Tunnel Name : $CF_TUNNEL_NAME"
+            echo -e "  Tunnel UUID : $CF_TUNNEL_ID"
+            [[ -n "$CF_CUSTOM_DOMAIN" ]] && echo -e "  Hostname    : $CF_CUSTOM_DOMAIN"
+            echo -e "\n${RED}${BOLD}WARNING: The public domain will immediately become unreachable!${NC}"
+            echo -e "To confirm remote tunnel and DNS deletion, type: ${BOLD}${RED}DELETE MORNYE TUNNEL${NC}"
+            echo ""
+            IFS= read -p "Confirmation: " -r user_tok
+            if [[ "$user_tok" == "DELETE MORNYE TUNNEL" ]]; then
+                CF_CONFIRM_TOKEN="DELETE MORNYE TUNNEL"
+                echo -e "${GREEN}[✔] Confirmation token validated: 'DELETE MORNYE TUNNEL'.${NC}"
+                return 0
+            else
+                echo -e "${YELLOW}[ABORTED] Confirmation token mismatch ('$user_tok'). Preserving Cloudflare Tunnel.${NC}"
+                CLOUDFLARE_ACTION="keep"
+                CF_REMOVAL_STATUS="preserved_unconfirmed"
+                CF_REMOVAL_NOTES="Confirmation token mismatch ('$user_tok' != 'DELETE MORNYE TUNNEL'); preserved."
+                PRESERVED_RESOURCES+=("Cloudflare Tunnel: $CF_TUNNEL_NAME ($CF_TUNNEL_ID) [Preserved]")
+                return 0
+            fi
+        fi
+    fi
+
+    # Non-interactive fallback: default to keep
+    if [[ "$AUTO_CONFIRM" == true || ! -t 0 ]]; then
+        CLOUDFLARE_ACTION="keep"
+        CF_REMOVAL_STATUS="kept"
+        CF_REMOVAL_NOTES="Non-interactive execution defaulted to preserving Cloudflare Tunnel."
+        PRESERVED_RESOURCES+=("Cloudflare Tunnel: $CF_TUNNEL_NAME ($CF_TUNNEL_ID) [Kept by default]")
+        echo -e "${GREEN}[✔] Non-interactive run: Preserving Cloudflare Tunnel and DNS configuration.${NC}"
+        return 0
+    fi
+
+    # Interactive 3-Option Menu
+    echo -e "\n${BOLD}${CYAN}======================================================================${NC}"
+    echo -e "${BOLD}${CYAN}                      Cloudflare Tunnel Cleanup                       ${NC}"
+    echo -e "${BOLD}${CYAN}======================================================================${NC}"
+    echo -e "Mornye has detected an active Cloudflare Tunnel configuration:"
+    echo -e "  Tunnel Name : ${BOLD}$CF_TUNNEL_NAME${NC}"
+    echo -e "  Tunnel UUID : ${BOLD}$CF_TUNNEL_ID${NC}"
+    [[ -n "$CF_CUSTOM_DOMAIN" ]] && echo -e "  Hostname    : ${BOLD}$CF_CUSTOM_DOMAIN${NC}"
+    echo ""
+    echo -e "  ${BOLD}1. Keep Cloudflare Tunnel${NC} — uninstall Mornye but preserve the tunnel and DNS configuration."
+    echo -e "  ${BOLD}2. Remove Mornye Cloudflare Tunnel${NC} — remove only resources owned by Mornye."
+    echo -e "  ${BOLD}3. Cancel uninstall.${NC}"
+    echo ""
+
+    local choice=""
+    read -p "Select an option [1-3]: " -r choice
+    case "$choice" in
+        1)
+            CLOUDFLARE_ACTION="keep"
+            CF_REMOVAL_STATUS="kept"
+            CF_REMOVAL_NOTES="Preserved by user selection (Option 1)."
+            PRESERVED_RESOURCES+=("Cloudflare Tunnel: $CF_TUNNEL_NAME ($CF_TUNNEL_ID)")
+            echo -e "${GREEN}[✔] Cloudflare Tunnel and DNS route will be PRESERVED.${NC}"
+            ;;
+        2)
+            echo -e "\n${RED}${BOLD}======================================================================${NC}"
+            echo -e "${RED}${BOLD}          CONFIRMATION REQUIRED: REMOVE CLOUDFLARE TUNNEL            ${NC}"
+            echo -e "${RED}${BOLD}======================================================================${NC}"
+            echo -e "${YELLOW}You have chosen to remove the Mornye Cloudflare Tunnel.${NC}"
+            echo -e "  Tunnel Name : $CF_TUNNEL_NAME"
+            echo -e "  Tunnel UUID : $CF_TUNNEL_ID"
+            [[ -n "$CF_CUSTOM_DOMAIN" ]] && echo -e "  Hostname    : $CF_CUSTOM_DOMAIN"
+            echo -e "\n${RED}${BOLD}WARNING: The public domain will immediately become unreachable!${NC}"
+            echo -e "To confirm remote tunnel and DNS deletion, type: ${BOLD}${RED}DELETE MORNYE TUNNEL${NC}"
+            echo ""
+            IFS= read -p "Confirmation: " -r user_tok
+            if [[ "$user_tok" == "DELETE MORNYE TUNNEL" ]]; then
+                CLOUDFLARE_ACTION="remove"
+                CF_CONFIRM_TOKEN="DELETE MORNYE TUNNEL"
+                echo -e "${GREEN}[✔] Confirmation token validated: 'DELETE MORNYE TUNNEL'.${NC}"
+            else
+                echo -e "${YELLOW}[ABORTED] Confirmation token mismatch ('$user_tok'). Preserving Cloudflare Tunnel.${NC}"
+                CLOUDFLARE_ACTION="keep"
+                CF_REMOVAL_STATUS="preserved_unconfirmed"
+                CF_REMOVAL_NOTES="Confirmation token mismatch ('$user_tok' != 'DELETE MORNYE TUNNEL'); preserved."
+                PRESERVED_RESOURCES+=("Cloudflare Tunnel: $CF_TUNNEL_NAME ($CF_TUNNEL_ID)")
+            fi
+            ;;
+        3)
+            echo -e "${YELLOW}[*] Uninstallation cancelled by operator.${NC}"
+            exit 0
+            ;;
+        *)
+            echo -e "${YELLOW}[!] Invalid option selected ('$choice'). Defaulting to: Keep Cloudflare Tunnel.${NC}"
+            CLOUDFLARE_ACTION="keep"
+            CF_REMOVAL_STATUS="kept"
+            CF_REMOVAL_NOTES="Defaulted to keep on invalid menu selection."
+            PRESERVED_RESOURCES+=("Cloudflare Tunnel: $CF_TUNNEL_NAME ($CF_TUNNEL_ID)")
+            ;;
+    esac
+}
+
+remove_mornye_cloudflare_tunnel() {
+    echo -e "\n${CYAN}[*] Executing Mornye Cloudflare Tunnel cleanup...${NC}"
+
+    if [[ "$CF_CONFIRM_TOKEN" != "DELETE MORNYE TUNNEL" ]]; then
+        echo -e "${YELLOW}[ABORTED] Missing valid confirmation token ('DELETE MORNYE TUNNEL'). Aborting tunnel removal.${NC}"
+        CF_REMOVAL_STATUS="aborted_unconfirmed"
+        return 1
+    fi
+
+    # 1. Strict ownership verification
+    if ! verify_mornye_tunnel_ownership "$CF_TUNNEL_ID"; then
+        echo -e "${RED}[CRITICAL SAFETY] Ownership verification failed for tunnel $CF_TUNNEL_ID. Skipping remote deletion.${NC}"
+        CF_REMOVAL_STATUS="ownership_unverified"
+        CF_REMOVAL_NOTES="Ownership could not be verified against Mornye configuration; remote deletion skipped."
+        ERRORS_ENCOUNTERED+=("Cloudflare tunnel $CF_TUNNEL_ID ownership unverified; remote deletion skipped")
+        return 1
+    fi
+
+    # 2. Stop and remove only the Mornye tunnel container
+    if has_docker && docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qw "mornye-tunnel"; then
+        local t_wdir="" t_proj=""
+        t_wdir="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project.working_dir"}}' mornye-tunnel 2>/dev/null || echo '')"
+        t_proj="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project"}}' mornye-tunnel 2>/dev/null || echo '')"
+        if [[ -n "$t_wdir" && "$t_wdir" != "$PROGRAM_DIR" ]]; then
+            echo -e "${YELLOW}[!] Preserving container 'mornye-tunnel': belongs to another working directory ($t_wdir).${NC}"
+            PRESERVED_RESOURCES+=("mornye-tunnel container (Foreign working_dir: $t_wdir)")
+        else
+            echo -e "  - Stopping and removing Mornye tunnel container 'mornye-tunnel'..."
+            docker stop mornye-tunnel 2>/dev/null || true
+            docker rm -f mornye-tunnel 2>/dev/null || true
+            REMOVED_CONTAINERS+=("mornye-tunnel")
+        fi
+    fi
+
+    # 3. Locate Cloudflare origin certificate
+    local cert_file
+    cert_file="$(find_origin_certificate 2>/dev/null || echo '')"
+
+    if [[ -z "$cert_file" || ! -f "$cert_file" ]]; then
+        echo -e "${YELLOW}[!] Cloudflare account origin certificate (cert.pem) not found.${NC}"
+        echo -e "${YELLOW}[!] Remote deletion of tunnel and DNS records cannot be performed without Cloudflare authentication.${NC}"
+        echo -e "${YELLOW}[!] Manual cleanup required in Cloudflare dashboard or CLI:${NC}"
+        echo -e "    1. Delete tunnel: cloudflared tunnel delete -f $CF_TUNNEL_ID"
+        if [[ -n "$CF_CUSTOM_DOMAIN" ]]; then
+            echo -e "    2. Delete DNS CNAME: remove record '$CF_CUSTOM_DOMAIN' pointing to ${CF_TUNNEL_ID}.cfargotunnel.com"
+        fi
+        CF_REMOVAL_STATUS="auth_missing_manual_required"
+        CF_REMOVAL_NOTES="cert.pem not found; remote resources preserved. Manual cleanup required."
+        ERRORS_ENCOUNTERED+=("Remote Cloudflare deletion skipped: cert.pem not found")
+
+        # Clean local Mornye files anyway
+        safe_remove_path "$CONFIG_DIR/credentials.json"
+        safe_remove_path "$CONFIG_DIR/cloudflared.yml"
+        safe_remove_path "$CONFIG_DIR/tunnel_info.env"
+        return 0
+    fi
+
+    # Origin certificate is found! Ensure it will NEVER be deleted
+    echo -e "${GREEN}[✔] Cloudflare account origin certificate preserved: $cert_file${NC}"
+    PRESERVED_RESOURCES+=("Cloudflare origin certificate: $cert_file")
+
+    # 4. Remove DNS route associated with this Mornye tunnel and hostname
+    if [[ -n "$CF_CUSTOM_DOMAIN" ]]; then
+        cleanup_cloudflare_dns_route "$CF_CUSTOM_DOMAIN" "$CF_TUNNEL_ID" "$cert_file"
+    fi
+
+    # 5. Delete the Mornye tunnel using Cloudflare's supported CLI workflow
+    local cf_bin
+    cf_bin="$(get_cloudflared_bin)"
+    local cert_args=()
+    [[ -n "$cert_file" ]] && cert_args=("--origincert" "$cert_file")
+
+    echo -e "  - Deleting remote Cloudflare Tunnel '$CF_TUNNEL_NAME' ($CF_TUNNEL_ID)..."
+    local del_out="" del_rc=0
+    del_out="$($cf_bin tunnel "${cert_args[@]}" delete -f "$CF_TUNNEL_ID" 2>&1)" || del_rc=$?
+
+    if [[ $del_rc -eq 0 ]] || echo "$del_out" | grep -qiE "(deleted|not found|does not exist)"; then
+        echo -e "${GREEN}[✔] Remote Cloudflare Tunnel successfully deleted: $CF_TUNNEL_ID${NC}"
+        CF_REMOVAL_STATUS="deleted"
+        CF_REMOVAL_NOTES="Tunnel $CF_TUNNEL_ID and DNS route removed successfully."
+    else
+        echo -e "${RED}[ERROR] Failed to delete Cloudflare Tunnel $CF_TUNNEL_ID (code: $del_rc): $del_out${NC}"
+        CF_REMOVAL_STATUS="failed_remote_delete"
+        CF_REMOVAL_NOTES="cloudflared tunnel delete returned error: $del_out"
+        ERRORS_ENCOUNTERED+=("Failed to delete Cloudflare Tunnel $CF_TUNNEL_ID: $del_out")
+    fi
+
+    # 6. Remove Mornye-specific local tunnel artifacts
+    echo -e "  - Removing Mornye tunnel configuration artifacts..."
+    safe_remove_path "$CONFIG_DIR/credentials.json"
+    safe_remove_path "$CONFIG_DIR/cloudflared.yml"
+    safe_remove_path "$CONFIG_DIR/tunnel_info.env"
+    echo -e "${GREEN}[✔] Mornye Cloudflare Tunnel cleanup complete.${NC}"
+}
+
 operator_gate() {
     if [[ "$DRY_RUN" == true ]]; then
         echo -e "\n${CYAN}${BOLD}[DRY-RUN] Simulation completed. 0 system changes made.${NC}"
         echo -e "Review the plan above to see all actions that would be executed."
         exit 0
+    fi
+
+    # Cloudflare Tunnel Cleanup Gate
+    if [[ "$CF_TUNNEL_DETECTED" == true ]]; then
+        prompt_cloudflare_cleanup
     fi
 
     # If standalone backup requested
@@ -1025,6 +1582,18 @@ handle_cloudflare() {
         PRESERVED_RESOURCES+=("mornye-tunnel.service (Active & Preserved)")
     fi
 
+    # Cloudflare Tunnel lifecycle cleanup
+    if [[ "$CF_TUNNEL_DETECTED" == true ]]; then
+        if [[ "$CLOUDFLARE_ACTION" == "remove" && "$CF_CONFIRM_TOKEN" == "DELETE MORNYE TUNNEL" ]]; then
+            remove_mornye_cloudflare_tunnel
+        elif [[ "$CLOUDFLARE_ACTION" == "keep" ]]; then
+            echo -e "${GREEN}[✔] Keeping Cloudflare Tunnel '$CF_TUNNEL_NAME' ($CF_TUNNEL_ID) and DNS route as requested.${NC}"
+            PRESERVED_RESOURCES+=("Cloudflare Tunnel: $CF_TUNNEL_NAME ($CF_TUNNEL_ID) [Preserved]")
+            [[ -n "$CF_CUSTOM_DOMAIN" ]] && PRESERVED_RESOURCES+=("Cloudflare DNS Route: $CF_CUSTOM_DOMAIN [Preserved]")
+            PRESERVED_RESOURCES+=("Cloudflare Credentials & Configuration: $CONFIG_DIR [Preserved]")
+        fi
+    fi
+
     # Check shared /etc/cloudflared/config.yml for Mornye-specific ingress rule
     local shared_cf="/etc/cloudflared/config.yml"
     if [[ -f "$shared_cf" ]]; then
@@ -1152,12 +1721,28 @@ remove_files() {
         safe_remove_path "$DATA_DIR"
         safe_remove_path "$STORAGE_DIR"
         safe_remove_path "$BACKUP_DIR"
-        safe_remove_path "$CONFIG_DIR"
+
+        # If Keep Tunnel was selected, preserve tunnel files even in purge!
+        if [[ "$CF_TUNNEL_DETECTED" == true && "$CLOUDFLARE_ACTION" == "keep" ]]; then
+            echo -e "${GREEN}[*] Preserving Cloudflare Tunnel configuration in $CONFIG_DIR...${NC}"
+            find "$CONFIG_DIR" -maxdepth 1 -type f ! -name "credentials.json" ! -name "cloudflared.yml" ! -name "tunnel_info.env" ! -name "cert.pem" -exec rm -f {} + 2>/dev/null || true
+            PRESERVED_RESOURCES+=("Cloudflare config files in $CONFIG_DIR")
+        else
+            safe_remove_path "$CONFIG_DIR"
+        fi
+
         safe_remove_path "$PROGRAM_DIR/.env"
         find "$PROGRAM_DIR" -maxdepth 1 -name ".env.bak_*" -exec rm -f {} + 2>/dev/null || true
         safe_remove_path "$PROGRAM_DIR/venv"
         safe_remove_path "$LOG_DIR"
     else
+        # In Safe Uninstall mode:
+        if [[ "$CLOUDFLARE_ACTION" == "remove" ]]; then
+            echo -e "${CYAN}[*] Removing Mornye-specific Cloudflare configuration files...${NC}"
+            safe_remove_path "$CONFIG_DIR/credentials.json"
+            safe_remove_path "$CONFIG_DIR/cloudflared.yml"
+            safe_remove_path "$CONFIG_DIR/tunnel_info.env"
+        fi
         echo -e "${GREEN}[✔] Preserved user database, storage, backups, and configurations.${NC}"
     fi
     echo -e "${GREEN}[✔] File removal phase complete.${NC}"
@@ -1262,12 +1847,25 @@ generate_report() {
         echo "  - Cron Tasks: ${REMOVED_CRON_JOBS[*]:-None}"
         echo "  - Firewall  : ${REMOVED_FIREWALL_RULES[*]:-None}"
         echo ""
-        echo "4. FILES & DATA AUDIT:"
+        echo "4. CLOUDFLARE TUNNEL CLEANUP AUDIT:"
+        if [[ "$CF_TUNNEL_DETECTED" == true ]]; then
+            echo "  - Tunnel Status   : $(echo "$CF_REMOVAL_STATUS" | tr '[:lower:]' '[:upper:]')"
+            echo "  - Tunnel Name     : $CF_TUNNEL_NAME"
+            echo "  - Tunnel UUID     : $CF_TUNNEL_ID"
+            echo "  - Custom Hostname : ${CF_CUSTOM_DOMAIN:-None}"
+            echo "  - DNS Route Action: ${CF_DNS_ACTION:-None}"
+            echo "  - Removal Notes   : ${CF_REMOVAL_NOTES:-None}"
+            echo "  - Account Cert    : PRESERVED (cert.pem is strictly protected)"
+        else
+            echo "  - Tunnel Status   : NOT DETECTED"
+        fi
+        echo ""
+        echo "5. FILES & DATA AUDIT:"
         if [[ "$PURGE_MODE" == true ]]; then
             echo "  - Database Directory : PURGED ($DATA_DIR)"
             echo "  - Storage Directory  : PURGED ($STORAGE_DIR)"
             echo "  - Backups Directory  : PURGED ($BACKUP_DIR)"
-            echo "  - Config & Env Files : PURGED"
+            echo "  - Config & Env Files : $([[ "$CF_TUNNEL_DETECTED" == true && "$CLOUDFLARE_ACTION" == "keep" ]] && echo "PARTIALLY PURGED (Tunnel Config Preserved)" || echo "PURGED")"
         else
             echo "  - Database Directory : PRESERVED ($DATA_DIR)"
             echo "  - Storage Directory  : PRESERVED ($STORAGE_DIR)"
@@ -1275,14 +1873,14 @@ generate_report() {
             echo "  - Config & Env Files : PRESERVED ($CONFIG_DIR, .env)"
         fi
         echo ""
-        echo "5. STRICTLY PROTECTED FOREIGN SERVICES:"
+        echo "6. STRICTLY PROTECTED FOREIGN SERVICES:"
         if [[ ${#PROTECTED_SERVICES[@]} -gt 0 ]]; then
             for ps in "${PROTECTED_SERVICES[@]}"; do echo "  - $ps"; done
         else
             echo "  - Standard system services verified."
         fi
         echo ""
-        echo "6. ERRORS ENCOUNTERED:"
+        echo "7. ERRORS ENCOUNTERED:"
         if [[ ${#ERRORS_ENCOUNTERED[@]} -gt 0 ]]; then
             for err in "${ERRORS_ENCOUNTERED[@]}"; do echo "  - $err"; done
         else
@@ -1299,6 +1897,17 @@ generate_report() {
     echo -e "Saved Removal Report : ${CYAN}${rep_dest}${NC}"
     if [[ -n "$BACKUP_CREATED_PATH" ]]; then
         echo -e "Safety Backup Archive: ${GREEN}${BACKUP_CREATED_PATH}${NC}"
+    fi
+    if [[ "$CF_TUNNEL_DETECTED" == true ]]; then
+        echo -e "\nCloudflare Tunnel Audit:"
+        echo -e "  - Status   : ${BOLD}$CF_REMOVAL_STATUS${NC}"
+        echo -e "  - Tunnel   : $CF_TUNNEL_NAME ($CF_TUNNEL_ID)"
+        [[ -n "$CF_CUSTOM_DOMAIN" ]] && echo -e "  - Hostname : $CF_CUSTOM_DOMAIN"
+        if [[ "$CLOUDFLARE_ACTION" == "keep" ]]; then
+            echo -e "  - Config   : ${GREEN}PRESERVED${NC}"
+        elif [[ "$CLOUDFLARE_ACTION" == "remove" ]]; then
+            echo -e "  - Config   : ${RED}REMOVED${NC}"
+        fi
     fi
     if [[ "$PURGE_MODE" != true ]]; then
         echo -e "\nUser Data Preserved At:"
@@ -1323,6 +1932,7 @@ main() {
     discover_scheduled_tasks
     discover_firewall_rules
     discover_filesystem_inventory
+    detect_mornye_cloudflare_tunnel
 
     display_plan
     operator_gate

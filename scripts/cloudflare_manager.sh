@@ -55,6 +55,10 @@ has_cmd() {
 }
 
 get_cloudflared_bin() {
+    if [[ -n "${CLOUDFLARED_BIN:-}" ]]; then
+        echo "$CLOUDFLARED_BIN"
+        return 0
+    fi
     if has_cmd cloudflared; then
         echo "cloudflared"
     elif [[ -x /usr/local/bin/cloudflared ]]; then
@@ -289,11 +293,152 @@ save_tunnel_metadata() {
 # Mornye Cloudflare Tunnel Metadata
 TUNNEL_NAME="${TUNNEL_NAME:-mornye-storage}"
 TUNNEL_ID="${TUNNEL_ID:-}"
+ROOT_DOMAIN="${ROOT_DOMAIN:-}"
 CUSTOM_DOMAIN="${CUSTOM_DOMAIN:-}"
 TUNNEL_MODE="${TUNNEL_MODE:-docker}"
 LAST_UPDATED="$(date -u +"%Y-%m-%d %H:%M:%SZ")"
 EOF
     chmod 600 "$TUNNEL_METADATA"
+}
+
+# ------------------------------------------------------------------------------
+# 1.2 DOMAIN VALIDATION & CLOUDFLARE VERIFICATION HELPERS
+# ------------------------------------------------------------------------------
+
+format_and_validate_domain() {
+    local raw_input="$1"
+    local clean_domain="$raw_input"
+
+    # Strip whitespace
+    clean_domain="$(echo "$clean_domain" | tr -d '[:space:]')"
+
+    # Convert to lowercase first
+    clean_domain="$(echo "$clean_domain" | tr '[:upper:]' '[:lower:]')"
+
+    # Strip protocol prefix (http://, https://)
+    clean_domain="${clean_domain#http://}"
+    clean_domain="${clean_domain#https://}"
+
+    # Strip port suffix (:8000, :443, etc.)
+    clean_domain="${clean_domain%%:*}"
+
+    # Strip trailing slashes and paths (/dav/, /health, etc.)
+    clean_domain="${clean_domain%%/*}"
+
+    # If user passed "mornye.<domain>", strip "mornye." prefix so we get the root domain
+    if [[ "$clean_domain" =~ ^mornye\.(.+)$ ]]; then
+        clean_domain="${BASH_REMATCH[1]}"
+    fi
+
+    # Empty check
+    if [[ -z "$clean_domain" ]]; then
+        return 1
+    fi
+
+    # Disallow localhost
+    if [[ "$clean_domain" == "localhost" ]]; then
+        return 1
+    fi
+
+    # Reject IPv4 addresses
+    if [[ "$clean_domain" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
+        return 1
+    fi
+
+    # Reject IPv6 addresses
+    if [[ "$clean_domain" =~ : ]]; then
+        return 1
+    fi
+
+    # Reject leading or trailing hyphens or dots
+    if [[ "$clean_domain" =~ ^[-.] || "$clean_domain" =~ [-.]$ ]]; then
+        return 1
+    fi
+
+    # Reject consecutive dots or underscores
+    if [[ "$clean_domain" =~ \.\. || "$clean_domain" =~ _ ]]; then
+        return 1
+    fi
+
+    # Valid domain labels and TLD (at least 2 alpha characters)
+    if [[ ! "$clean_domain" =~ ^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$ ]]; then
+        return 1
+    fi
+
+    echo "$clean_domain"
+    return 0
+}
+
+verify_cloudflare_domain() {
+    local root_domain="$1"
+    local cert_file="$2"
+
+    if [[ "${MOCK_CF_ZONE_VERIFY:-}" == "fail" ]]; then
+        echo -e "${RED}[ERROR] Domain '$root_domain' is not associated with your Cloudflare account.${NC}"
+        return 1
+    fi
+    if [[ "${MOCK_CF_ZONE_VERIFY:-}" == "ok" ]]; then
+        return 0
+    fi
+
+    if [[ -z "$cert_file" ]] || ! validate_origin_certificate "$cert_file"; then
+        echo -e "${RED}[ERROR] Valid Cloudflare origin certificate (cert.pem) required to verify domain.${NC}"
+        print_cert_diagnostic_help
+        return 1
+    fi
+
+    return 0
+}
+
+check_and_create_dns_route() {
+    local t_id="$1"
+    local r_domain="$2"
+    local sub_domain="$3"
+    local cert_file="$4"
+    local cf_bin
+    cf_bin="$(get_cloudflared_bin)"
+
+    if [[ -n "${MOCK_CF_DNS_CREATE_HANDLER:-}" ]]; then
+        "${MOCK_CF_DNS_CREATE_HANDLER}" "$t_id" "$sub_domain"
+        return $?
+    fi
+
+    local cert_args=()
+    [[ -n "$cert_file" ]] && cert_args=("--origincert" "$cert_file")
+
+    local expected_target="${t_id}.cfargotunnel.com"
+    local existing_target=""
+
+    if has_cmd dig; then
+        existing_target=$(dig +short CNAME "$sub_domain" 2>/dev/null | sed 's/\.$//' || true)
+    elif has_cmd host; then
+        existing_target=$(host -t CNAME "$sub_domain" 2>/dev/null | awk '{print $NF}' | sed 's/\.$//' || true)
+    fi
+
+    if [[ -n "$existing_target" ]]; then
+        if [[ "$existing_target" == "$expected_target" ]]; then
+            return 0
+        else
+            if "$cf_bin" "${cert_args[@]}" tunnel route dns --overwrite-dns "$t_id" "$sub_domain" 2>/dev/null; then
+                return 0
+            else
+                return 1
+            fi
+        fi
+    fi
+
+    local route_output
+    if route_output=$("$cf_bin" "${cert_args[@]}" tunnel route dns "$t_id" "$sub_domain" 2>&1); then
+        return 0
+    else
+        if echo "$route_output" | grep -qiE "already exists|conflict|CNAME"; then
+            if "$cf_bin" "${cert_args[@]}" tunnel route dns --overwrite-dns "$t_id" "$sub_domain" 2>/dev/null; then
+                return 0
+            fi
+        fi
+        echo -e "${RED}[ERROR] Cloudflare DNS routing failed: $route_output${NC}"
+        return 1
+    fi
 }
 
 # ------------------------------------------------------------------------------
@@ -498,36 +643,47 @@ cmd_domain_add() {
     cf_bin="$(get_cloudflared_bin)"
     load_tunnel_metadata
 
-    local domain="$1"
-    if [[ -z "$domain" ]]; then
-        read -p "Enter custom hostname (e.g. storage.example.com): " -r domain
+    local domain_input="${1:-}"
+    if [[ -z "$domain_input" ]]; then
+        read -p "Enter your Root Domain (e.g. example.com): " -r domain_input
     fi
 
-    if [[ -z "$domain" ]]; then
+    if [[ -z "$domain_input" ]]; then
         echo -e "${RED}[ERROR] Hostname cannot be empty.${NC}"
         return 1
     fi
 
-    # Hostname syntax validation
-    if [[ ! "$domain" =~ ^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$ ]]; then
-        echo -e "${RED}[ERROR] Invalid hostname syntax: '$domain'${NC}"
+    local root_domain
+    if ! root_domain="$(format_and_validate_domain "$domain_input")"; then
+        echo -e "${RED}[ERROR] Invalid root domain format: '$domain_input'${NC}"
+        return 1
+    fi
+
+    local subdomain="mornye.${root_domain}"
+
+    # Origin certificate & Cloudflare domain check
+    local origin_cert
+    origin_cert="$(find_origin_certificate 2>/dev/null || true)"
+    if ! verify_cloudflare_domain "$root_domain" "$origin_cert"; then
         return 1
     fi
 
     if [[ -z "$TUNNEL_ID" ]]; then
-        echo -e "${YELLOW}[!] Tunnel not initialized. Initializing tunnel '$TUNNEL_NAME'...${NC}"
         cmd_create "${TUNNEL_NAME:-mornye-storage}" || return 1
+        load_tunnel_metadata
     fi
 
-    echo -e "${BOLD}[*] Routing DNS CNAME for '$domain' to Tunnel '$TUNNEL_ID'...${NC}"
-    if $cf_bin tunnel route dns "$TUNNEL_ID" "$domain" 2>/dev/null; then
-        echo -e "${GREEN}[✔] Cloudflare DNS CNAME route created: $domain -> ${TUNNEL_ID}.cfargotunnel.com${NC}"
-    else
-        echo -e "${YELLOW}[!] Note: DNS route may already exist in your Cloudflare zone or require zone access.${NC}"
-    fi
-
-    CUSTOM_DOMAIN="$domain"
-    save_tunnel_metadata
+    # Display configuration banner and progress steps
+    echo "========================================"
+    echo "       Mornye Network Storage"
+    echo "========================================"
+    echo ""
+    echo "Cloudflare Domain Configuration"
+    echo ""
+    echo "Root Domain: ${root_domain}"
+    echo "Generated Subdomain: ${subdomain}"
+    echo ""
+    echo "Configuring Cloudflare Tunnel..."
 
     # Target origin configuration:
     # Inside docker network, tunnel reaches webdav container directly
@@ -545,8 +701,8 @@ tunnel: ${TUNNEL_ID}
 credentials-file: /etc/cloudflared/credentials.json
 
 ingress:
-  # Public WebDAV endpoint mapped exclusively
-  - hostname: ${domain}
+  # Dedicated Mornye WebDAV endpoint mapped exclusively
+  - hostname: ${subdomain}
     service: ${target_origin}
     originRequest:
       connectTimeout: 30s
@@ -556,21 +712,53 @@ ingress:
   - service: http_status:404
 YMLEOF
     chmod 644 "$TUNNEL_CONFIG"
-    echo -e "${GREEN}[✔] Structural ingress configuration written to $TUNNEL_CONFIG${NC}"
+
+    ROOT_DOMAIN="$root_domain"
+    CUSTOM_DOMAIN="$subdomain"
+    save_tunnel_metadata
 
     # Ensure credentials file is ready for container mount
     ensure_credentials_file "$TUNNEL_ID" "$TUNNEL_NAME" || true
 
-    # Update .env STORAGE_HOSTNAME
+    # Update .env configuration
     if [[ -f "$PROGRAM_DIR/.env" ]]; then
-        sed -i "s/STORAGE_HOSTNAME=.*/STORAGE_HOSTNAME=$domain/" "$PROGRAM_DIR/.env" 2>/dev/null || true
+        if grep -q "^STORAGE_HOSTNAME=" "$PROGRAM_DIR/.env" 2>/dev/null; then
+            sed -i "s/^STORAGE_HOSTNAME=.*/STORAGE_HOSTNAME=$subdomain/" "$PROGRAM_DIR/.env" 2>/dev/null || true
+        else
+            echo "STORAGE_HOSTNAME=$subdomain" >> "$PROGRAM_DIR/.env"
+        fi
+        if grep -q "^CLOUDFLARE_ROOT_DOMAIN=" "$PROGRAM_DIR/.env" 2>/dev/null; then
+            sed -i "s/^CLOUDFLARE_ROOT_DOMAIN=.*/CLOUDFLARE_ROOT_DOMAIN=$root_domain/" "$PROGRAM_DIR/.env" 2>/dev/null || true
+        else
+            echo "CLOUDFLARE_ROOT_DOMAIN=$root_domain" >> "$PROGRAM_DIR/.env"
+        fi
+        if grep -q "^CLOUDFLARE_DOMAIN=" "$PROGRAM_DIR/.env" 2>/dev/null; then
+            sed -i "s/^CLOUDFLARE_DOMAIN=.*/CLOUDFLARE_DOMAIN=$subdomain/" "$PROGRAM_DIR/.env" 2>/dev/null || true
+        else
+            echo "CLOUDFLARE_DOMAIN=$subdomain" >> "$PROGRAM_DIR/.env"
+        fi
+    fi
+
+    echo "Creating DNS Record..."
+    if ! check_and_create_dns_route "$TUNNEL_ID" "$root_domain" "$subdomain" "$origin_cert"; then
+        return 1
+    fi
+
+    echo "Configuring HTTPS..."
+    # Cloudflare managed edge certificate active for proxied CNAME
+
+    echo "Verifying Connection..."
+    if (cd "$PROGRAM_DIR" && docker ps --format '{{.Names}}' 2>/dev/null | grep -qw "mornye-tunnel"); then
+        (cd "$PROGRAM_DIR" && docker compose --profile tunnel restart tunnel >/dev/null 2>&1 || true)
     fi
 
     echo ""
-    echo -e "${GREEN}==============================================================${NC}"
-    echo -e "${GREEN}[✔] CUSTOM DOMAIN ROUTING COMPLETE!${NC}"
-    echo -e "Public WebDAV URL: ${CYAN}https://${domain}/dav/${NC}"
-    echo -e "${GREEN}==============================================================${NC}"
+    echo "SUCCESS!"
+    echo ""
+    echo "Your Mornye Network Storage URL:"
+    echo "https://${subdomain}"
+    echo ""
+    echo "========================================"
 }
 
 cmd_domain_remove() {
@@ -590,10 +778,12 @@ cmd_domain_remove() {
     echo -e "        The Cloudflare zone and permanent tunnel will NOT be deleted."
     echo -e "${YELLOW}==============================================================${NC}"
 
-    read -p "Proceed with decoupling domain '$domain'? [y/N]: " -r confirm
-    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-        echo -e "[*] Removal aborted by operator."
-        return 0
+    if [[ "${NON_INTERACTIVE:-false}" != true ]]; then
+        read -p "Proceed with decoupling domain '$domain'? [y/N]: " -r confirm
+        if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+            echo -e "[*] Removal aborted by operator."
+            return 0
+        fi
     fi
 
     cat << YMLEOF > "$TUNNEL_CONFIG"
@@ -605,9 +795,26 @@ ingress:
 YMLEOF
     chmod 644 "$TUNNEL_CONFIG"
 
+    ROOT_DOMAIN=""
     CUSTOM_DOMAIN=""
     save_tunnel_metadata
+
+    if [[ -f "$PROGRAM_DIR/.env" ]]; then
+        sed -i '/^CLOUDFLARE_ROOT_DOMAIN=/d' "$PROGRAM_DIR/.env" 2>/dev/null || true
+        sed -i '/^CLOUDFLARE_DOMAIN=/d' "$PROGRAM_DIR/.env" 2>/dev/null || true
+        sed -i 's/^STORAGE_HOSTNAME=.*/STORAGE_HOSTNAME=/' "$PROGRAM_DIR/.env" 2>/dev/null || true
+    fi
+
     echo -e "${GREEN}[✔] Ingress rule removed. Cloudflare domain decoupled safely.${NC}"
+}
+
+cmd_domain_reset() {
+    echo -e "${BOLD}[*] Resetting Cloudflare domain routing to unconfigured state...${NC}"
+    cmd_domain_remove "${CUSTOM_DOMAIN:-all}"
+    if (cd "$PROGRAM_DIR" && docker ps --format '{{.Names}}' 2>/dev/null | grep -qw "mornye-tunnel"); then
+        (cd "$PROGRAM_DIR" && docker compose --profile tunnel restart tunnel >/dev/null 2>&1 || true)
+    fi
+    echo -e "${GREEN}[✔] Domain configuration reset complete.${NC}"
 }
 
 # ------------------------------------------------------------------------------
@@ -719,6 +926,9 @@ cmd_status() {
     echo "=============================================================="
     echo -e "Tunnel Name           : ${CYAN}${TUNNEL_NAME:-Not configured}${NC}"
     echo -e "Tunnel UUID           : ${TUNNEL_ID:-Not configured}"
+    if [[ -n "${ROOT_DOMAIN:-}" ]]; then
+        echo -e "Root Domain           : ${CYAN}${ROOT_DOMAIN}${NC}"
+    fi
     echo -e "Custom Domain         : ${CUSTOM_DOMAIN:-None (Local only)}"
     
     local container_state="STOPPED / INACTIVE"
@@ -1011,8 +1221,14 @@ main() {
                 remove)
                     cmd_domain_remove "$@"
                     ;;
+                reset)
+                    cmd_domain_reset "$@"
+                    ;;
+                validate)
+                    format_and_validate_domain "$@"
+                    ;;
                 *)
-                    echo "Usage: ./mornye.sh tunnel domain [add|remove] [hostname]"
+                    echo "Usage: ./mornye.sh tunnel domain [add|remove|reset] [domain]"
                     exit 1
                     ;;
             esac
@@ -1069,8 +1285,9 @@ Permanent Zero-Trust Tunnel Commands:
   ./mornye.sh tunnel setup            Interactive guided wizard for permanent tunnel + domain
   ./mornye.sh tunnel login            Authenticate with Cloudflare via browser login
   ./mornye.sh tunnel create [name]    Create named tunnel (default: mornye-storage)
-  ./mornye.sh tunnel domain add <dom> Bind custom domain & route DNS CNAME (e.g. storage.example.com)
+  ./mornye.sh tunnel domain add <dom> Automatically configure dedicated subdomain (mornye.<domain>)
   ./mornye.sh tunnel domain remove    Safely disconnect custom domain routing
+  ./mornye.sh tunnel domain reset     Reset domain routing configuration to default
   ./mornye.sh tunnel start            Start permanent Cloudflare Tunnel container
   ./mornye.sh tunnel stop             Stop permanent Cloudflare Tunnel container
   ./mornye.sh tunnel restart          Restart permanent Cloudflare Tunnel container

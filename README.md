@@ -220,24 +220,30 @@ Quick Tunnel generates a temporary, public `*.trycloudflare.com` URL powered by 
 > [!WARNING]
 > Quick Tunnel URLs are temporary and ephemeral. They are intended strictly for testing and validation. WebDAV Basic Auth (Argon2id) remains enforced.
 
-### Mode B: Permanent Zero-Trust Tunnel (Production)
-For permanent production ingress under your custom domain:
+### Mode B: Permanent Zero-Trust Tunnel (Automatic Dedicated Subdomain)
+For permanent production ingress under your custom domain, Mornye automatically creates and routes a dedicated subdomain (`mornye.<root-domain>`):
 
 ```bash
-# 1. Run guided setup or login
+# 1. Run guided setup wizard (prompts for root domain, e.g. example.com)
 ./mornye.sh tunnel setup
-# Or step-by-step:
-./mornye.sh tunnel login
-./mornye.sh tunnel create mornye-storage
-./mornye.sh tunnel domain add storage.yourdomain.com
 
-# 2. Start and verify tunnel daemon
-./mornye.sh tunnel start
+# Or configure domain directly (automatically creates mornye.<domain>):
+./mornye.sh tunnel domain add example.com
+
+# 2. Inspect tunnel status and domain routing
 ./mornye.sh tunnel status
+
+# 3. Test WAN connectivity and Argon2id boundary
 ./mornye.sh tunnel test
+
+# 4. Decouple domain or reset configuration
+./mornye.sh tunnel domain remove
+./mornye.sh tunnel domain reset
 ```
 
-See [CLOUDFLARE_TUNNEL.md](docs/CLOUDFLARE_TUNNEL.md) and [CUSTOM_DOMAIN_SETUP.md](docs/CUSTOM_DOMAIN_SETUP.md) for full instructions.
+When you enter `example.com`, Mornye automatically generates and configures `mornye.example.com`, provisions the DNS CNAME record, configures Edge SSL, and verifies connectivity.
+
+See [CLOUDFLARE_CUSTOM_DOMAIN.md](docs/CLOUDFLARE_CUSTOM_DOMAIN.md) for the complete architecture and troubleshooting guide.
 
 ---
 

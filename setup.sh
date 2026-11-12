@@ -32,6 +32,7 @@ SKIP_DOCKER=false
 SKIP_CLOUDFLARED=false
 DO_BUILD_IMAGE=true
 NETWORKING_MODE="local" # local | permanent | quick
+CHOSEN_ROOT_DOMAIN=""
 CHOSEN_DOMAIN=""
 
 # WebDAV Authentication Flags
@@ -63,7 +64,7 @@ Options:
   --skip-cloudflared            Skip optional cloudflared installation
   --cert <path>                 Path to existing Cloudflare origin certificate (cert.pem)
   --network-mode <mode>         Set networking mode: 'local', 'permanent', or 'quick'
-  --domain <hostname>           Bind custom domain during installation (e.g. storage.example.com)
+  --domain, --root-domain <dom> Root domain for Cloudflare Tunnel (auto-configures mornye.<domain>)
   --auth-enabled                Enforce WebDAV HTTP Basic Auth (Recommended, default)
   --auth-disabled               Disable WebDAV HTTP Basic Auth (Anonymous public access)
   --webdav-user <username>      Set WebDAV administrator username (Default: admin)
@@ -110,8 +111,8 @@ while [[ $# -gt 0 ]]; do
             NETWORKING_MODE="$2"
             shift 2
             ;;
-        --domain)
-            CHOSEN_DOMAIN="$2"
+        --domain|--root-domain)
+            CHOSEN_ROOT_DOMAIN="$2"
             shift 2
             ;;
         --auth-enabled)
@@ -727,6 +728,44 @@ stage5_networking_mode() {
                 ;;
             2)
                 NETWORKING_MODE="permanent"
+                if [[ -z "$CHOSEN_ROOT_DOMAIN" ]]; then
+                    local existing_root=""
+                    if [[ -f "$PROGRAM_DIR/config/tunnel_info.env" ]]; then
+                        existing_root=$(grep -E '^ROOT_DOMAIN=' "$PROGRAM_DIR/config/tunnel_info.env" | cut -d= -f2 | tr -d '"' | tr -d "'" || true)
+                    fi
+                    if [[ -n "$existing_root" ]]; then
+                        echo ""
+                        echo -e "Existing domain configuration detected: ${CYAN}mornye.${existing_root}${NC} (Root: ${CYAN}${existing_root}${NC})"
+                        read -p "Reuse existing domain? [Y/n]: " -r reuse_dom
+                        if [[ ! "$reuse_dom" =~ ^[Nn]$ ]]; then
+                            CHOSEN_ROOT_DOMAIN="$existing_root"
+                            CHOSEN_DOMAIN="mornye.${CHOSEN_ROOT_DOMAIN}"
+                        fi
+                    fi
+                    if [[ -z "$CHOSEN_ROOT_DOMAIN" ]]; then
+                        while true; do
+                            echo ""
+                            read -p "Enter your Root Domain (e.g. example.com): " -r input_dom
+                            if [[ -z "$input_dom" ]]; then
+                                echo -e "${RED}[ERROR] Root domain cannot be empty.${NC}"
+                                continue
+                            fi
+                            local validated_dom=""
+                            if [[ -f "$SCRIPTS_DIR/cloudflare_manager.sh" ]]; then
+                                validated_dom=$("$SCRIPTS_DIR/cloudflare_manager.sh" domain validate "$input_dom" 2>/dev/null || true)
+                            fi
+                            if [[ -n "$validated_dom" ]]; then
+                                CHOSEN_ROOT_DOMAIN="$validated_dom"
+                                CHOSEN_DOMAIN="mornye.${CHOSEN_ROOT_DOMAIN}"
+                                echo -e "${GREEN}[✔] Root Domain: ${CHOSEN_ROOT_DOMAIN}${NC}"
+                                echo -e "${GREEN}[✔] Generated Subdomain: ${CHOSEN_DOMAIN}${NC}"
+                                break
+                            else
+                                echo -e "${RED}[ERROR] Invalid root domain format: '$input_dom'. Please enter a valid root domain (e.g. example.com, mydomain.in).${NC}"
+                            fi
+                        done
+                    fi
+                fi
                 ;;
             3)
                 NETWORKING_MODE="quick"
@@ -735,6 +774,32 @@ stage5_networking_mode() {
                 NETWORKING_MODE="local"
                 ;;
         esac
+    fi
+
+    # Domain validation for non-interactive or CLI-provided domain
+    if [[ "$NETWORKING_MODE" == "permanent" ]]; then
+        if [[ -n "$CHOSEN_ROOT_DOMAIN" ]]; then
+            local validated_dom=""
+            if [[ -f "$SCRIPTS_DIR/cloudflare_manager.sh" ]]; then
+                validated_dom=$("$SCRIPTS_DIR/cloudflare_manager.sh" domain validate "$CHOSEN_ROOT_DOMAIN" 2>/dev/null || true)
+            fi
+            if [[ -n "$validated_dom" ]]; then
+                CHOSEN_ROOT_DOMAIN="$validated_dom"
+                CHOSEN_DOMAIN="mornye.${CHOSEN_ROOT_DOMAIN}"
+                log_ok "Configured Root Domain: $CHOSEN_ROOT_DOMAIN (Generated Subdomain: $CHOSEN_DOMAIN)"
+            else
+                log_err "Invalid root domain format: '$CHOSEN_ROOT_DOMAIN'"
+                exit 1
+            fi
+        elif [[ "$NON_INTERACTIVE" == true && -f "$PROGRAM_DIR/config/tunnel_info.env" ]]; then
+            local existing_root
+            existing_root=$(grep -E '^ROOT_DOMAIN=' "$PROGRAM_DIR/config/tunnel_info.env" | cut -d= -f2 | tr -d '"' | tr -d "'" || true)
+            if [[ -n "$existing_root" ]]; then
+                CHOSEN_ROOT_DOMAIN="$existing_root"
+                CHOSEN_DOMAIN="mornye.${CHOSEN_ROOT_DOMAIN}"
+                log_ok "Reusing existing root domain: $CHOSEN_ROOT_DOMAIN (Subdomain: $CHOSEN_DOMAIN)"
+            fi
+        fi
     fi
 
     # Unauthenticated Public Exposure Warning & Confirmation Gate
@@ -787,9 +852,11 @@ stage6_cloudflare_workflow() {
         if [[ -f "$SCRIPTS_DIR/cloudflare_manager.sh" ]]; then
             local cf_extra_args=()
             [[ -n "${CLOUDFLARE_CERT_PATH:-}" ]] && cf_extra_args=("--cert" "$CLOUDFLARE_CERT_PATH")
-            if [[ -n "$CHOSEN_DOMAIN" ]]; then
-                "$SCRIPTS_DIR/cloudflare_manager.sh" "${cf_extra_args[@]}" setup
-                "$SCRIPTS_DIR/cloudflare_manager.sh" "${cf_extra_args[@]}" domain add "$CHOSEN_DOMAIN"
+            local target_domain="${CHOSEN_ROOT_DOMAIN:-$CHOSEN_DOMAIN}"
+            if [[ -n "$target_domain" ]]; then
+                "$SCRIPTS_DIR/cloudflare_manager.sh" "${cf_extra_args[@]}" create mornye-storage
+                "$SCRIPTS_DIR/cloudflare_manager.sh" "${cf_extra_args[@]}" domain add "$target_domain"
+                "$SCRIPTS_DIR/cloudflare_manager.sh" "${cf_extra_args[@]}" start
             else
                 "$SCRIPTS_DIR/cloudflare_manager.sh" "${cf_extra_args[@]}" setup
             fi
@@ -839,6 +906,13 @@ stage7_report_and_summary() {
         auth_status_str="ENABLED (User: ${WEBDAV_USER:-admin}, Argon2id Basic Auth)"
     fi
 
+    local display_root="${CHOSEN_ROOT_DOMAIN:-}"
+    local display_sub="${CHOSEN_DOMAIN:-}"
+    if [[ -z "$display_sub" && -f "$PROGRAM_DIR/config/tunnel_info.env" ]]; then
+        display_sub=$(grep -E '^CUSTOM_DOMAIN=' "$PROGRAM_DIR/config/tunnel_info.env" | cut -d= -f2 | tr -d '"' | tr -d "'" || true)
+        display_root=$(grep -E '^ROOT_DOMAIN=' "$PROGRAM_DIR/config/tunnel_info.env" | cut -d= -f2 | tr -d '"' | tr -d "'" || true)
+    fi
+
     cat << REPORTEOF > "$report_file"
 # MORNYE NETWORK STORAGE — MASTER INSTALLATION & RECONCILIATION REPORT
 **Generated automatically on $(date -u +"%Y-%m-%d %H:%M:%SZ")**
@@ -878,10 +952,12 @@ stage7_report_and_summary() {
 ## 3. Networking & Ingress Status
 
 - **Selected Networking Mode**: ${NETWORKING_MODE}
+- **Root Domain**: ${display_root:-None}
+- **Dedicated Subdomain**: ${display_sub:-None}
 - **Local WebDAV Target**: http://${summary_bind:-127.0.0.1}:${summary_port:-8001}/dav/
 - **Local Healthcheck**: http://${summary_bind:-127.0.0.1}:${summary_port:-8001}/health
 - **Authentication Mode**: ${auth_status_str}
-- **Public Ingress**: $( [[ -n "$CHOSEN_DOMAIN" ]] && echo "https://${CHOSEN_DOMAIN}/dav/" || echo "Local-only / Ephemeral" )
+- **Public Ingress**: $( [[ -n "$display_sub" ]] && echo "https://${display_sub}/dav/" || echo "Local-only / Ephemeral" )
 
 ---
 
@@ -912,8 +988,10 @@ REPORTEOF
     echo ""
     echo -e "${BOLD}CLOUDFLARE INGRESS:${NC}"
     echo -e "  - Selected Mode     : ${CYAN}$NETWORKING_MODE${NC}"
-    if [[ "$NETWORKING_MODE" == "permanent" && -n "$CHOSEN_DOMAIN" ]]; then
-        echo -e "  - Custom Domain URL : ${CYAN}https://${CHOSEN_DOMAIN}/dav/${NC}"
+    if [[ "$NETWORKING_MODE" == "permanent" && -n "$display_sub" ]]; then
+        [[ -n "$display_root" ]] && echo -e "  - Root Domain       : ${CYAN}${display_root}${NC}"
+        echo -e "  - Mornye Subdomain  : ${CYAN}${display_sub}${NC}"
+        echo -e "  - Custom Domain URL : ${CYAN}https://${display_sub}/dav/${NC}"
     fi
     echo ""
     echo -e "${BOLD}PRIMARY MANAGEMENT CLI:${NC}"

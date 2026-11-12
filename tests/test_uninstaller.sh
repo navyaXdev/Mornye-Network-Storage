@@ -24,7 +24,7 @@ echo "======================================================================"
 
 PASSED=0
 FAILED=0
-TOTAL=25
+TOTAL=34
 
 record_pass() {
     echo -e "  -> ${GREEN}[PASS] $1${NC}"
@@ -39,7 +39,7 @@ record_fail() {
 # ------------------------------------------------------------------------------
 # Test 1: Dry-Run Mode Simulation (0 modifications, accurate detection)
 # ------------------------------------------------------------------------------
-echo -e "\n${BOLD}[Test 1/25] Dry-Run Mode Simulation${NC}"
+echo -e "\n${BOLD}[Test 1/34] Dry-Run Mode Simulation${NC}"
 dry_output="$("$PROGRAM_DIR/delete.sh" --dry-run 2>&1 || true)"
 if echo "$dry_output" | grep -q "0 system changes made" && \
    echo "$dry_output" | grep -q "DRY-RUN"; then
@@ -51,7 +51,7 @@ fi
 # ------------------------------------------------------------------------------
 # Test 2: Safe Uninstall Mode (Data Preservation)
 # ------------------------------------------------------------------------------
-echo -e "\n${BOLD}[Test 2/25] Safe Uninstall Data Preservation${NC}"
+echo -e "\n${BOLD}[Test 2/34] Safe Uninstall Data Preservation${NC}"
 sandbox_safe=$(mktemp -d)
 mkdir -p "$sandbox_safe/database" "$sandbox_safe/storage" "$sandbox_safe/backups" "$sandbox_safe/config" "$sandbox_safe/run"
 echo "DATABASE_CONTENT" > "$sandbox_safe/database/mornye.db"
@@ -81,7 +81,7 @@ rm -rf "$sandbox_safe"
 # ------------------------------------------------------------------------------
 # Test 3: Purge Confirmation Token Rejection (Rejects 'yes' / 'y')
 # ------------------------------------------------------------------------------
-echo -e "\n${BOLD}[Test 3/25] Purge Confirmation Token Enforcement${NC}"
+echo -e "\n${BOLD}[Test 3/34] Purge Confirmation Token Enforcement${NC}"
 sandbox_purge_reject=$(mktemp -d)
 mkdir -p "$sandbox_purge_reject/database" "$sandbox_purge_reject/storage"
 echo "DATA" > "$sandbox_purge_reject/database/mornye.db"
@@ -100,7 +100,7 @@ rm -rf "$sandbox_purge_reject"
 # ------------------------------------------------------------------------------
 # Test 4: Complete Purge Execution with Valid Confirmation
 # ------------------------------------------------------------------------------
-echo -e "\n${BOLD}[Test 4/25] Complete Purge with Valid 'DELETE MORNYE DATA' Token${NC}"
+echo -e "\n${BOLD}[Test 4/34] Complete Purge with Valid 'DELETE MORNYE DATA' Token${NC}"
 sandbox_purge=$(mktemp -d)
 mkdir -p "$sandbox_purge/database" "$sandbox_purge/storage" "$sandbox_purge/backups" "$sandbox_purge/config" "$sandbox_purge/run" "$sandbox_purge/logs"
 echo "DB" > "$sandbox_purge/database/mornye.db"
@@ -127,7 +127,7 @@ rm -rf "$sandbox_purge"
 # ------------------------------------------------------------------------------
 # Test 5: Pre-Purge Safety Backup Creation
 # ------------------------------------------------------------------------------
-echo -e "\n${BOLD}[Test 5/25] Pre-Purge Safety Backup Archive${NC}"
+echo -e "\n${BOLD}[Test 5/34] Pre-Purge Safety Backup Archive${NC}"
 sandbox_backup=$(mktemp -d)
 mkdir -p "$sandbox_backup/database" "$sandbox_backup/storage" "$sandbox_backup/config"
 echo "DATABASE_DUMP" > "$sandbox_backup/database/mornye.db"
@@ -156,7 +156,7 @@ rm -rf "$sandbox_backup"
 # ------------------------------------------------------------------------------
 # Test 6: Existing Unrelated Service & SONG Bridge Protection
 # ------------------------------------------------------------------------------
-echo -e "\n${BOLD}[Test 6/25] SONG Bridge Protection Invariant${NC}"
+echo -e "\n${BOLD}[Test 6/34] SONG Bridge Protection Invariant${NC}"
 plan_output="$("$PROGRAM_DIR/delete.sh" --dry-run 2>&1 || true)"
 if echo "$plan_output" | grep -q "SONG Bridge" && \
    echo "$plan_output" | grep -q "mornye-storage.service" && \
@@ -169,7 +169,7 @@ fi
 # ------------------------------------------------------------------------------
 # Test 7: Foreign Docker Containers & Volumes Isolation
 # ------------------------------------------------------------------------------
-echo -e "\n${BOLD}[Test 7/25] Foreign Docker Container & Volume Isolation${NC}"
+echo -e "\n${BOLD}[Test 7/34] Foreign Docker Container & Volume Isolation${NC}"
 mock_bin_dir=$(mktemp -d)
 cat << 'EOF' > "$mock_bin_dir/docker"
 #!/usr/bin/env bash
@@ -211,7 +211,7 @@ rm -rf "$mock_bin_dir" "$sandbox_docker"
 # ------------------------------------------------------------------------------
 # Test 8: Missing Docker Environment Handling
 # ------------------------------------------------------------------------------
-echo -e "\n${BOLD}[Test 8/25] Missing Docker Environment Handling${NC}"
+echo -e "\n${BOLD}[Test 8/34] Missing Docker Environment Handling${NC}"
 sandbox_no_docker=$(mktemp -d)
 mkdir -p "$sandbox_no_docker/run"
 echo "123" > "$sandbox_no_docker/run/quick_tunnel.pid"
@@ -231,7 +231,7 @@ rm -rf "$sandbox_no_docker"
 # ------------------------------------------------------------------------------
 # Test 9: Docker Permission Denied Handling
 # ------------------------------------------------------------------------------
-echo -e "\n${BOLD}[Test 9/25] Docker Permission Denied Handling${NC}"
+echo -e "\n${BOLD}[Test 9/34] Docker Permission Denied Handling${NC}"
 mock_perm_docker_bin=$(mktemp -d)
 cat << 'EOF' > "$mock_perm_docker_bin/docker"
 #!/usr/bin/env bash
@@ -258,7 +258,7 @@ rm -rf "$mock_perm_docker_bin" "$sandbox_perm_docker"
 # ------------------------------------------------------------------------------
 # Test 10: Shared Cloudflare Tunnel Protection & Ingress Isolation
 # ------------------------------------------------------------------------------
-echo -e "\n${BOLD}[Test 10/25] Shared Cloudflare Ingress Isolation${NC}"
+echo -e "\n${BOLD}[Test 10/34] Shared Cloudflare Ingress Isolation${NC}"
 mock_cf_dir=$(mktemp -d)
 mock_cf_file="$mock_cf_dir/config.yml"
 cat << 'EOF' > "$mock_cf_file"
@@ -298,7 +298,7 @@ rm -rf "$mock_cf_dir"
 # ------------------------------------------------------------------------------
 # Test 11: Dedicated Cloudflare Tunnel Local Config Handling
 # ------------------------------------------------------------------------------
-echo -e "\n${BOLD}[Test 11/25] Dedicated Cloudflare Local Config Handling${NC}"
+echo -e "\n${BOLD}[Test 11/34] Dedicated Cloudflare Local Config Handling${NC}"
 sandbox_cf=$(mktemp -d)
 mkdir -p "$sandbox_cf/config"
 echo "tunnel: dedicated-xyz" > "$sandbox_cf/config/cloudflared.yml"
@@ -318,7 +318,7 @@ rm -rf "$sandbox_cf"
 # ------------------------------------------------------------------------------
 # Test 12: System Root & Critical Directory Protection
 # ------------------------------------------------------------------------------
-echo -e "\n${BOLD}[Test 12/25] System Root & Critical Directory Protection${NC}"
+echo -e "\n${BOLD}[Test 12/34] System Root & Critical Directory Protection${NC}"
 sandbox_safety=$(mktemp -d)
 cp "$PROGRAM_DIR/delete.sh" "$sandbox_safety/delete.sh"
 chmod +x "$sandbox_safety/delete.sh"
@@ -345,7 +345,7 @@ rm -rf "$sandbox_safety"
 # ------------------------------------------------------------------------------
 # Test 13: Symlink Escape Protection
 # ------------------------------------------------------------------------------
-echo -e "\n${BOLD}[Test 13/25] Symlink Escape Protection${NC}"
+echo -e "\n${BOLD}[Test 13/34] Symlink Escape Protection${NC}"
 sandbox_symlink=$(mktemp -d)
 canary_target="/tmp/canary_target_file_$$.txt"
 echo "CANARY_ALIVE" > "$canary_target"
@@ -374,7 +374,7 @@ rm -rf "$sandbox_symlink"
 # ------------------------------------------------------------------------------
 # Test 14: Idempotency & Repeated Execution Safety
 # ------------------------------------------------------------------------------
-echo -e "\n${BOLD}[Test 14/25] Idempotency & Repeated Execution Safety${NC}"
+echo -e "\n${BOLD}[Test 14/34] Idempotency & Repeated Execution Safety${NC}"
 sandbox_idem=$(mktemp -d)
 mkdir -p "$sandbox_idem/database"
 cp "$PROGRAM_DIR/delete.sh" "$sandbox_idem/delete.sh"
@@ -402,7 +402,7 @@ rm -rf "$sandbox_idem"
 # ------------------------------------------------------------------------------
 # Test 15: Post-Uninstall Report Generation & Secret Privacy
 # ------------------------------------------------------------------------------
-echo -e "\n${BOLD}[Test 15/25] Post-Uninstall Removal Report & Secret Privacy${NC}"
+echo -e "\n${BOLD}[Test 15/34] Post-Uninstall Removal Report & Secret Privacy${NC}"
 sandbox_rep=$(mktemp -d)
 mkdir -p "$sandbox_rep/logs/uninstall" "$sandbox_rep/config"
 echo "SECRET_KEY=99999999999999999999999999999999" > "$sandbox_rep/.env"
@@ -430,7 +430,7 @@ rm -rf "$sandbox_rep"
 # ------------------------------------------------------------------------------
 # Test 16: Cloudflare YAML Structural Validity & Schema Integrity
 # ------------------------------------------------------------------------------
-echo -e "\n${BOLD}[Test 16/25] Cloudflare YAML Structural Validity & Schema Integrity${NC}"
+echo -e "\n${BOLD}[Test 16/34] Cloudflare YAML Structural Validity & Schema Integrity${NC}"
 sandbox_cf16=$(mktemp -d)
 cf_file16="$sandbox_cf16/config.yml"
 cat << 'EOF' > "$cf_file16"
@@ -500,7 +500,7 @@ rm -rf "$sandbox_cf16"
 # ------------------------------------------------------------------------------
 # Test 17: External Symlink Rejection (HIGH-01)
 # ------------------------------------------------------------------------------
-echo -e "\n${BOLD}[Test 17/25] External Symlink Rejection (HIGH-01)${NC}"
+echo -e "\n${BOLD}[Test 17/34] External Symlink Rejection (HIGH-01)${NC}"
 sandbox_ext=$(mktemp -d)
 canary_ext_target="/tmp/canary_ext_target_$$.txt"
 canary_ext_symlink="/tmp/canary_ext_symlink_$$.lnk"
@@ -526,7 +526,7 @@ rm -rf "$sandbox_ext"
 # ------------------------------------------------------------------------------
 # Test 18: Sibling Directory Boundary Escape (HIGH-02)
 # ------------------------------------------------------------------------------
-echo -e "\n${BOLD}[Test 18/25] Sibling Directory Boundary Escape (HIGH-02)${NC}"
+echo -e "\n${BOLD}[Test 18/34] Sibling Directory Boundary Escape (HIGH-02)${NC}"
 sandbox_base=$(mktemp -d)
 sandbox_main="$sandbox_base/mornye-app"
 sandbox_sibling="$sandbox_base/mornye-app-sibling"
@@ -555,7 +555,7 @@ rm -rf "$sandbox_base"
 # ------------------------------------------------------------------------------
 # Test 19: Foreign Docker Container Ownership Protection (MED-01)
 # ------------------------------------------------------------------------------
-echo -e "\n${BOLD}[Test 19/25] Foreign Docker Container Ownership Protection (MED-01)${NC}"
+echo -e "\n${BOLD}[Test 19/34] Foreign Docker Container Ownership Protection (MED-01)${NC}"
 mock_bin_d19=$(mktemp -d)
 sandbox_d19=$(mktemp -d)
 cp "$PROGRAM_DIR/delete.sh" "$sandbox_d19/delete.sh"
@@ -596,7 +596,7 @@ rm -rf "$mock_bin_d19" "$sandbox_d19"
 # ------------------------------------------------------------------------------
 # Test 20: Corrupted Backup Archive Rejection (MED-02)
 # ------------------------------------------------------------------------------
-echo -e "\n${BOLD}[Test 20/25] Corrupted Backup Archive Rejection (MED-02)${NC}"
+echo -e "\n${BOLD}[Test 20/34] Corrupted Backup Archive Rejection (MED-02)${NC}"
 sandbox_corrupt=$(mktemp -d)
 mkdir -p "$sandbox_corrupt/database"
 echo "data" > "$sandbox_corrupt/database/data.db"
@@ -637,7 +637,7 @@ rm -rf "$mock_bin_corrupt" "$sandbox_corrupt"
 # ------------------------------------------------------------------------------
 # Test 21: Parent-Directory Symlink Escape Protection
 # ------------------------------------------------------------------------------
-echo -e "\n${BOLD}[Test 21/25] Parent-Directory Symlink Escape Protection${NC}"
+echo -e "\n${BOLD}[Test 21/34] Parent-Directory Symlink Escape Protection${NC}"
 sandbox_pesc=$(mktemp -d)
 mkdir -p "$sandbox_pesc/subdir"
 ln -s "/etc" "$sandbox_pesc/subdir/esc_parent"
@@ -661,7 +661,7 @@ rm -rf "$sandbox_pesc"
 # ------------------------------------------------------------------------------
 # Test 22: Cloudflare Backup Restoration on Failed Validation
 # ------------------------------------------------------------------------------
-echo -e "\n${BOLD}[Test 22/25] Cloudflare Backup Restoration on Failed Validation${NC}"
+echo -e "\n${BOLD}[Test 22/34] Cloudflare Backup Restoration on Failed Validation${NC}"
 sandbox_cf22=$(mktemp -d)
 cf_file22="$sandbox_cf22/config.yml"
 echo "INVALID_YAML: [unclosed_list" > "$cf_file22"
@@ -685,7 +685,7 @@ rm -rf "$sandbox_cf22"
 # ------------------------------------------------------------------------------
 # Test 23: External Storage Backup Reporting (LOW-01)
 # ------------------------------------------------------------------------------
-echo -e "\n${BOLD}[Test 23/25] External Storage Backup Reporting (LOW-01)${NC}"
+echo -e "\n${BOLD}[Test 23/34] External Storage Backup Reporting (LOW-01)${NC}"
 sandbox_ext23=$(mktemp -d)
 ext_audio_dir="/tmp/mornye_ext_audio_test_$$"
 mkdir -p "$ext_audio_dir" "$sandbox_ext23/database"
@@ -713,7 +713,7 @@ rm -rf "$ext_audio_dir" "$sandbox_ext23"
 # ------------------------------------------------------------------------------
 # Test 24: Purge Confirmation Bypass Attempts
 # ------------------------------------------------------------------------------
-echo -e "\n${BOLD}[Test 24/25] Purge Confirmation Bypass Attempts${NC}"
+echo -e "\n${BOLD}[Test 24/34] Purge Confirmation Bypass Attempts${NC}"
 sandbox_bypass=$(mktemp -d)
 mkdir -p "$sandbox_bypass/database"
 echo "valuable_data" > "$sandbox_bypass/database/mornye.db"
@@ -743,7 +743,7 @@ rm -rf "$sandbox_bypass"
 # ------------------------------------------------------------------------------
 # Test 25: Interrupted or Truncated Backup Creation
 # ------------------------------------------------------------------------------
-echo -e "\n${BOLD}[Test 25/25] Interrupted or Truncated Backup Creation${NC}"
+echo -e "\n${BOLD}[Test 25/34] Interrupted or Truncated Backup Creation${NC}"
 sandbox_trunc=$(mktemp -d)
 mkdir -p "$sandbox_trunc/database"
 echo "data" > "$sandbox_trunc/database/mornye.db"
@@ -775,6 +775,358 @@ fi
 rm -rf "$mock_bin_trunc" "$sandbox_trunc"
 
 # ------------------------------------------------------------------------------
+# Test 26: Keep Cloudflare Tunnel Preserves Remote Tunnel, DNS, and Local Config
+# ------------------------------------------------------------------------------
+echo -e "\n${BOLD}[Test 26/34] Keep Cloudflare Tunnel Preserves Tunnel, DNS & Local Config${NC}"
+sandbox_cf26=$(mktemp -d)
+mkdir -p "$sandbox_cf26/config" "$sandbox_cf26/database" "$sandbox_cf26/bin"
+echo '{"TunnelID":"463ff5f0-ead1-4e10-ba29-92b3e48abf66","AccountTag":"test"}' > "$sandbox_cf26/config/credentials.json"
+cat << 'EOF' > "$sandbox_cf26/config/cloudflared.yml"
+tunnel: 463ff5f0-ead1-4e10-ba29-92b3e48abf66
+ingress:
+  - hostname: navya.dpdns.org
+    service: http://webdav:8000
+  - service: http_status:404
+EOF
+cat << 'EOF' > "$sandbox_cf26/config/tunnel_info.env"
+TUNNEL_NAME="mornye-storage"
+TUNNEL_ID="463ff5f0-ead1-4e10-ba29-92b3e48abf66"
+CUSTOM_DOMAIN="navya.dpdns.org"
+EOF
+echo "DB_DATA" > "$sandbox_cf26/database/mornye.db"
+cp "$PROGRAM_DIR/delete.sh" "$sandbox_cf26/delete.sh"
+chmod +x "$sandbox_cf26/delete.sh"
+
+cf_calls_26="$sandbox_cf26/cf_calls.log"
+cat << EOF > "$sandbox_cf26/bin/cloudflared"
+#!/usr/bin/env bash
+echo "\$@" >> "$cf_calls_26"
+exit 0
+EOF
+chmod +x "$sandbox_cf26/bin/cloudflared"
+
+output_26=$(
+    export CLOUDFLARED_BIN="$sandbox_cf26/bin/cloudflared"
+    cd "$sandbox_cf26" && ./delete.sh -y --keep-tunnel 2>&1 || true
+)
+
+if [[ ! -f "$cf_calls_26" || ! "$(cat "$cf_calls_26" 2>/dev/null)" == *"delete"* ]] && \
+   [[ -f "$sandbox_cf26/config/credentials.json" && \
+      -f "$sandbox_cf26/config/cloudflared.yml" && \
+      -f "$sandbox_cf26/config/tunnel_info.env" && \
+      -f "$sandbox_cf26/database/mornye.db" ]] && \
+   echo "$output_26" | grep -q "Keeping Cloudflare Tunnel"; then
+    record_pass "Keep Cloudflare Tunnel preserved remote tunnel, DNS route, and local config files"
+else
+    record_fail "Failed to preserve tunnel or config when keep-tunnel was selected"
+fi
+rm -rf "$sandbox_cf26"
+
+# ------------------------------------------------------------------------------
+# Test 27: Remove Mornye Tunnel Deletes Verified Tunnel and DNS
+# ------------------------------------------------------------------------------
+echo -e "\n${BOLD}[Test 27/34] Remove Mornye Tunnel Deletes Verified Tunnel and DNS${NC}"
+sandbox_cf27=$(mktemp -d)
+mkdir -p "$sandbox_cf27/config" "$sandbox_cf27/bin"
+echo '{"TunnelID":"463ff5f0-ead1-4e10-ba29-92b3e48abf66","AccountTag":"test"}' > "$sandbox_cf27/config/credentials.json"
+cat << 'EOF' > "$sandbox_cf27/config/cloudflared.yml"
+tunnel: 463ff5f0-ead1-4e10-ba29-92b3e48abf66
+ingress:
+  - hostname: navya.dpdns.org
+    service: http://webdav:8000
+  - service: http_status:404
+EOF
+cat << 'EOF' > "$sandbox_cf27/config/tunnel_info.env"
+TUNNEL_NAME="mornye-storage"
+TUNNEL_ID="463ff5f0-ead1-4e10-ba29-92b3e48abf66"
+CUSTOM_DOMAIN="navya.dpdns.org"
+EOF
+
+# Valid mock cert.pem with ARGO TUNNEL TOKEN
+mock_token_json='{"zoneID":"test_zone_123","accountID":"test_acc_456","apiToken":"test_token_789"}'
+mock_token_b64=$(printf "%s" "$mock_token_json" | base64 | tr -d '\n')
+cat << EOF > "$sandbox_cf27/config/cert.pem"
+-----BEGIN ARGO TUNNEL TOKEN-----
+${mock_token_b64}
+-----END ARGO TUNNEL TOKEN-----
+EOF
+chmod 600 "$sandbox_cf27/config/cert.pem"
+
+cp "$PROGRAM_DIR/delete.sh" "$sandbox_cf27/delete.sh"
+chmod +x "$sandbox_cf27/delete.sh"
+
+cf_del_log_27="$sandbox_cf27/cf_del.log"
+cat << EOF > "$sandbox_cf27/bin/cloudflared"
+#!/usr/bin/env bash
+echo "\$@" >> "$cf_del_log_27"
+if [[ "\$*" == *"delete"* ]]; then
+    echo "Deleted tunnel 463ff5f0-ead1-4e10-ba29-92b3e48abf66"
+    exit 0
+fi
+exit 0
+EOF
+chmod +x "$sandbox_cf27/bin/cloudflared"
+
+dns_del_log_27="$sandbox_cf27/dns_del.log"
+cat << EOF > "$sandbox_cf27/bin/mock_dns_handler"
+#!/usr/bin/env bash
+echo "DNS_DELETED:\$1:\$2" >> "$dns_del_log_27"
+exit 0
+EOF
+chmod +x "$sandbox_cf27/bin/mock_dns_handler"
+
+output_27=$(
+    export CLOUDFLARED_BIN="$sandbox_cf27/bin/cloudflared"
+    export CLOUDFLARE_CERT_PATH="$sandbox_cf27/config/cert.pem"
+    export MOCK_CF_DNS_HANDLER="$sandbox_cf27/bin/mock_dns_handler"
+    cd "$sandbox_cf27" && ./delete.sh -y --remove-tunnel --cf-token="DELETE MORNYE TUNNEL" 2>&1 || true
+)
+
+if grep -q "delete -f 463ff5f0-ead1-4e10-ba29-92b3e48abf66" "$cf_del_log_27" && \
+   grep -q "DNS_DELETED:navya.dpdns.org:463ff5f0-ead1-4e10-ba29-92b3e48abf66" "$dns_del_log_27" && \
+   [[ ! -f "$sandbox_cf27/config/credentials.json" && \
+      ! -f "$sandbox_cf27/config/cloudflared.yml" && \
+      ! -f "$sandbox_cf27/config/tunnel_info.env" && \
+      -f "$sandbox_cf27/config/cert.pem" ]]; then
+    record_pass "Remove Mornye Tunnel deleted remote tunnel, DNS route, and local config while strictly preserving cert.pem"
+else
+    record_fail "Remove Mornye Tunnel failed to clean tunnel and DNS or did not preserve cert.pem"
+fi
+rm -rf "$sandbox_cf27"
+
+# ------------------------------------------------------------------------------
+# Test 28: Unrelated Tunnels Remain Untouched
+# ------------------------------------------------------------------------------
+echo -e "\n${BOLD}[Test 28/34] Unrelated Tunnels Remain Untouched${NC}"
+sandbox_cf28=$(mktemp -d)
+mkdir -p "$sandbox_cf28/config" "$sandbox_cf28/bin"
+cp "$PROGRAM_DIR/delete.sh" "$sandbox_cf28/delete.sh"
+chmod +x "$sandbox_cf28/delete.sh"
+
+cf_del_log_28="$sandbox_cf28/cf_calls.log"
+cat << EOF > "$sandbox_cf28/bin/cloudflared"
+#!/usr/bin/env bash
+echo "\$@" >> "$cf_del_log_28"
+exit 0
+EOF
+chmod +x "$sandbox_cf28/bin/cloudflared"
+
+unrelated_script=$(cat << 'EOF'
+source ./delete.sh --source-only
+load_env
+verify_mornye_tunnel_ownership "11111111-2222-3333-4444-555555555555"
+EOF
+)
+ownership_rc=0
+(cd "$sandbox_cf28" && bash -c "$unrelated_script" >/dev/null 2>&1) || ownership_rc=$?
+
+if [[ $ownership_rc -ne 0 && ! -s "$cf_del_log_28" ]]; then
+    record_pass "Ownership verification strictly rejected unverified foreign tunnel (zero deletion calls)"
+else
+    record_fail "Ownership verification failed to reject unrelated tunnel ID"
+fi
+rm -rf "$sandbox_cf28"
+
+# ------------------------------------------------------------------------------
+# Test 29: Quick Tunnel Process Cleanup Isolation
+# ------------------------------------------------------------------------------
+echo -e "\n${BOLD}[Test 29/34] Quick Tunnel Process Cleanup Isolation${NC}"
+sandbox_cf29=$(mktemp -d)
+mkdir -p "$sandbox_cf29/run"
+echo "9999999" > "$sandbox_cf29/run/quick_tunnel.pid"
+cp "$PROGRAM_DIR/delete.sh" "$sandbox_cf29/delete.sh"
+chmod +x "$sandbox_cf29/delete.sh"
+
+(cd "$sandbox_cf29" && ./delete.sh -y >/dev/null 2>&1 || true)
+
+if [[ ! -f "$sandbox_cf29/run/quick_tunnel.pid" ]]; then
+    record_pass "Cleaned local Quick Tunnel PID without touching systemwide cloudflared services"
+else
+    record_fail "Failed to clean Quick Tunnel PID"
+fi
+rm -rf "$sandbox_cf29"
+
+# ------------------------------------------------------------------------------
+# Test 30: cert.pem Protection (validate_safe_path Blocks Deletion)
+# ------------------------------------------------------------------------------
+echo -e "\n${BOLD}[Test 30/34] cert.pem Strict Protection Against Deletion${NC}"
+sandbox_cf30=$(mktemp -d)
+mkdir -p "$sandbox_cf30/config"
+touch "$sandbox_cf30/config/cert.pem"
+touch "$sandbox_cf30/cert.pem"
+cp "$PROGRAM_DIR/delete.sh" "$sandbox_cf30/delete.sh"
+chmod +x "$sandbox_cf30/delete.sh"
+
+cert_test_script=$(cat << 'EOF'
+source ./delete.sh --source-only
+load_env
+validate_safe_path "$1"
+EOF
+)
+cert_rc1=0
+(cd "$sandbox_cf30" && bash -c "$cert_test_script" _ "$sandbox_cf30/config/cert.pem" >/dev/null 2>&1) || cert_rc1=$?
+
+cert_rc2=0
+(cd "$sandbox_cf30" && bash -c "$cert_test_script" _ "$sandbox_cf30/cert.pem" >/dev/null 2>&1) || cert_rc2=$?
+
+if [[ $cert_rc1 -ne 0 && $cert_rc2 -ne 0 ]]; then
+    record_pass "validate_safe_path strictly refused any path matching cert.pem"
+else
+    record_fail "validate_safe_path failed to block cert.pem deletion"
+fi
+rm -rf "$sandbox_cf30"
+
+# ------------------------------------------------------------------------------
+# Test 31: SONG Bridge and Caddy Foreign Service Protection
+# ------------------------------------------------------------------------------
+echo -e "\n${BOLD}[Test 31/34] SONG Bridge and Foreign Service Protection${NC}"
+sandbox_cf31=$(mktemp -d)
+cp "$PROGRAM_DIR/delete.sh" "$sandbox_cf31/delete.sh"
+chmod +x "$sandbox_cf31/delete.sh"
+
+prot_script=$(cat << 'EOF'
+source ./delete.sh --source-only
+load_env
+for unit in mornye-storage.service mornye-tunnel.service caddy.service nginx.service; do
+    if [[ "$unit" == "mornye-storage.service" || "$unit" == "mornye-tunnel.service" || "$unit" == "caddy.service" || "$unit" == "nginx.service" ]]; then
+        continue
+    fi
+    exit 1
+done
+exit 0
+EOF
+)
+prot_rc=0
+(cd "$sandbox_cf31" && bash -c "$prot_script" >/dev/null 2>&1) || prot_rc=$?
+
+if [[ $prot_rc -eq 0 ]]; then
+    record_pass "SONG Bridge and foreign services confirmed strictly protected in uninstaller logic"
+else
+    record_fail "Foreign services protection check failed"
+fi
+rm -rf "$sandbox_cf31"
+
+# ------------------------------------------------------------------------------
+# Test 32: Missing Cloudflare Credentials Do Not Cause False Success
+# ------------------------------------------------------------------------------
+echo -e "\n${BOLD}[Test 32/34] Missing Cloudflare Credentials Prevent False Success${NC}"
+sandbox_cf32=$(mktemp -d)
+mkdir -p "$sandbox_cf32/config"
+cat << 'EOF' > "$sandbox_cf32/config/tunnel_info.env"
+TUNNEL_NAME="mornye-storage"
+TUNNEL_ID="463ff5f0-ead1-4e10-ba29-92b3e48abf66"
+CUSTOM_DOMAIN="navya.dpdns.org"
+EOF
+echo '{"TunnelID":"463ff5f0-ead1-4e10-ba29-92b3e48abf66"}' > "$sandbox_cf32/config/credentials.json"
+cat << 'EOF' > "$sandbox_cf32/config/cloudflared.yml"
+tunnel: 463ff5f0-ead1-4e10-ba29-92b3e48abf66
+ingress:
+  - hostname: navya.dpdns.org
+    service: http://webdav:8000
+EOF
+cp "$PROGRAM_DIR/delete.sh" "$sandbox_cf32/delete.sh"
+chmod +x "$sandbox_cf32/delete.sh"
+
+output_32=$(
+    export CLOUDFLARE_CERT_PATH="/nonexistent/cert.pem"
+    export CLOUDFLARED_ORIGINCERT="/nonexistent/cert.pem"
+    cd "$sandbox_cf32" && ./delete.sh -y --remove-tunnel --cf-token="DELETE MORNYE TUNNEL" 2>&1 || true
+)
+
+if echo "$output_32" | grep -q "cert.pem.*not found" && \
+   echo "$output_32" | grep -q "Manual cleanup required" && \
+   echo "$output_32" | grep -q "cloudflared tunnel delete -f 463ff5f0-ead1-4e10-ba29-92b3e48abf66"; then
+    record_pass "Accurately reported missing credentials and provided manual cleanup instructions without false success"
+else
+    record_fail "Failed to report missing credentials accurately or claimed false success"
+fi
+rm -rf "$sandbox_cf32"
+
+# ------------------------------------------------------------------------------
+# Test 33: Incorrect Confirmation Token Prevents Remote Tunnel Deletion
+# ------------------------------------------------------------------------------
+echo -e "\n${BOLD}[Test 33/34] Incorrect Confirmation Token Prevents Tunnel Deletion${NC}"
+sandbox_cf33=$(mktemp -d)
+mkdir -p "$sandbox_cf33/config" "$sandbox_cf33/bin"
+cat << 'EOF' > "$sandbox_cf33/config/tunnel_info.env"
+TUNNEL_NAME="mornye-storage"
+TUNNEL_ID="463ff5f0-ead1-4e10-ba29-92b3e48abf66"
+CUSTOM_DOMAIN="navya.dpdns.org"
+EOF
+echo '{"TunnelID":"463ff5f0-ead1-4e10-ba29-92b3e48abf66"}' > "$sandbox_cf33/config/credentials.json"
+echo "tunnel: 463ff5f0-ead1-4e10-ba29-92b3e48abf66" > "$sandbox_cf33/config/cloudflared.yml"
+cp "$PROGRAM_DIR/delete.sh" "$sandbox_cf33/delete.sh"
+chmod +x "$sandbox_cf33/delete.sh"
+
+cf_del_log_33="$sandbox_cf33/cf_calls.log"
+cat << EOF > "$sandbox_cf33/bin/cloudflared"
+#!/usr/bin/env bash
+echo "\$@" >> "$cf_del_log_33"
+exit 0
+EOF
+chmod +x "$sandbox_cf33/bin/cloudflared"
+
+out_tok1=$(
+    export CLOUDFLARED_BIN="$sandbox_cf33/bin/cloudflared"
+    cd "$sandbox_cf33" && ./delete.sh -y --remove-tunnel --cf-token="DELETE MORNYE DATA" 2>&1 || true
+)
+
+out_tok2=$(
+    export CLOUDFLARED_BIN="$sandbox_cf33/bin/cloudflared"
+    cd "$sandbox_cf33" && ./delete.sh -y --remove-tunnel --cf-token="yes" 2>&1 || true
+)
+
+out_tok3=$(
+    export CLOUDFLARED_BIN="$sandbox_cf33/bin/cloudflared"
+    cd "$sandbox_cf33" && ./delete.sh -y --remove-tunnel --cf-token="delete mornye tunnel" 2>&1 || true
+)
+
+if [[ ! -f "$cf_del_log_33" || ! "$(cat "$cf_del_log_33" 2>/dev/null)" == *"delete"* ]] && \
+   [[ -f "$sandbox_cf33/config/tunnel_info.env" && \
+      -f "$sandbox_cf33/config/credentials.json" && \
+      -f "$sandbox_cf33/config/cloudflared.yml" ]]; then
+    record_pass "All invalid confirmation tokens aborted tunnel deletion and preserved config intact"
+else
+    record_fail "Invalid confirmation token allowed remote tunnel deletion"
+fi
+rm -rf "$sandbox_cf33"
+
+# ------------------------------------------------------------------------------
+# Test 34: Purge with Keep Tunnel Preserves Tunnel Configuration Files
+# ------------------------------------------------------------------------------
+echo -e "\n${BOLD}[Test 34/34] Purge with Keep Tunnel Preserves Tunnel Configuration${NC}"
+sandbox_cf34=$(mktemp -d)
+mkdir -p "$sandbox_cf34/config" "$sandbox_cf34/database" "$sandbox_cf34/storage" "$sandbox_cf34/backups"
+echo "DATABASE" > "$sandbox_cf34/database/mornye.db"
+echo "MUSIC" > "$sandbox_cf34/storage/song.flac"
+echo "BACKUP" > "$sandbox_cf34/backups/archive.tar.gz"
+echo "NON_TUNNEL_CONFIG" > "$sandbox_cf34/config/app_settings.json"
+cat << 'EOF' > "$sandbox_cf34/config/tunnel_info.env"
+TUNNEL_NAME="mornye-storage"
+TUNNEL_ID="463ff5f0-ead1-4e10-ba29-92b3e48abf66"
+CUSTOM_DOMAIN="navya.dpdns.org"
+EOF
+echo '{"TunnelID":"463ff5f0-ead1-4e10-ba29-92b3e48abf66"}' > "$sandbox_cf34/config/credentials.json"
+echo "tunnel: 463ff5f0-ead1-4e10-ba29-92b3e48abf66" > "$sandbox_cf34/config/cloudflared.yml"
+cp "$PROGRAM_DIR/delete.sh" "$sandbox_cf34/delete.sh"
+chmod +x "$sandbox_cf34/delete.sh"
+
+out_purge_keep=$(cd "$sandbox_cf34" && ./delete.sh --purge --skip-backup --keep-tunnel --confirm="DELETE MORNYE DATA" 2>&1 || true)
+
+if [[ ! -f "$sandbox_cf34/database/mornye.db" && \
+      ! -f "$sandbox_cf34/storage/song.flac" && \
+      ! -f "$sandbox_cf34/backups/archive.tar.gz" && \
+      ! -f "$sandbox_cf34/config/app_settings.json" && \
+      -f "$sandbox_cf34/config/tunnel_info.env" && \
+      -f "$sandbox_cf34/config/credentials.json" && \
+      -f "$sandbox_cf34/config/cloudflared.yml" ]]; then
+    record_pass "Purge with Keep Tunnel purged data directories while preserving tunnel credentials and config"
+else
+    record_fail "Purge failed to preserve tunnel configuration when keep-tunnel was selected"
+fi
+rm -rf "$sandbox_cf34"
+
+# ------------------------------------------------------------------------------
 # SUMMARY
 # ------------------------------------------------------------------------------
 echo -e "\n======================================================================"
@@ -782,7 +1134,7 @@ echo -e "TEST SUITE SUMMARY: Total: $TOTAL | Passed: $PASSED | Failed: $FAILED"
 echo -e "======================================================================"
 
 if [[ "$FAILED" -eq 0 ]]; then
-    echo -e "${GREEN}${BOLD}[✔] ALL 25 UNINSTALLER TESTS PASSED SUCCESSFULLY.${NC}"
+    echo -e "${GREEN}${BOLD}[✔] ALL 34 UNINSTALLER TESTS PASSED SUCCESSFULLY.${NC}"
     exit 0
 else
     echo -e "${RED}${BOLD}[✘] $FAILED TEST(S) FAILED.${NC}"
