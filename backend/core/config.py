@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     # WebDAV Engine Network Configuration
     WEBDAV_HOST: str = "127.0.0.1"
     WEBDAV_PORT: int = 8000
+    WEBDAV_AUTH_ENABLED: bool = True
+    WEBDAV_USER: str = "admin"
 
     # Storage Paths
     DATA_PATH: Path = Field(default_factory=lambda: Path(__file__).resolve().parent.parent.parent / "database")

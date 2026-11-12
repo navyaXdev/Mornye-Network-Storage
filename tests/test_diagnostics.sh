@@ -40,7 +40,7 @@ record_fail() {
 # Test 1: Clean Debian / Linux Distribution Detection
 # ------------------------------------------------------------------------------
 echo -e "\n${BOLD}[Test 1/16] Universal Linux System Detection${NC}"
-out_json="$("$PROGRAM_DIR/scripts/doctor.sh" --json 2>/dev/null)"
+out_json="$("$PROGRAM_DIR/scripts/doctor.sh" --json 2>/dev/null || true)"
 os_id=$(echo "$out_json" | grep -oE '"os_id": "[^"]+"' | cut -d'"' -f4)
 init_sys=$(echo "$out_json" | grep -oE '"init_system": "[^"]+"' | cut -d'"' -f4)
 if [[ -n "$os_id" && -n "$init_sys" ]]; then
@@ -96,7 +96,7 @@ fi
 # Test 4: Host Port 8000 Occupied (SONG Bridge) Diagnosis
 # ------------------------------------------------------------------------------
 echo -e "\n${BOLD}[Test 4/16] Host Port 8000 Occupied (SONG Bridge) Protection${NC}"
-ports_out="$("$PROGRAM_DIR/scripts/doctor.sh" --ports 2>/dev/null)"
+ports_out="$("$PROGRAM_DIR/scripts/doctor.sh" --ports 2>/dev/null || true)"
 if echo "$ports_out" | grep -q "Standard Port 8000"; then
     record_pass "Audited Port 8000 state without stopping or interfering with service"
 else

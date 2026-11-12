@@ -40,17 +40,18 @@ Alternatively, direct execution of the setup wizard:
 
 ---
 
-## 3. The 6-Stage Automated Installation Wizard
+## 3. The 7-Stage Automated Installation Wizard
 
-The universal installer executes a guided, deterministic 6-stage lifecycle:
+The universal installer executes a guided, deterministic 7-stage lifecycle:
 
 ```mermaid
 flowchart TD
-    S1["Stage 1: Pre-flight Audit<br/>OS, Kernel, RAM, Disk, Sudo"] --> S2["Stage 2: Storage Hardening<br/>Directory Creation, chmod 700/755"]
-    S2 --> S3["Stage 3: Package & Docker<br/>Distro Detection, Docker & Compose, Image Build"]
-    S3 --> S4["Stage 4: Network Selection<br/>Local / Permanent Tunnel / Quick Tunnel"]
-    S4 --> S5["Stage 5: Cloudflare Setup<br/>Login, Create Tunnel, DNS Routing"]
-    S5 --> S6["Stage 6: Final Verification<br/>Health Check, Credentials, Summary Report"]
+    S1["Stage 1: Pre-flight Audit<br/>OS, Kernel, RAM, Disk, Sudo"] --> S2["Stage 2: Storage Hardening<br/>Directory Creation, chmod 750/755"]
+    S2 --> S3["Stage 3: WebDAV Authentication<br/>Enable/Disable, Argon2id, Secure Passwords"]
+    S3 --> S4["Stage 4: Package & Docker<br/>Distro Detection, Docker & Compose, Image Build"]
+    S4 --> S5["Stage 5: Network Selection<br/>Local / Permanent Tunnel / Quick Tunnel"]
+    S5 --> S6["Stage 6: Cloudflare Setup<br/>Login, Create Tunnel, DNS Routing"]
+    S6 --> S7["Stage 7: Final Verification<br/>Health Check, Credentials, Summary Report"]
 ```
 
 ### Stage 1: Pre-flight System Audit
@@ -71,7 +72,20 @@ Creates the required host-persisted directory layout with strict Unix permission
 
 Generates a cryptographically strong 256-bit URL-safe `SECRET_KEY` in `.env` if one does not already exist, and exports `MORNYE_UID` / `MORNYE_GID`.
 
-### Stage 3: Universal Package & Docker Runtime Setup
+### Stage 3: WebDAV Authentication Configuration
+Configures whether the WebDAV sync server enforces HTTP Basic Authentication or allows anonymous public access:
+1. **Enable Username & Password (Recommended, Default)**:
+   - Sets administrator username (default: `admin`).
+   - Generates a cryptographically secure 16-character random password or allows custom password entry with verification (minimum 8 characters).
+   - Displayed once in a high-visibility terminal security box.
+   - Hashed using OWASP-compliant Argon2id parameters before insertion into `database/mornye.db`.
+   - **Zero Secret Leakage Guarantee**: Plaintext passwords are never saved to `.env`, terminal logs, or installation reports.
+   - **Credential Preservation Guarantee**: On system upgrade or reinstallation, existing active credentials in `database/mornye.db` are automatically detected and preserved.
+2. **Disable Authentication (Anonymous Access)**:
+   - Configures the server to accept unauthenticated WebDAV operations mapping to an internal surrogate user.
+   - **Unauthenticated Public WAN Warning Gate**: If the operator chooses to expose an unauthenticated server via Cloudflare Tunnel, the wizard displays a critical security warning and requires explicit confirmation (`--confirm-unauthenticated` or typing `CONFIRM`) before proceeding.
+
+### Stage 4: Universal Package & Docker Runtime Setup
 Detects the host package manager and installs missing dependencies automatically:
 - **Debian / Ubuntu / Kali / Mint**: `apt` (installs `docker.io` + `docker-cli` or official Docker CE repo, `docker-compose-plugin`, `curl`, `ca-certificates`, `cloudflared`).
 - **Arch Linux / Manjaro / EndeavourOS**: `pacman` (installs `docker`, `docker-compose`, `cloudflared`).
@@ -79,23 +93,23 @@ Detects the host package manager and installs missing dependencies automatically
 - **openSUSE Leap / Tumbleweed**: `zypper` (installs `docker`, `docker-compose`, `cloudflared`).
 - **Alpine Linux**: `apk` (installs `docker`, `docker-cli-compose`, enables Docker on OpenRC boot).
 
-Ensures the invoking user is added to the `docker` group, starts the Docker daemon, and builds the production multi-stage image `mornye-webdav:latest`.
+Ensures the invoking user is added to the `docker` group, starts the Docker daemon, builds the production multi-stage image `mornye-webdav:latest`, launches the stack, and provisions the initial WebDAV user account.
 
-### Stage 4: Networking Mode Selection
+### Stage 5: Networking Mode Selection
 The installer prompts the operator to choose their deployment topology:
-1. **Local Network Only**: WebDAV service binds strictly to `127.0.0.1:8000`. No WAN exposure.
+1. **Local Network Only**: WebDAV service binds strictly to loopback (`127.0.0.1:8001`). No WAN exposure.
 2. **Permanent Zero-Trust Cloudflare Tunnel (Production)**: Automated Cloudflare login, named tunnel creation, custom domain binding, and DNS CNAME propagation.
 3. **Ephemeral Quick Tunnel (Testing)**: Instant public testing endpoint via `*.trycloudflare.com` without requiring a Cloudflare account.
 
-### Stage 5: Cloudflare Workflow Execution
-If option 2 or 3 is selected, the installer invokes `scripts/cloudflare_manager.sh` to configure credentials, configure the ingress rules (`/etc/cloudflared/config.yml`), and start the tunnel service.
+### Stage 6: Cloudflare Workflow Execution
+If option 2 or 3 is selected, the installer configures credentials, updates ingress rules (`config/cloudflared.yml`), and starts the tunnel service while protecting existing third-party services.
 
-### Stage 6: Final Verification & Post-Install Report
+### Stage 7: Final Verification & Post-Install Report
 Runs an end-to-end sanity audit:
 - WebDAV `/health` endpoint probe (expects HTTP 200).
-- WebDAV `/dav/` authentication probe (expects HTTP 401 Unauthorized for unauthenticated requests).
+- WebDAV `/dav/` authentication probe (verifies HTTP 401 boundary or anonymous access).
 - SQLite PRAGMA integrity check.
-- Exports a full markdown report to `docs/SETUP_DEPENDENCY_INSTALLATION_REPORT.md`.
+- Exports a full markdown report to `docs/SETUP_DEPENDENCY_INSTALLATION_REPORT.md` (passwords are redacted).
 
 ---
 
@@ -104,14 +118,35 @@ Runs an end-to-end sanity audit:
 The installer supports non-interactive execution for continuous deployment or automated testing:
 
 ```bash
-# Non-interactive local installation (defaults to local mode)
-./setup.sh --yes --mode local
+# Non-interactive installation with auto-generated secure credentials
+./setup.sh --yes --network-mode local --auth-enabled --generate-password
 
-# Non-interactive with permanent tunnel creation
-./setup.sh --yes --mode tunnel --tunnel-name my-mornye --domain storage.mydomain.com
+# Non-interactive with custom WebDAV administrator credentials
+./setup.sh --yes --webdav-user admin --webdav-password "MyStrongSecretPass123!"
 
-# Non-interactive with temporary Quick Tunnel test
-./setup.sh --yes --mode quick
+# Non-interactive with authentication disabled (requires explicit confirmation if using WAN)
+./setup.sh --yes --network-mode permanent --domain storage.example.com --auth-disabled --confirm-unauthenticated
+```
+
+### WebDAV Authentication CLI Management (`./mornye.sh auth`)
+
+Mornye includes a dedicated management suite for managing credentials:
+
+```bash
+# Inspect authentication mode and active user accounts (Zero secret leakage)
+./mornye.sh auth status
+
+# Change password for an existing WebDAV user
+./mornye.sh auth change admin
+
+# Reset administrator password with a cryptographically secure random password
+./mornye.sh auth reset admin
+
+# Enable WebDAV HTTP Basic Authentication and restart container
+./mornye.sh auth enable
+
+# Disable authentication (Allows anonymous public access, requires confirmation)
+./mornye.sh auth disable --confirm
 ```
 
 ---

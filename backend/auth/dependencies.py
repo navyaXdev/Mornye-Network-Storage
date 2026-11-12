@@ -8,8 +8,19 @@ from fastapi import Request, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
+from backend.core.config import settings
 from backend.core.database import get_db, User
 from backend.auth.security import parse_basic_auth, verify_password
+
+# Anonymous user surrogate for WebDAV access when authentication is disabled
+ANONYMOUS_USER = User(
+    id=0,
+    username="guest",
+    password_hash="",
+    role="admin",
+    storage_quota_bytes=settings.DEFAULT_STORAGE_QUOTA_BYTES,
+    is_active=True
+)
 
 async def authenticate_user(
     request: Request,
@@ -18,7 +29,11 @@ async def authenticate_user(
     """
     Authenticate request via HTTP Basic Auth header.
     Standard for WebDAV clients and streaming music players.
+    If WEBDAV_AUTH_ENABLED is False, authentication is disabled and returns ANONYMOUS_USER.
     """
+    if not settings.WEBDAV_AUTH_ENABLED:
+        return ANONYMOUS_USER
+
     auth_header = request.headers.get("Authorization")
     basic_creds = parse_basic_auth(auth_header)
     if basic_creds:
@@ -28,4 +43,6 @@ async def authenticate_user(
         user = res.scalar_one_or_none()
         if user and verify_password(password, user.password_hash):
             return user
+        return None
+
     return None

@@ -66,6 +66,16 @@ Run the diagnostic probe to audit certificate paths, owners, and cryptographic t
 > - If `credentials.json` is missing on a system where the tunnel was already created, Mornye executes `cloudflared tunnel token <UUID>` to retrieve the base64 token, decodes the payload, and automatically reconstructs a valid `credentials.json` file.
 > - `config/credentials.json` must always exist as a regular file before starting the container stack. If a bad mount created it as a directory, Mornye detects and corrects the artifact automatically.
 
+### WebDAV Authentication vs Cloudflare Access
+> [!NOTE]
+> **Do not confuse Cloudflare Access with WebDAV Authentication**:
+> - **WebDAV Authentication (Argon2id)**: Operates at the application layer on `/dav/`. Standard desktop and mobile sync clients (Cyberduck, rclone, VLC, Windows Explorer, macOS Finder) communicate using standard HTTP Basic Authentication headers. This authentication is managed directly via `./mornye.sh auth` and the setup wizard.
+> - **Cloudflare Edge Ingress**: Securely tunnels encrypted HTTPS traffic from `https://storage.example.com` to Mornye's containerized WebDAV port.
+> - **Cloudflare Access (Zero Trust SSO)**: An optional edge identity gateway. Do not place browser-based Cloudflare Access login pages in front of WebDAV endpoints unless using client service tokens, as RFC 4918 WebDAV clients cannot complete interactive HTML/SAML login forms.
+
+### Public WAN Security Policy
+When WebDAV authentication is enabled, public traffic through Cloudflare is strictly gated behind Argon2id Basic Auth (unauthenticated requests receive HTTP 401 Unauthorized). If authentication is disabled in configuration, Mornye requires explicit confirmation (`--confirm-unauthenticated` or typing `CONFIRM`) to prevent exposing unauthenticated storage to the public Internet.
+
 ### Ingress Configuration Template (`config/cloudflared.yml`):
 ```yaml
 tunnel: 463ff5f0-ead1-4e10-ba29-92b3e48abf66

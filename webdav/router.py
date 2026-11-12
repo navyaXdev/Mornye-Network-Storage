@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from backend.core.config import settings
 from backend.core.database import get_db, User, StagedUpload
-from backend.auth.dependencies import authenticate_user
+from backend.auth.dependencies import authenticate_user, ANONYMOUS_USER
 from backend.storage.engine import storage_engine
 from backend.storage import diagnostics
 from backend.storage.validator import (
@@ -42,6 +42,9 @@ WEBDAV_HEADERS = {
 
 def verify_user_access(user: Optional[User]) -> Optional[Response]:
     """Helper to verify user is authenticated, active, and has music storage permissions."""
+    if not settings.WEBDAV_AUTH_ENABLED and user is None:
+        user = ANONYMOUS_USER
+
     if not user:
         return Response(
             content="Authentication Required",

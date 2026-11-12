@@ -19,12 +19,71 @@ def setup_test_env():
 
 @pytest.mark.asyncio
 async def test_webdav_unauthorized_propfind():
-    """Verify that unauthenticated PROPFIND is rejected with HTTP 401."""
+    """Verify that unauthenticated PROPFIND is rejected with HTTP 401 when auth is enabled."""
+    settings.WEBDAV_AUTH_ENABLED = True
     transport = httpx.ASGITransport(app=webdav_app)
     async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
         resp = await client.request("PROPFIND", "/dav/", headers={"Depth": "0"})
         assert resp.status_code == 401
         assert 'Basic realm="Mornye Music WebDAV"' in resp.headers.get("www-authenticate", "")
+
+@pytest.mark.asyncio
+async def test_webdav_invalid_credentials_propfind():
+    """Verify that PROPFIND with invalid credentials returns HTTP 401."""
+    settings.WEBDAV_AUTH_ENABLED = True
+    transport = httpx.ASGITransport(app=webdav_app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+        resp = await client.request(
+            "PROPFIND",
+            "/dav/",
+            headers={"Depth": "0"},
+            auth=("nonexistent_user", "wrong_password_123")
+        )
+        assert resp.status_code == 401
+        assert 'Basic realm="Mornye Music WebDAV"' in resp.headers.get("www-authenticate", "")
+
+@pytest.mark.asyncio
+async def test_webdav_authorized_propfind():
+    """Verify that PROPFIND with valid user credentials returns HTTP 207 Multi-Status."""
+    await init_db()
+    test_user = "authtest_user"
+    test_pass = "SecurePass123!@#"
+    async with AsyncSessionLocal() as session:
+        stmt = select(User).where(User.username == test_user)
+        res = await session.execute(stmt)
+        existing = res.scalar_one_or_none()
+        if not existing:
+            u = User(
+                username=test_user,
+                password_hash=hash_password(test_pass),
+                role="admin",
+                is_active=True
+            )
+            session.add(u)
+            await session.commit()
+
+    settings.WEBDAV_AUTH_ENABLED = True
+    transport = httpx.ASGITransport(app=webdav_app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+        resp = await client.request(
+            "PROPFIND",
+            "/dav/",
+            headers={"Depth": "0"},
+            auth=(test_user, test_pass)
+        )
+        assert resp.status_code in [200, 207]
+
+@pytest.mark.asyncio
+async def test_webdav_disabled_auth_propfind():
+    """Verify that unauthenticated PROPFIND succeeds when WEBDAV_AUTH_ENABLED is False."""
+    settings.WEBDAV_AUTH_ENABLED = False
+    try:
+        transport = httpx.ASGITransport(app=webdav_app)
+        async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+            resp = await client.request("PROPFIND", "/dav/", headers={"Depth": "0"})
+            assert resp.status_code in [200, 207]
+    finally:
+        settings.WEBDAV_AUTH_ENABLED = True
 
 @pytest.mark.asyncio
 async def test_webdav_health():

@@ -138,8 +138,15 @@ cmd_help() {
     echo ""
     echo -e "${BOLD}WEBDAV STORAGE ENGINE:${NC}"
     echo -e "  ${CYAN}webdav status${NC}               Inspect WebDAV port state and protocol configuration"
-    echo -e "  ${CYAN}webdav test${NC}                 Execute live PROPFIND probe verifying auth boundary"
+    echo -e "  ${CYAN}webdav test [user] [pass]${NC}   Execute live PROPFIND probe verifying auth boundary"
     echo -e "  ${CYAN}webdav logs [-f] [N]${NC}        View recent WebDAV access logs (default: 50 lines)"
+    echo ""
+    echo -e "${BOLD}WEBDAV AUTHENTICATION & ACCESS CONTROL:${NC}"
+    echo -e "  ${CYAN}auth status${NC}                 Display auth state and list active accounts (zero secret leaks)"
+    echo -e "  ${CYAN}auth change [user]${NC}          Interactively change password for a WebDAV user"
+    echo -e "  ${CYAN}auth reset [user] [pass]${NC}    Generate secure random password and reset user"
+    echo -e "  ${CYAN}auth enable${NC}                 Enforce HTTP Basic Auth and restart container"
+    echo -e "  ${CYAN}auth disable [--confirm]${NC}    Disable authentication (Requires explicit confirmation)"
     echo ""
     echo -e "${BOLD}CLOUDFLARE ZERO-TRUST TUNNEL (WAN INGRESS):${NC}"
     echo -e "  ${CYAN}tunnel cert-check${NC}           Inspect and diagnose Cloudflare origin cert (cert.pem)"
@@ -661,6 +668,105 @@ cmd_users() {
     esac
 }
 
+cmd_auth() {
+    local sub="${1:-status}"
+    shift || true
+
+    case "$sub" in
+        status)
+            run_cli_op "user_ops.py" auth-status "$@"
+            ;;
+        change)
+            local user="$1"
+            local pass="$2"
+            if [[ -z "$user" ]]; then
+                read -p "Username: " -r user
+            fi
+            if [[ -z "$pass" ]]; then
+                read -s -p "New WebDAV Password (min 8 characters): " -r pass
+                echo ""
+                read -s -p "Confirm New WebDAV Password: " -r pass_confirm
+                echo ""
+                if [[ "$pass" != "$pass_confirm" ]]; then
+                    echo -e "${RED}[ERROR] Passwords do not match.${NC}"
+                    exit 1
+                fi
+            fi
+            if [[ ${#pass} -lt 8 ]]; then
+                echo -e "${RED}[ERROR] Password must be at least 8 characters long.${NC}"
+                exit 1
+            fi
+            run_cli_op "user_ops.py" change-password "$user" "$pass"
+            ;;
+        reset)
+            local user="${1:-admin}"
+            local custom_pass="$2"
+            run_cli_op "user_ops.py" reset-password "$user" "$custom_pass"
+            ;;
+        enable)
+            echo -e "[*] Enabling WebDAV authentication..."
+            if [[ -f "$PROGRAM_DIR/.env" ]]; then
+                if grep -q "^WEBDAV_AUTH_ENABLED=" "$PROGRAM_DIR/.env"; then
+                    sed -i "s/^WEBDAV_AUTH_ENABLED=.*/WEBDAV_AUTH_ENABLED=true/" "$PROGRAM_DIR/.env"
+                else
+                    echo "WEBDAV_AUTH_ENABLED=true" >> "$PROGRAM_DIR/.env"
+                fi
+            fi
+            # Check if any users exist in the database
+            local has_u
+            has_u=$(run_cli_op "user_ops.py" has-users 2>/dev/null || echo "NO")
+            if [[ "$has_u" != "YES" ]]; then
+                echo -e "${YELLOW}[!] No WebDAV users found. Generating administrator account...${NC}"
+                run_cli_op "user_ops.py" reset-password "admin"
+            fi
+            echo -e "[*] Restarting WebDAV container to apply authentication policy..."
+            if docker ps --format '{{.Names}}' 2>/dev/null | grep -qw "mornye-webdav"; then
+                docker compose up -d --no-deps webdav 2>/dev/null || true
+            fi
+            echo -e "${GREEN}[✔] WebDAV authentication is now ENABLED.${NC}"
+            ;;
+        disable)
+            local is_confirmed=false
+            for arg in "$@"; do
+                [[ "$arg" == "--yes" || "$arg" == "-y" || "$arg" == "--confirm" ]] && is_confirmed=true
+            done
+            echo -e "${YELLOW}[!] WARNING: Disabling WebDAV authentication allows anonymous access without credentials.${NC}"
+            if [[ -f "$PROGRAM_DIR/config/cloudflared.yml" ]]; then
+                echo -e "${RED}[!] CRITICAL: Active Cloudflare ingress detected! Storage will be public to the internet!${NC}"
+            fi
+            if [[ "$is_confirmed" != true ]]; then
+                read -p "Type 'DISABLE' to confirm disabling authentication: " -r dis_conf
+                if [[ "$dis_conf" != "DISABLE" ]]; then
+                    echo -e "${YELLOW}[*] Operation cancelled by operator.${NC}"
+                    exit 0
+                fi
+            fi
+            if [[ -f "$PROGRAM_DIR/.env" ]]; then
+                if grep -q "^WEBDAV_AUTH_ENABLED=" "$PROGRAM_DIR/.env"; then
+                    sed -i "s/^WEBDAV_AUTH_ENABLED=.*/WEBDAV_AUTH_ENABLED=false/" "$PROGRAM_DIR/.env"
+                else
+                    echo "WEBDAV_AUTH_ENABLED=false" >> "$PROGRAM_DIR/.env"
+                fi
+            fi
+            echo -e "[*] Restarting WebDAV container to apply authentication policy..."
+            if docker ps --format '{{.Names}}' 2>/dev/null | grep -qw "mornye-webdav"; then
+                docker compose up -d --no-deps webdav 2>/dev/null || true
+            fi
+            echo -e "${GREEN}[✔] WebDAV authentication is now DISABLED.${NC}"
+            ;;
+        help|*)
+            echo -e "${BOLD}Usage:${NC} ./mornye.sh auth [status|change|reset|enable|disable]"
+            echo ""
+            echo -e "Commands:"
+            echo -e "  ${CYAN}status${NC}                    Display authentication mode and active user accounts"
+            echo -e "  ${CYAN}change [user]${NC}             Change password for an existing WebDAV user"
+            echo -e "  ${CYAN}reset [user] [pass]${NC}       Generate cryptographically secure password & reset account"
+            echo -e "  ${CYAN}enable${NC}                    Enforce HTTP Basic Auth and restart WebDAV"
+            echo -e "  ${CYAN}disable [--confirm]${NC}       Disable authentication (Requires confirmation)"
+            ;;
+    esac
+}
+
 cmd_quota() {
     local sub="${1:-status}"
     shift || true
@@ -869,6 +975,9 @@ main() {
             ;;
         users)
             cmd_users "$@"
+            ;;
+        auth)
+            cmd_auth "$@"
             ;;
         quota)
             cmd_quota "$@"

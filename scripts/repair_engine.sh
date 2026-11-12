@@ -944,6 +944,67 @@ Free up disk space manually:
         "$verify_cmd"
 }
 
+# Handler 12: Missing WebDAV Users When Auth is Enabled
+repair_auth_no_users() {
+    load_env
+    if [[ "${WEBDAV_AUTH_ENABLED:-true}" == "false" ]]; then
+        return 0
+    fi
+
+    if [[ -f "$DATA_DIR/mornye.db" ]] && command -v sqlite3 &>/dev/null; then
+        local cnt
+        cnt=$(sqlite3 "$DATA_DIR/mornye.db" "SELECT count(*) FROM users WHERE is_active=1;" 2>/dev/null || echo "0")
+        if [[ "$cnt" -gt 0 ]]; then
+            return 0
+        fi
+    else
+        return 0
+    fi
+
+    local what="WebDAV authentication is enabled in configuration, but the users database table is empty."
+    local why="Without configured user accounts, all WebDAV requests to /dav/ will be rejected with HTTP 401 Unauthorized."
+    local comp="Mornye SQLite Users Database (database/mornye.db)"
+    local risk="LOW (Provisions an initial administrator account with a cryptographically secure random password)"
+    local sol="Generate a cryptographically secure random password and provision administrator account 'admin'."
+
+    local exact_changes="1. Generate 16-character secure random password
+2. Hash password with Argon2id OWASP parameters
+3. Insert active user 'admin' with role 'admin' into database/mornye.db
+4. Display one-time credential card in terminal (Zero secret leakage to logs)"
+
+    local fix_cmd="
+        if [[ -f '$PROGRAM_DIR/mornye.sh' ]]; then
+            '$PROGRAM_DIR/mornye.sh' auth reset admin
+        elif [[ -f '$PROGRAM_DIR/cli/user_ops.py' ]]; then
+            python3 '$PROGRAM_DIR/cli/user_ops.py' reset-password admin
+        fi
+    "
+
+    local manual_cmd="
+Run the authentication reset utility:
+  ./mornye.sh auth reset admin
+Or create a custom account:
+  ./mornye.sh auth change <username>
+"
+
+    local verify_cmd="
+        sqlite3 '$DATA_DIR/mornye.db' \"SELECT count(*) FROM users WHERE is_active=1;\" 2>/dev/null | grep -qv '^0$'
+    "
+
+    prompt_interactive_error \
+        "ERR_AUTH_NO_USERS" \
+        "WebDAV Authentication Enabled With Zero Users Configured" \
+        "$what" \
+        "$why" \
+        "$comp" \
+        "$risk" \
+        "$sol" \
+        "$exact_changes" \
+        "$fix_cmd" \
+        "$manual_cmd" \
+        "$verify_cmd"
+}
+
 # ------------------------------------------------------------------------------
 # 4. LIFECYCLE PRE-FLIGHT INTEGRATION ORCHESTRATOR
 # ------------------------------------------------------------------------------
@@ -968,6 +1029,7 @@ run_preflight_checks() {
             repair_volume_writability || rc=$?
             repair_missing_env || rc=$?
             repair_default_secret_key || rc=$?
+            repair_auth_no_users || rc=$?
             ;;
         health)
             repair_unhealthy_container || rc=$?
@@ -985,6 +1047,7 @@ run_preflight_checks() {
             repair_volume_writability || rc=$?
             repair_missing_env || rc=$?
             repair_default_secret_key || rc=$?
+            repair_auth_no_users || rc=$?
             repair_unhealthy_container || rc=$?
             repair_cloudflare_ingress_mismatch || rc=$?
             repair_private_port_exposed || rc=$?

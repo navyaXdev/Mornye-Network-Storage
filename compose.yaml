@@ -27,6 +27,7 @@ services:
       - DEBUG=${DEBUG:-false}
       - WEBDAV_HOST=0.0.0.0
       - WEBDAV_PORT=8000
+      - WEBDAV_AUTH_ENABLED=${WEBDAV_AUTH_ENABLED:-true}
       - DATA_PATH=/data
       - STORAGE_PATH=/storage
       - LOG_PATH=/logs

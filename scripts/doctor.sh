@@ -680,6 +680,33 @@ audit_configuration() {
         fi
     fi
 
+    # 4. WebDAV Authentication Audit
+    local auth_enabled=true
+    if [[ -f "$PROGRAM_DIR/.env" ]]; then
+        local raw_auth
+        raw_auth="$(grep -E '^WEBDAV_AUTH_ENABLED=' "$PROGRAM_DIR/.env" | cut -d= -f2 | tr -d '"' | tr -d "'" | tr '[:upper:]' '[:lower:]' || true)"
+        if [[ "$raw_auth" == "false" ]]; then
+            auth_enabled=false
+        fi
+    fi
+
+    if [[ "$auth_enabled" == true ]]; then
+        if [[ -f "$DATA_DIR/mornye.db" ]] && has_cmd sqlite3; then
+            local u_cnt
+            u_cnt=$(sqlite3 "$DATA_DIR/mornye.db" "SELECT count(*) FROM users WHERE is_active=1;" 2>/dev/null || echo "0")
+            if [[ "$u_cnt" -eq 0 ]]; then
+                FINDINGS_ERRORS+=("AUTH_NO_USERS|WebDAV authentication is enabled, but no users exist in database.|Create an administrator account using './mornye.sh auth reset admin' or rerun './mornye.sh install'.")
+            fi
+        fi
+    else
+        # Authentication disabled
+        if [[ -f "$CONFIG_DIR/cloudflared.yml" ]]; then
+            FINDINGS_WARNINGS+=("AUTH_DISABLED_PUBLIC_WAN|WebDAV authentication is DISABLED while Cloudflare ingress configuration exists.|Protect public storage by enabling authentication via './mornye.sh auth enable'.")
+        else
+            FINDINGS_INFO+=("AUTH_DISABLED_LOCAL|WebDAV authentication is disabled (Local-only anonymous access).|Enable authentication via './mornye.sh auth enable' if access control is needed.")
+        fi
+    fi
+
     [[ "$config_err" == false ]] && CONFIG_VALIDATION_STATUS="valid" || CONFIG_VALIDATION_STATUS="invalid"
 }
 
@@ -1124,8 +1151,13 @@ render_human_report() {
     print_section "6. LOCAL ENDPOINTS & HEALTH STATUS"
     local h_url="http://${MORNYE_HOST_BIND}:${MORNYE_HOST_PORT}/health"
     local d_url="http://${MORNYE_HOST_BIND}:${MORNYE_HOST_PORT}/dav/"
+    local auth_status_disp="Enabled (HTTP Basic Auth)"
+    if [[ "$WEBDAV_AUTH_ENABLED" == "false" ]]; then
+        auth_status_disp="Disabled (Anonymous Access)"
+    fi
     echo -e "Health Probe (/health): $([[ "$HEALTH_HTTP_CODE" == "200" ]] && echo -e "${GREEN}[✔] HTTP 200 OK (${HEALTH_LATENCY_MS} ms)${NC}" || echo -e "${YELLOW}[!] HTTP ${HEALTH_HTTP_CODE} (${h_url})${NC}")"
     echo -e "WebDAV Probe (/dav/)  : $([[ "$DAV_HTTP_CODE" =~ ^(401|200|207)$ ]] && echo -e "${GREEN}[✔] HTTP ${DAV_HTTP_CODE} (Auth Boundary Active, ${DAV_LATENCY_MS} ms)${NC}" || echo -e "${YELLOW}[!] HTTP ${DAV_HTTP_CODE} (${d_url})${NC}")"
+    echo -e "Authentication Policy : ${BOLD}${auth_status_disp}${NC}"
 
     print_section "7. CLOUDFLARE ZERO-TRUST TUNNEL AUDIT"
     echo -e "cloudflared CLI      : $([[ "$CLOUDFLARE_INSTALLED" == true ]] && echo -e "${GREEN}[✔] Installed${NC} (${CLOUDFLARE_VERSION})" || echo -e "${YELLOW}[!] Not installed on host${NC}")"
