@@ -55,3 +55,50 @@ def test_broken_html_page_still_fails_audit():
     finally:
         if broken_file.exists():
             broken_file.unlink()
+
+def test_relative_asset_paths_and_internal_links_resolve():
+    """Ensure that all HTML pages use relative paths that resolve to actual files without hardcoded /Mornye-Network-Storage/ prefixes."""
+    import re
+    verified = 0
+    for root, _, files in os.walk(SITE_DIR):
+        for f in files:
+            if not f.endswith('.html') or f.startswith('google'):
+                continue
+            file_path = os.path.join(root, f)
+            rel_html = os.path.relpath(file_path, SITE_DIR).replace('\\', '/')
+            dir_of_file = os.path.dirname(file_path)
+            content = Path(file_path).read_text(encoding='utf-8')
+            
+            # Find all href and src attributes
+            tags = re.findall(r'(?:href|src)=["\']([^"\']+)["\']', content)
+            for target in tags:
+                if target.startswith(('http://', 'https://', 'mailto:', 'tel:', '#', 'javascript:')):
+                    continue
+                # Ensure no hardcoded subpath
+                assert not target.startswith('/Mornye-Network-Storage/'), f"[{rel_html}] Has hardcoded /Mornye-Network-Storage/ in {target}"
+                
+                # In 404.html, paths are relative to base
+                if rel_html == '404.html':
+                    clean = target.split('#')[0].split('?')[0]
+                    if clean.startswith('./'):
+                        clean = clean[2:]
+                    if clean in ('', '/'):
+                        target_file = os.path.join(SITE_DIR, 'index.html')
+                    elif clean.endswith('/'):
+                        target_file = os.path.join(SITE_DIR, clean.strip('/'), 'index.html')
+                    else:
+                        target_file = os.path.join(SITE_DIR, clean)
+                else:
+                    clean = target.split('#')[0].split('?')[0]
+                    if clean.endswith('/'):
+                        target_file = os.path.normpath(os.path.join(dir_of_file, clean, 'index.html'))
+                    elif clean in ('', '.'):
+                        target_file = os.path.normpath(os.path.join(dir_of_file, 'index.html'))
+                    else:
+                        target_file = os.path.normpath(os.path.join(dir_of_file, clean))
+                        if os.path.isdir(target_file):
+                            target_file = os.path.join(target_file, 'index.html')
+                
+                assert os.path.exists(target_file), f"[{rel_html}] Link target '{target}' resolves to missing file: {target_file}"
+                verified += 1
+    assert verified > 300, f"Expected >300 relative assets/links verified, got {verified}"

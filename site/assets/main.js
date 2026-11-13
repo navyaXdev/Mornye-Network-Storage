@@ -66,5 +66,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
+
+  // 4. Base Path Normalizer (Cross-compatibility for Root Domains / Cloudflare Workers and GitHub Pages)
+  if (!window.location.pathname.startsWith('/Mornye-Network-Storage')) {
+    document.querySelectorAll('a[href^="/Mornye-Network-Storage/"]').forEach(link => {
+      const currentHref = link.getAttribute('href');
+      const newHref = currentHref.replace(/^\/Mornye-Network-Storage/, '') || '/';
+      link.setAttribute('href', newHref);
+    });
+  }
 });
 

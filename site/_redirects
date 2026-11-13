@@ -1,0 +1,3 @@
+# Cloudflare Pages / Workers Redirects
+# Redirect any requests containing the GitHub Pages repository subpath to domain root
+/Mornye-Network-Storage/*  /:splat  301

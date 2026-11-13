@@ -1,34 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    (function() {
+      var isGHP = window.location.pathname.indexOf('/Mornye-Network-Storage') === 0;
+      var base = isGHP ? '/Mornye-Network-Storage/' : '/';
+      document.write('<base href="' + base + '">');
+    })();
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Page Not Found — Mornye Network Storage</title>
   <meta name="description" content="The page you requested could not be found. Return to Mornye Network Storage homepage or browse our documentation.">
   <meta name="robots" content="noindex, follow">
-  <link rel="icon" type="image/svg+xml" href="/Mornye-Network-Storage/assets/favicon.svg">
-  <link rel="stylesheet" href="/Mornye-Network-Storage/assets/style.css">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
   <a href="#main-content" class="skip-link">Skip to main content</a>
 
   <header class="site-header">
     <div class="nav-container">
-      <a href="/Mornye-Network-Storage/" class="brand-link">
+      <a href="./" class="brand-link">
         <div class="brand-logo">M</div>
         <span>Mornye Storage</span>
       </a>
 
       <nav aria-label="Main Navigation">
         <ul class="nav-links">
-          <li><a href="/Mornye-Network-Storage/">Home</a></li>
-          <li><a href="/Mornye-Network-Storage/features/">Features</a></li>
-          <li><a href="/Mornye-Network-Storage/installation/">Installation</a></li>
-          <li><a href="/Mornye-Network-Storage/docker/">Docker</a></li>
-          <li><a href="/Mornye-Network-Storage/cloudflare/">Cloudflare</a></li>
-          <li><a href="/Mornye-Network-Storage/guides/">Guides</a></li>
-          <li><a href="/Mornye-Network-Storage/faq/">FAQ</a></li>
-          <li><a href="/Mornye-Network-Storage/documentation/">Docs</a></li>
+          <li><a href="./">Home</a></li>
+          <li><a href="features/">Features</a></li>
+          <li><a href="installation/">Installation</a></li>
+          <li><a href="docker/">Docker</a></li>
+          <li><a href="cloudflare/">Cloudflare</a></li>
+          <li><a href="guides/">Guides</a></li>
+          <li><a href="faq/">FAQ</a></li>
+          <li><a href="documentation/">Docs</a></li>
         </ul>
       </nav>
 
@@ -46,7 +53,7 @@
     <h2 style="font-size: 2rem; margin-bottom: 1rem; color: #fff;">Page Not Found</h2>
     <p style="color: var(--text-secondary); max-width: 500px; margin: 0 auto 2rem;">The requested document or resource could not be found. It may have moved or been renamed.</p>
     <div>
-      <a href="/Mornye-Network-Storage/" class="btn-primary">Return to Homepage &rarr;</a>
+      <a href="./" class="btn-primary">Return to Homepage &rarr;</a>
     </div>
   </main>
 
