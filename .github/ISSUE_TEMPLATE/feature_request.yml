@@ -1,0 +1,41 @@
+name: "Feature Request"
+description: "Suggest a new feature or improvement for Mornye Network Storage"
+title: "[Feature]: "
+labels: ["enhancement", "feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a feature! Please provide context on how this improves Mornye.
+  - type: textarea
+    id: problem
+    attributes:
+      label: "Problem Statement or User Need"
+      description: "Is your feature request related to a specific limitation or pain point?"
+      placeholder: "I'm always frustrated when..."
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: "Proposed Solution"
+      description: "Describe the solution you would like to see implemented."
+      placeholder: "Add support for..."
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "Alternatives Considered"
+      description: "A description of any alternative solutions or features you considered."
+      placeholder: "I tried using..."
+    validations:
+      required: false
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: "Willingness to Contribute"
+      options:
+        - label: "I am interested in contributing code or documentation to implement this feature."
+          required: false
+

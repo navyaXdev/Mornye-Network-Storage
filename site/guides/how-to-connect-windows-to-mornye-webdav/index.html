@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How to Connect Windows 11 &amp; 10 to Mornye WebDAV | Guide</title>
+  <meta name="description" content="Step-by-step tutorial on mapping Mornye WebDAV network drives in Windows Explorer, fixing the 50MB WebClient transfer limit, and saving credentials.">
+  <meta name="keywords" content="connect Windows to Mornye WebDAV, map network drive WebDAV, WebClient registry 50MB fix, Windows Explorer WebDAV, Mornye Windows setup">
+  <meta name="author" content="NavyaXdev">
+  <link rel="canonical" href="https://navyaxdev.github.io/Mornye-Network-Storage/guides/how-to-connect-windows-to-mornye-webdav/">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://navyaxdev.github.io/Mornye-Network-Storage/guides/how-to-connect-windows-to-mornye-webdav/">
+  <meta property="og:title" content="How to Connect Windows 11 &amp; 10 to Mornye WebDAV | Guide">
+  <meta property="og:description" content="Mount your Mornye storage server natively as a Windows network drive letter and unlock large file transfers.">
+  <meta property="og:image" content="https://navyaxdev.github.io/Mornye-Network-Storage/assets/mornye-social-preview.png">
+  <meta property="og:site_name" content="Mornye Network Storage">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="How to Connect Windows 11 &amp; 10 to Mornye WebDAV | Guide">
+  <meta name="twitter:description" content="Mount your Mornye storage server natively as a Windows network drive letter and unlock large file transfers.">
+  <meta name="twitter:image" content="https://navyaxdev.github.io/Mornye-Network-Storage/assets/mornye-social-preview.png">
+
+  <link rel="icon" type="image/svg+xml" href="/Mornye-Network-Storage/assets/favicon.svg">
+  <link rel="stylesheet" href="/Mornye-Network-Storage/assets/style.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://navyaxdev.github.io/Mornye-Network-Storage/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Guides",
+            "item": "https://navyaxdev.github.io/Mornye-Network-Storage/guides/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Connect Windows to Mornye WebDAV",
+            "item": "https://navyaxdev.github.io/Mornye-Network-Storage/guides/how-to-connect-windows-to-mornye-webdav/"
+          }
+        ]
+      },
+      {
+        "@type": "TechArticle",
+        "headline": "How to Connect Windows 11 & 10 to Mornye WebDAV",
+        "description": "Complete walkthrough detailing how to map Mornye WebDAV as a Windows network drive, bypass the 50 MB WebClient file size limitation, and resolve authentication issues.",
+        "url": "https://navyaxdev.github.io/Mornye-Network-Storage/guides/how-to-connect-windows-to-mornye-webdav/",
+        "author": {
+          "@type": "Person",
+          "name": "NavyaXdev"
+        },
+        "datePublished": "2026-11-12",
+        "dateModified": "2026-11-12"
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header class="site-header">
+    <div class="nav-container">
+      <a href="/Mornye-Network-Storage/" class="brand-link">
+        <div class="brand-logo">M</div>
+        <span>Mornye Storage</span>
+      </a>
+
+      <nav aria-label="Main Navigation">
+        <ul class="nav-links">
+          <li><a href="/Mornye-Network-Storage/">Home</a></li>
+          <li><a href="/Mornye-Network-Storage/features/">Features</a></li>
+          <li><a href="/Mornye-Network-Storage/installation/">Installation</a></li>
+          <li><a href="/Mornye-Network-Storage/docker/">Docker</a></li>
+          <li><a href="/Mornye-Network-Storage/cloudflare/">Cloudflare</a></li>
+          <li><a href="/Mornye-Network-Storage/guides/" class="active">Guides</a></li>
+          <li><a href="/Mornye-Network-Storage/faq/">FAQ</a></li>
+          <li><a href="/Mornye-Network-Storage/documentation/">Docs</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="https://github.com/navyaXdev/Mornye-Network-Storage" class="btn-github" target="_blank" rel="noopener noreferrer">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>GitHub</span>
+        </a>
+        <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">&#9776;</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content" class="container">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/Mornye-Network-Storage/">Home</a>
+      <span class="divider">/</span>
+      <a href="/Mornye-Network-Storage/guides/">Guides</a>
+      <span class="divider">/</span>
+      <span class="current">Connect Windows to WebDAV</span>
+    </nav>
+
+    <header class="article-header">
+      <h1>How to Connect Windows 11 &amp; 10 to Mornye WebDAV</h1>
+      <div class="article-meta">
+        <span>Author: <strong>NavyaXdev</strong></span>
+        <span>&bull;</span>
+        <span>Client Platform: <strong>Windows 11 / 10 Explorer</strong></span>
+        <span>&bull;</span>
+        <span>Read Time: <strong>8 min</strong></span>
+      </div>
+    </header>
+
+    <article class="content-body">
+      <p>One of the chief advantages of <strong>Mornye Network Storage</strong> is that it adheres strictly to the <strong>RFC 4918 WebDAV standard</strong>. This means you do not need to install proprietary desktop synchronization clients that consume system RAM, run unnecessary background telemetry, or slow down your operating system. Windows 11 and Windows 10 have native, built-in support for WebDAV via Windows File Explorer.</p>
+
+      <p>However, because the default Windows WebClient service was architected decades ago, Windows enforces two legacy constraints out of the box: a <strong>50 MB maximum file transfer limit</strong> (Error 0x800700DF) and strict restrictions on HTTP Basic Authentication over unencrypted connections. In this guide, you will learn how to map Mornye as a permanent drive letter (e.g. <code>Z:</code>) and apply standard registry fixes to unlock full 4 GB+ transfers.</p>
+
+      <h2>Prerequisites</h2>
+      <ul>
+        <li>A running Mornye instance accessible via Cloudflare HTTPS (e.g., <code>https://mornye.yourdomain.com/dav/</code>) or LAN (<code>http://192.168.0.x:8001/dav/</code>).</li>
+        <li>Your configured Mornye WebDAV username and password.</li>
+        <li>Administrative privileges on your Windows PC (to adjust the WebClient file size limit).</li>
+      </ul>
+
+      <h2>Step 1: Ensure the Windows WebClient Service is Running</h2>
+      <p>Windows Explorer relies on the background <code>WebClient</code> service to communicate with WebDAV servers. Ensure it is started and configured to launch automatically:</p>
+
+      <ol>
+        <li>Press <kbd>Win + R</kbd>, type <code>services.msc</code>, and hit <kbd>Enter</kbd>.</li>
+        <li>Scroll down to find <strong>WebClient</strong>.</li>
+        <li>Right-click <strong>WebClient</strong> &rarr; <strong>Properties</strong>.</li>
+        <li>Set <strong>Startup type</strong> to <strong>Automatic</strong>, click <strong>Start</strong>, then click <strong>OK</strong>.</li>
+      </ol>
+
+      <p>Alternatively, open PowerShell as Administrator and run:</p>
+      <pre><code>Set-Service -Name WebClient -StartupType Automatic
+Start-Service -Name WebClient</code></pre>
+
+      <h2>Step 2: Fix the Windows 50 MB File Size Limitation</h2>
+      <p>By default, Windows WebClient limits any single WebDAV file transfer to approximately 50 MB (50,000,000 bytes). If you attempt to copy high-resolution FLAC audio tracks, 4K videos, or backup archives larger than 50 MB, Windows displays:</p>
+
+      <div class="callout callout-warning">
+        <strong>Error 0x800700DF:</strong>
+        <p>The file size exceeds the limit allowed and cannot be saved.</p>
+      </div>
+
+      <p>To increase the transfer limit to the maximum 4 GB (4,294,967,295 bytes), modify the registry parameter <code>FileSizeLimitInBytes</code>:</p>
+
+      <ol>
+        <li>Press <kbd>Win + R</kbd>, type <code>regedit</code>, and hit <kbd>Enter</kbd>.</li>
+        <li>Navigate to the following key:
+          <pre><code>HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\WebClient\Parameters</code></pre>
+        </li>
+        <li>Double-click <code>FileSizeLimitInBytes</code>.</li>
+        <li>Select <strong>Decimal</strong> and change the value from <code>50000000</code> to <code>4294967295</code> (or <code>ffffffff</code> in Hexadecimal).</li>
+        <li>Click <strong>OK</strong>.</li>
+        <li>Restart the WebClient service via PowerShell:
+          <pre><code>Restart-Service -Name WebClient</code></pre>
+        </li>
+      </ol>
+
+      <h3>One-Line PowerShell Fix (Run as Administrator):</h3>
+      <pre><code>Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\WebClient\Parameters" -Name "FileSizeLimitInBytes" -Value 0xffffffff -Type DWord
+Restart-Service -Name WebClient</code></pre>
+
+      <h2>Step 3: Map Mornye as a Permanent Network Drive</h2>
+      <p>Now map your Mornye storage server directly in Windows Explorer:</p>
+
+      <ol>
+        <li>Open <strong>File Explorer</strong> (<kbd>Win + E</kbd>).</li>
+        <li>Click <strong>This PC</strong> on the left sidebar.</li>
+        <li>On the top ribbon menu, click the <strong>&hellip; (More options)</strong> menu and select <strong>Map network drive</strong> (or press <kbd>Alt + V, N</kbd>).</li>
+        <li>Select a drive letter (e.g. <code>M:</code> or <code>Z:</code>).</li>
+        <li>In the <strong>Folder</strong> field, enter your Mornye WebDAV endpoint:
+          <pre><code>https://mornye.yourdomain.com/dav/</code></pre>
+          <em>(Make sure to include the trailing slash <code>/</code>)</em>
+        </li>
+        <li>Check both:
+          <ul>
+            <li>&check; <strong>Reconnect at sign-in</strong></li>
+            <li>&check; <strong>Connect using different credentials</strong></li>
+          </ul>
+        </li>
+        <li>Click <strong>Finish</strong>.</li>
+        <li>When the Windows Security prompt appears, enter your Mornye WebDAV username and password, check <strong>Remember my credentials</strong>, and click <strong>OK</strong>.</li>
+      </ol>
+
+      <p>Windows Explorer will open your new drive letter immediately! You can now drag and drop files, create folders, stream music directly in VLC or foobar2000, and organize documents just like any local hard drive.</p>
+
+      <h2>Alternative: Command Line Mapping via `net use`</h2>
+      <p>You can also map Mornye from the command line or within automated startup scripts using <code>net use</code>:</p>
+
+      <pre><code>net use Z: https://mornye.yourdomain.com/dav/ /persistent:yes /user:admin YourSecurePassword</code></pre>
+
+      <h2>Troubleshooting Common Windows WebDAV Issues</h2>
+      <ul>
+        <li><strong>Credential Prompt Keeps Repeating:</strong> Ensure you are using HTTPS. Windows blocks basic authentication over unencrypted HTTP unless <code>BasicAuthLevel</code> is set to <code>2</code> in the registry. Cloudflare Tunnels provide HTTPS out of the box.</li>
+        <li><strong>"The network path was not found":</strong> Ensure the WebClient service is running and verify that the URL ends with <code>/dav/</code>.</li>
+        <li><strong>Slow Directory Browsing:</strong> In Windows Internet Options (<kbd>inetcpl.cpl</kbd>), go to <strong>Connections</strong> &rarr; <strong>LAN settings</strong> &rarr; uncheck <strong>Automatically detect settings</strong>. This prevents Windows from attempting WPAD proxy autodiscovery on every WebDAV query.</li>
+      </ul>
+
+      <div class="callout callout-success">
+        <strong>Seamless Native Integration:</strong>
+        <p>Your Mornye storage is now mapped to Windows Explorer. Every file write is securely hashed with SHA-256 and stored on your sovereign Linux server.</p>
+      </div>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <h4>Mornye Network Storage</h4>
+        <p>Open-source, self-hosted private cloud storage and WebDAV engine for Linux. Created and maintained by <strong>NavyaXdev</strong>.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Product</h5>
+        <ul>
+          <li><a href="/Mornye-Network-Storage/features/">Features</a></li>
+          <li><a href="/Mornye-Network-Storage/installation/">Installation</a></li>
+          <li><a href="/Mornye-Network-Storage/docker/">Docker Setup</a></li>
+          <li><a href="/Mornye-Network-Storage/cloudflare/">Cloudflare Tunnel</a></li>
+          <li><a href="/Mornye-Network-Storage/download/">Download</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Resources</h5>
+        <ul>
+          <li><a href="/Mornye-Network-Storage/documentation/">Documentation</a></li>
+          <li><a href="/Mornye-Network-Storage/guides/">Guides &amp; Tutorials</a></li>
+          <li><a href="/Mornye-Network-Storage/faq/">FAQ</a></li>
+          <li><a href="/Mornye-Network-Storage/about/">About the Creator</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Open Source</h5>
+        <ul>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage" target="_blank" rel="noopener">GitHub Repository</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/SECURITY.md" target="_blank" rel="noopener">Security Policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 NavyaXdev. Released under the MIT License.</p>
+      <p>Official Project Website &bull; Built with semantic HTML &amp; CSS &bull; Zero Trackers</p>
+    </div>
+  </footer>
+
+  <script src="/Mornye-Network-Storage/assets/main.js"></script>
+</body>
+</html>
+

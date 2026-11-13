@@ -1,0 +1,28 @@
+# Mornye Network Storage
+> High-performance, self-hosted private cloud storage and RFC 4918 WebDAV server for modern Linux distributions.
+
+Mornye Network Storage is an open-source, rootless containerized network storage platform created by NavyaXdev. It allows individuals, home labs, and small engineering teams to host high-performance private storage accessible across LAN and WAN without open router ports or CGNAT headaches.
+
+## Core Capabilities
+- WebDAV Engine: Fully compliant RFC 4918 server implementing PROPFIND, GET, PUT, MKCOL, MOVE, and DELETE.
+- Security: OWASP-compliant Argon2id password hashing, unprivileged Docker execution (UID/GID 1000), MIME validation via magic bytes, and loopback isolation.
+- Zero-Trust Remote Ingress: Cloudflare Named Tunnels with automated `mornye.<root-domain>` subdomain routing, plus zero-account ephemeral Quick Tunnels (`*.trycloudflare.com`).
+- Universal Linux Compatibility: Tested and automated for Debian, Ubuntu, Kali Linux, Arch Linux, Fedora, openSUSE, and Alpine across x86_64 and aarch64.
+- POSIX CLI Management: Single unified script `./mornye.sh` providing health monitoring, real-time dashboards, hot online SQLite backups, and 11-category self-healing diagnostics (`./mornye.sh doctor --fix`).
+
+## Canonical Links
+- Official Website: https://navyaxdev.github.io/Mornye-Network-Storage/
+- GitHub Repository: https://github.com/navyaXdev/Mornye-Network-Storage
+- Documentation Hub: https://navyaxdev.github.io/Mornye-Network-Storage/documentation/
+- Installation Guide: https://navyaxdev.github.io/Mornye-Network-Storage/installation/
+- Docker Guide: https://navyaxdev.github.io/Mornye-Network-Storage/docker/
+- Cloudflare Tunnel Guide: https://navyaxdev.github.io/Mornye-Network-Storage/cloudflare/
+- Technical Guides & Tutorials: https://navyaxdev.github.io/Mornye-Network-Storage/guides/
+- WebDAV Windows Client Guide: https://navyaxdev.github.io/Mornye-Network-Storage/guides/how-to-connect-windows-to-mornye-webdav/
+- Kali Linux Installation Guide: https://navyaxdev.github.io/Mornye-Network-Storage/guides/how-to-install-mornye-on-kali-linux/
+
+## Quickstart Command
+```bash
+curl -fsSL https://raw.githubusercontent.com/navyaXdev/Mornye-Network-Storage/main/setup.sh | bash
+```
+

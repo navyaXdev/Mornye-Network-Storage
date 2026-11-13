@@ -1,0 +1,15 @@
+/* TEAM */
+Creator & Lead Engineer: NavyaXdev
+GitHub: https://github.com/navyaXdev
+Project Repository: https://github.com/navyaXdev/Mornye-Network-Storage
+Location: India
+
+/* THANKS */
+The open-source community, Linux kernel developers, Docker team, Cloudflare Zero-Trust, and Python asyncio/aiohttp developers.
+
+/* SITE */
+Standards: HTML5, CSS3, Vanilla JavaScript, Schema.org JSON-LD
+Components: 100% hand-crafted semantic markup, zero external tracking, zero CDN dependencies
+Hosting: GitHub Pages via GitHub Actions workflow
+Design: Accessible, Dark-mode first, Mobile-responsive
+

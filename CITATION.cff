@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use Mornye Network Storage in your research or infrastructure, please cite it as below."
+authors:
+  - name: "NavyaXdev"
+    website: "https://github.com/navyaXdev"
+title: "Mornye Network Storage: Open-Source Self-Hosted Network Storage & RFC 4918 WebDAV Server for Linux"
+version: 3.3.0
+date-released: 2026-11-12
+url: "https://github.com/navyaXdev/Mornye-Network-Storage"
+repository-code: "https://github.com/navyaXdev/Mornye-Network-Storage"
+keywords:
+  - "network storage"
+  - "webdav"
+  - "self-hosted"
+  - "private cloud"
+  - "docker"
+  - "cloudflare tunnel"
+  - "linux"
+license: MIT
+

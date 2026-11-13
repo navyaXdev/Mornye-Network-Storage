@@ -1,0 +1,37 @@
+name: Mornye CI Test Suite & Audit
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  audit-and-tests:
+    name: Security Scan, SEO Audit & Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Repository Secret Scanner
+        run: python3 scripts/secret_scan.py
+
+      - name: Run Global SEO Quality Audit Gate
+        run: python3 scripts/seo_audit.py
+
+      - name: Run Pytest Test Suite
+        run: pytest tests/test_quota.py tests/test_webdav_rfc4918.py -v

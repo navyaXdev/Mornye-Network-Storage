@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+# Canonical Sitemap
+Sitemap: https://navyaxdev.github.io/Mornye-Network-Storage/sitemap.xml
+

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How to Install Mornye on Kali Linux Step-by-Step</title>
+  <meta name="description" content="Complete tutorial for installing Mornye Network Storage on Kali Linux Rolling (x86_64, kernel 7.1.5+) with non-root Docker UID 1000 and port coexistence.">
+  <meta name="keywords" content="install Mornye on Kali Linux, Kali Linux storage server, Mornye Kali install, Docker WebDAV Kali Linux, Kali Linux cloud storage">
+  <meta name="author" content="NavyaXdev">
+  <link rel="canonical" href="https://navyaxdev.github.io/Mornye-Network-Storage/guides/how-to-install-mornye-on-kali-linux/">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://navyaxdev.github.io/Mornye-Network-Storage/guides/how-to-install-mornye-on-kali-linux/">
+  <meta property="og:title" content="How to Install Mornye on Kali Linux Step-by-Step">
+  <meta property="og:description" content="Step-by-step tutorial on deploying Mornye Network Storage on Kali Linux Rolling with hardened Docker permissions and Cloudflare tunnels.">
+  <meta property="og:image" content="https://navyaxdev.github.io/Mornye-Network-Storage/assets/mornye-social-preview.png">
+  <meta property="og:site_name" content="Mornye Network Storage">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="How to Install Mornye on Kali Linux Step-by-Step">
+  <meta name="twitter:description" content="Step-by-step tutorial on deploying Mornye Network Storage on Kali Linux Rolling with hardened Docker permissions and Cloudflare tunnels.">
+  <meta name="twitter:image" content="https://navyaxdev.github.io/Mornye-Network-Storage/assets/mornye-social-preview.png">
+
+  <link rel="icon" type="image/svg+xml" href="/Mornye-Network-Storage/assets/favicon.svg">
+  <link rel="stylesheet" href="/Mornye-Network-Storage/assets/style.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://navyaxdev.github.io/Mornye-Network-Storage/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Guides",
+            "item": "https://navyaxdev.github.io/Mornye-Network-Storage/guides/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "How to Install Mornye on Kali Linux",
+            "item": "https://navyaxdev.github.io/Mornye-Network-Storage/guides/how-to-install-mornye-on-kali-linux/"
+          }
+        ]
+      },
+      {
+        "@type": "TechArticle",
+        "headline": "How to Install Mornye Network Storage on Kali Linux Step-by-Step",
+        "description": "Comprehensive tutorial covering prerequisites, Docker configuration, volume permission hardening, WebDAV authentication, and Cloudflare Ingress on Kali Linux.",
+        "url": "https://navyaxdev.github.io/Mornye-Network-Storage/guides/how-to-install-mornye-on-kali-linux/",
+        "author": {
+          "@type": "Person",
+          "name": "NavyaXdev"
+        },
+        "datePublished": "2026-11-12",
+        "dateModified": "2026-11-12"
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header class="site-header">
+    <div class="nav-container">
+      <a href="/Mornye-Network-Storage/" class="brand-link">
+        <div class="brand-logo">M</div>
+        <span>Mornye Storage</span>
+      </a>
+
+      <nav aria-label="Main Navigation">
+        <ul class="nav-links">
+          <li><a href="/Mornye-Network-Storage/">Home</a></li>
+          <li><a href="/Mornye-Network-Storage/features/">Features</a></li>
+          <li><a href="/Mornye-Network-Storage/installation/">Installation</a></li>
+          <li><a href="/Mornye-Network-Storage/docker/">Docker</a></li>
+          <li><a href="/Mornye-Network-Storage/cloudflare/">Cloudflare</a></li>
+          <li><a href="/Mornye-Network-Storage/guides/" class="active">Guides</a></li>
+          <li><a href="/Mornye-Network-Storage/faq/">FAQ</a></li>
+          <li><a href="/Mornye-Network-Storage/documentation/">Docs</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="https://github.com/navyaXdev/Mornye-Network-Storage" class="btn-github" target="_blank" rel="noopener noreferrer">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>GitHub</span>
+        </a>
+        <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">&#9776;</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content" class="container">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/Mornye-Network-Storage/">Home</a>
+      <span class="divider">/</span>
+      <a href="/Mornye-Network-Storage/guides/">Guides</a>
+      <span class="divider">/</span>
+      <span class="current">Install on Kali Linux</span>
+    </nav>
+
+    <header class="article-header">
+      <h1>How to Install Mornye Network Storage on Kali Linux Step-by-Step</h1>
+      <div class="article-meta">
+        <span>Author: <strong>NavyaXdev</strong></span>
+        <span>&bull;</span>
+        <span>Target: <strong>Kali Linux Rolling (x86_64, Kernel 7.1.5+)</strong></span>
+        <span>&bull;</span>
+        <span>Read Time: <strong>9 min</strong></span>
+      </div>
+    </header>
+
+    <article class="content-body">
+      <p>Kali Linux is globally recognized as the premiere distribution for security research, digital forensics, and penetration testing. However, security researchers and lab engineers frequently require a secure, self-hosted file vault and media repository on their Kali workstations or headless servers. Setting up cloud storage on Kali has historically been frustrating due to strict upstream Debian package pinning, bleeding-edge kernels (such as Kernel 7.1.5+), and port conflicts with penetration testing listeners (e.g., Metasploit, Burp Suite, or custom HTTP bridges).</p>
+
+      <p>In this comprehensive tutorial, you will learn how to deploy <strong>Mornye Network Storage</strong> on Kali Linux Rolling. We will cover environment preparation, resolving permission issues with unprivileged Docker containers (UID: 1000), configuring port coexistence on port 8001, setting up Argon2id WebDAV authentication, and enabling encrypted Cloudflare Tunnels.</p>
+
+      <h2>Prerequisites &amp; Environment Verification</h2>
+      <p>Before beginning, ensure your Kali Linux installation meets the following baseline requirements:</p>
+
+      <ul>
+        <li><strong>Distribution:</strong> Kali Linux Rolling (2024.x – 2026.x).</li>
+        <li><strong>Architecture:</strong> <code>x86_64</code> (amd64) or <code>aarch64</code> (e.g. Raspberry Pi Kali build).</li>
+        <li><strong>User Privileges:</strong> Standard user with <code>sudo</code> privileges or root.</li>
+        <li><strong>Available Disk Space:</strong> At least 2.5 GB free disk space.</li>
+      </ul>
+
+      <p>Verify your kernel and architecture in the Kali terminal:</p>
+      <pre><code>uname -srm
+# Example output: Linux 7.1.5+kali-amd64 x86_64</code></pre>
+
+      <h2>Step 1: Update APT Repositories &amp; Install Prerequisites</h2>
+      <p>Mornye includes an automated APT installer (<code>installers/apt.sh</code>), but updating your local package indices ensures seamless Docker Engine installation:</p>
+
+      <pre><code>sudo apt update &amp;&amp; sudo apt install -y curl git ca-certificates gnupg lsb-release</code></pre>
+
+      <h2>Step 2: Clone the Mornye Network Storage Repository</h2>
+      <p>Clone the official GitHub repository created by <strong>NavyaXdev</strong> and enter the project directory:</p>
+
+      <pre><code>git clone https://github.com/navyaXdev/Mornye-Network-Storage.git
+cd Mornye-Network-Storage
+chmod +x setup.sh mornye.sh</code></pre>
+
+      <h2>Step 3: Launch the 6-Stage Automated Setup Wizard</h2>
+      <p>Launch the interactive Mornye setup engine:</p>
+
+      <pre><code>./mornye.sh install</code></pre>
+
+      <p>The installer will automatically execute the following stages:</p>
+      <ol>
+        <li><strong>System Audit:</strong> Detects Kali Linux via <code>/etc/os-release</code> and routes dependency installation through <code>installers/apt.sh</code>.</li>
+        <li><strong>Docker Verification:</strong> Checks for Docker Engine and the Docker Compose v2 plugin. If missing, it installs the official Kali docker packages (<code>docker.io</code>, <code>docker-compose-plugin</code>).</li>
+        <li><strong>Storage Volume Provisioning:</strong> Creates the host directories (<code>database/</code>, <code>storage/</code>, <code>logs/</code>, <code>backups/</code>) and hardens ownership to UID <code>1000:1000</code> with <code>chmod 700</code>.</li>
+        <li><strong>WebDAV Authentication:</strong> Prompts you to configure WebDAV credentials. You can choose to generate a cryptographically secure random password or specify your own custom secret.</li>
+        <li><strong>Container Build:</strong> Compiles the hardened rootless <code>mornye-webdav</code> image.</li>
+        <li><strong>Ingress Selection:</strong> Choose between Local LAN mode (<code>http://127.0.0.1:8001/dav/</code>), an ephemeral Quick Tunnel, or a permanent Cloudflare Tunnel.</li>
+      </ol>
+
+      <h2>Understanding Kali Linux Port Coexistence (`8001:8000`)</h2>
+      <p>A common pitfall on Kali Linux systems is port collision. Many security researchers run local web hooks, reverse shells, or legacy daemons that occupy TCP port <code>8000</code>. Mornye prevents collisions by binding to <strong>host port 8001</strong> while routing internally to port 8000 within the Docker bridge:</p>
+
+      <pre><code># Check port binding
+./mornye.sh ports
+# Output shows: 127.0.0.1:8001 -> container port 8000</code></pre>
+
+      <p>This allows Mornye to run simultaneously alongside existing port 8000 processes with zero service termination or interference.</p>
+
+      <h2>Troubleshooting: Resolving Docker `/data` Permission Denied</h2>
+      <p>On Kali Linux systems where the repository was previously cloned or manipulated with <code>sudo</code>, host directories might mistakenly be owned by <code>root:root (UID 0)</code>. Because Mornye strictly executes as unprivileged user <code>mornye (UID 1000)</code>, this can cause:</p>
+
+      <pre><code>[*] Mornye Container Bootstrapping...
+mkdir: cannot create directory '/data': Permission denied</code></pre>
+
+      <p>To resolve this instantly, use Mornye's automated self-healing diagnostic command:</p>
+
+      <pre><code>./mornye.sh doctor --fix</code></pre>
+
+      <p>The diagnostic engine will inspect the permissions, detect the UID mismatch, create a safety backup, and correctly execute:</p>
+      <pre><code>sudo chown -R 1000:1000 ./database ./storage ./logs
+sudo chmod 700 ./database ./storage ./logs</code></pre>
+
+      <h2>Step 4: End-to-End Service Verification</h2>
+      <p>Verify that your Mornye installation is healthy and ready for file transfers:</p>
+
+      <pre><code># 1. Inspect complete system diagnostic
+./mornye.sh doctor
+
+# 2. Probe the WebDAV HTTP endpoint
+./mornye.sh health
+
+# 3. Test WebDAV Basic Authentication (Argon2id)
+./mornye.sh webdav test
+
+# 4. View real-time container dashboard
+./mornye.sh dashboard</code></pre>
+
+      <h2>Step 5: Accessing Your Storage</h2>
+      <p>You can now connect to your WebDAV storage:</p>
+      <ul>
+        <li><strong>From Kali Linux:</strong> Open Thunar or GNOME Files, press <code>Ctrl+L</code>, and enter: <code>dav://127.0.0.1:8001/dav/</code></li>
+        <li><strong>From Remote Clients (Windows/macOS/Mobile):</strong> Use your Cloudflare Tunnel URL: <code>https://mornye.yourdomain.com/dav/</code></li>
+      </ul>
+
+      <div class="callout callout-success">
+        <strong>Kali Linux Deployment Complete!</strong>
+        <p>Your Mornye Network Storage instance is fully operational with rootless container security, Argon2id encryption, and automated diagnostics.</p>
+      </div>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <h4>Mornye Network Storage</h4>
+        <p>Open-source, self-hosted private cloud storage and WebDAV engine for Linux. Created and maintained by <strong>NavyaXdev</strong>.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Product</h5>
+        <ul>
+          <li><a href="/Mornye-Network-Storage/features/">Features</a></li>
+          <li><a href="/Mornye-Network-Storage/installation/">Installation</a></li>
+          <li><a href="/Mornye-Network-Storage/docker/">Docker Setup</a></li>
+          <li><a href="/Mornye-Network-Storage/cloudflare/">Cloudflare Tunnel</a></li>
+          <li><a href="/Mornye-Network-Storage/download/">Download</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Resources</h5>
+        <ul>
+          <li><a href="/Mornye-Network-Storage/documentation/">Documentation</a></li>
+          <li><a href="/Mornye-Network-Storage/guides/">Guides &amp; Tutorials</a></li>
+          <li><a href="/Mornye-Network-Storage/faq/">FAQ</a></li>
+          <li><a href="/Mornye-Network-Storage/about/">About the Creator</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Open Source</h5>
+        <ul>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage" target="_blank" rel="noopener">GitHub Repository</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/SECURITY.md" target="_blank" rel="noopener">Security Policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 NavyaXdev. Released under the MIT License.</p>
+      <p>Official Project Website &bull; Built with semantic HTML &amp; CSS &bull; Zero Trackers</p>
+    </div>
+  </footer>
+
+  <script src="/Mornye-Network-Storage/assets/main.js"></script>
+</body>
+</html>
+

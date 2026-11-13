@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What is Mornye Network Storage? Architecture Guide</title>
+  <meta name="description" content="An architectural deep dive into Mornye Network Storage: why it was built, its WebDAV engine, and an honest comparison with Nextcloud, TrueNAS, and Samba.">
+  <meta name="keywords" content="What is Mornye Network Storage, Mornye architecture, Nextcloud vs Mornye, TrueNAS vs Mornye, self-hosted Linux storage, RFC 4918 WebDAV server">
+  <meta name="author" content="NavyaXdev">
+  <link rel="canonical" href="https://navyaxdev.github.io/Mornye-Network-Storage/guides/what-is-mornye-network-storage/">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://navyaxdev.github.io/Mornye-Network-Storage/guides/what-is-mornye-network-storage/">
+  <meta property="og:title" content="What is Mornye Network Storage? Architecture &amp; Comparison">
+  <meta property="og:description" content="Detailed analysis of Mornye Network Storage architecture, design rationale, and comparison with Nextcloud and TrueNAS.">
+  <meta property="og:image" content="https://navyaxdev.github.io/Mornye-Network-Storage/assets/mornye-social-preview.png">
+  <meta property="og:site_name" content="Mornye Network Storage">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="What is Mornye Network Storage? Architecture &amp; Comparison">
+  <meta name="twitter:description" content="Detailed analysis of Mornye Network Storage architecture, design rationale, and comparison with Nextcloud and TrueNAS.">
+  <meta name="twitter:image" content="https://navyaxdev.github.io/Mornye-Network-Storage/assets/mornye-social-preview.png">
+
+  <link rel="icon" type="image/svg+xml" href="/Mornye-Network-Storage/assets/favicon.svg">
+  <link rel="stylesheet" href="/Mornye-Network-Storage/assets/style.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://navyaxdev.github.io/Mornye-Network-Storage/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Guides",
+            "item": "https://navyaxdev.github.io/Mornye-Network-Storage/guides/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "What is Mornye Network Storage",
+            "item": "https://navyaxdev.github.io/Mornye-Network-Storage/guides/what-is-mornye-network-storage/"
+          }
+        ]
+      },
+      {
+        "@type": "TechArticle",
+        "headline": "What is Mornye Network Storage? Architecture & Comparative Analysis",
+        "description": "An in-depth technical analysis of Mornye Network Storage, covering its origins, RFC 4918 WebDAV engine, rootless Docker implementation, and architectural comparison against Nextcloud, TrueNAS, and Samba.",
+        "url": "https://navyaxdev.github.io/Mornye-Network-Storage/guides/what-is-mornye-network-storage/",
+        "author": {
+          "@type": "Person",
+          "name": "NavyaXdev"
+        },
+        "datePublished": "2026-11-12",
+        "dateModified": "2026-11-12"
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header class="site-header">
+    <div class="nav-container">
+      <a href="/Mornye-Network-Storage/" class="brand-link">
+        <div class="brand-logo">M</div>
+        <span>Mornye Storage</span>
+      </a>
+
+      <nav aria-label="Main Navigation">
+        <ul class="nav-links">
+          <li><a href="/Mornye-Network-Storage/">Home</a></li>
+          <li><a href="/Mornye-Network-Storage/features/">Features</a></li>
+          <li><a href="/Mornye-Network-Storage/installation/">Installation</a></li>
+          <li><a href="/Mornye-Network-Storage/docker/">Docker</a></li>
+          <li><a href="/Mornye-Network-Storage/cloudflare/">Cloudflare</a></li>
+          <li><a href="/Mornye-Network-Storage/guides/" class="active">Guides</a></li>
+          <li><a href="/Mornye-Network-Storage/faq/">FAQ</a></li>
+          <li><a href="/Mornye-Network-Storage/documentation/">Docs</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="https://github.com/navyaXdev/Mornye-Network-Storage" class="btn-github" target="_blank" rel="noopener noreferrer">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>GitHub</span>
+        </a>
+        <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">&#9776;</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content" class="container">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/Mornye-Network-Storage/">Home</a>
+      <span class="divider">/</span>
+      <span class="current">Guides</span>
+      <span class="divider">/</span>
+      <span class="current">What is Mornye Network Storage?</span>
+    </nav>
+
+    <header class="article-header">
+      <h1>What is Mornye Network Storage? Architecture &amp; Comparative Analysis</h1>
+      <div class="article-meta">
+        <span>Author: <strong>NavyaXdev</strong></span>
+        <span>&bull;</span>
+        <span>Category: <strong>Architecture &amp; Design</strong></span>
+        <span>&bull;</span>
+        <span>Read Time: <strong>8 min</strong></span>
+      </div>
+    </header>
+
+    <article class="content-body">
+      <p>In the modern self-hosting landscape, individuals and small engineering teams face a persistent dilemma when choosing a private storage server. On one end of the spectrum lie heavyweight collaborative suites such as Nextcloud and ownCloud, which bundle hundreds of megabytes of PHP runtimes, relational databases, collaborative document editors, video conference servers, and background cron workers. On the other end sit low-level network file-sharing protocols like Samba (SMB/CIFS) or NFS, which were designed in the 1990s for local area network (LAN) segments, are notorious for traversing firewalls poorly, and expose broad attack surfaces when exposed to the internet.</p>
+
+      <p><strong>Mornye Network Storage</strong> was created by systems developer <strong>NavyaXdev</strong> to occupy the optimal middle ground: a lean, single-purpose, highly performant network storage engine and RFC 4918 WebDAV server built from the ground up for modern Linux infrastructure. It combines rootless Docker containerization, cryptographic Argon2id password hashing, and automated Cloudflare Zero-Trust WAN tunneling.</p>
+
+      <h2>Core Design Principles</h2>
+      <p>Mornye is engineered around five fundamental architectural principles:</p>
+
+      <ol>
+        <li><strong>Protocol Purity (RFC 4918 WebDAV):</strong> Rather than forcing users to install proprietary client applications that drain mobile batteries and consume desktop memory, Mornye leverages native WebDAV. Windows 11/10, macOS Finder, GNOME Files, KDE Dolphin, iOS Files, Android media streamers (Symfonium, VLC), and command-line tools like curl and rclone can mount and stream directly without third-party desktop utilities.</li>
+        <li><strong>Radical Attack Surface Reduction:</strong> Web management interfaces on non-standard ports (such as 8080 and 9000) have been deliberately decommissioned. Mornye offers exactly one listening HTTP interface: the authenticated RFC 4918 WebDAV endpoint. Management is executed purely via POSIX Bash commands through <code>./mornye.sh</code>.</li>
+        <li><strong>Rootless Container Isolation:</strong> The internal engine never executes as UID 0 (root). Container processes run under an unprivileged user (UID: 1000, GID: 1000) with Linux kernel capabilities dropped (<code>cap_drop: ALL</code>) and privilege escalation disabled (<code>no-new-privileges: true</code>).</li>
+        <li><strong>Zero Router Port Forwarding:</strong> Utilizing Cloudflare Zero-Trust Tunnels, Mornye connects out to Cloudflare edge data centers over encrypted QUIC/HTTP2 connections. Operators never have to open router ports, expose their public home IP, or battle Carrier-Grade NAT (CGNAT).</li>
+        <li><strong>Deterministic Self-Healing:</strong> Through <code>./mornye.sh doctor --fix</code>, Mornye inspects 11 system layers (Docker runtime, host port binding, filesystem permissions, environment secrets, and tunnel routes) and automatically heals discrepancies with pre-change safety snapshots.</li>
+      </ol>
+
+      <h2>Internal Architecture Breakdown</h2>
+      <p>The internal pipeline of Mornye Network Storage separates ingestion, validation, persistence, and ingress into distinct, verifiable boundaries:</p>
+
+      <h3>1. Transport &amp; Authentication Boundary</h3>
+      <p>Incoming HTTP requests arrive either via local loopback (<code>http://127.0.0.1:8001/dav/</code>) or through Cloudflare edge SSL (<code>https://mornye.yourdomain.com/dav/</code>). The request is evaluated against an HTTP Basic Authentication barrier. In Mornye, authentication uses <strong>Argon2id</strong>, the winner of the Password Hashing Competition (PHC) and OWASP's gold standard. Passwords are processed with 64 MB of RAM allocation, 3 time iterations, and 4 parallel execution threads, effectively eliminating the risk of brute-force attacks via consumer GPUs.</p>
+
+      <h3>2. Two-Phase Atomic Upload Pipeline</h3>
+      <p>In standard network storage engines, writing directly to the final file location risks corrupted files or partial indexing if a network drop occurs mid-transfer. Mornye implements a two-phase staging committer:</p>
+      <ul>
+        <li><strong>Stage 1 (Buffering):</strong> Streaming <code>PUT</code> requests write into isolated temporary files marked with a <code>.part</code> suffix.</li>
+        <li><strong>Stage 2 (MIME Inspection &amp; Atomic Rename):</strong> Once the stream terminates successfully, Mornye runs binary magic bytes inspection via <code>puremagic</code> to verify file headers. If valid, the file is atomically moved to its canonical physical path in <code>./storage</code> and registered in SQLite with its SHA-256 integrity hash.</li>
+      </ul>
+
+      <h3>3. SQLite Virtual Hierarchy &amp; Physical Disk Isolation</h3>
+      <p>Unlike flat FTP servers or traditional directory-based file trees, Mornye decouples physical disk organization from the virtual WebDAV hierarchy. Storage files are kept safely in a deterministic flat hierarchy while an ACID-compliant SQLite database (configured with Write-Ahead Logging / WAL mode) maintains virtual folder relationships, quota tracking, and recycle bin retention.</p>
+
+      <h2>Architectural Comparison: Mornye vs Alternatives</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature / Metric</th>
+              <th>Mornye Network Storage</th>
+              <th>Nextcloud / ownCloud</th>
+              <th>TrueNAS (Core/Scale)</th>
+              <th>Samba (SMB/CIFS)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Primary Focus</strong></td>
+              <td>Fast, lean private WebDAV file/music storage</td>
+              <td>Full collaboration suite (Office, Talk, Calendar)</td>
+              <td>Dedicated OS for enterprise ZFS arrays</td>
+              <td>Local network file sharing daemon</td>
+            </tr>
+            <tr>
+              <td><strong>RAM Footprint</strong></td>
+              <td>~60 MB – 120 MB</td>
+              <td>500 MB – 2 GB+</td>
+              <td>8 GB – 16 GB+ recommended</td>
+              <td>~40 MB – 80 MB</td>
+            </tr>
+            <tr>
+              <td><strong>Container Privileges</strong></td>
+              <td>Rootless (UID: 1000, drop all caps)</td>
+              <td>Typically runs Apache/PHP as www-data</td>
+              <td>App containers or VM middleware</td>
+              <td>Runs as root daemon with system users</td>
+            </tr>
+            <tr>
+              <td><strong>Remote Access (WAN)</strong></td>
+              <td>Cloudflare Tunnel (Zero port forwarding)</td>
+              <td>Requires Reverse Proxy, Port 443, DDNS</td>
+              <td>Requires VPN (WireGuard/OpenVPN) or proxy</td>
+              <td>Unsafe for raw WAN exposure (Port 445)</td>
+            </tr>
+            <tr>
+              <td><strong>Client Requirements</strong></td>
+              <td>Zero: Native Windows, Mac, Linux WebDAV</td>
+              <td>Proprietary desktop/mobile sync apps</td>
+              <td>Standard OS SMB/NFS client</td>
+              <td>Standard OS SMB client</td>
+            </tr>
+            <tr>
+              <td><strong>Self-Healing CLI</strong></td>
+              <td>Built-in (<code>./mornye.sh doctor --fix</code>)</td>
+              <td>Manual <code>occ</code> commands</td>
+              <td>Web GUI middleware &amp; TrueNAS alerts</td>
+              <td>Manual config editing &amp; smbcontrol</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>When to Choose Mornye Network Storage</h2>
+      <p>Mornye is ideal for:</p>
+      <ul>
+        <li><strong>Home Labs and Mini PCs:</strong> You want a lightweight storage server on an Intel N100, Raspberry Pi 4/5, or repurposed office PC that consumes minimal idle memory and CPU.</li>
+        <li><strong>Audiophiles and Music Collectors:</strong> You need high-speed remote streaming of FLAC, WAV, and MP3 collections to Symfonium or VLC on your phone without transcoding or web UI lag.</li>
+        <li><strong>Privacy-Conscious Developers:</strong> You want absolute control over your storage without telemetry, analytics, or complex third-party SaaS dependencies.</li>
+        <li><strong>Users Behind CGNAT:</strong> Your ISP does not provide a public IPv4 address, making traditional port forwarding impossible. Mornye's Cloudflare Tunnel integration solves this out of the box.</li>
+      </ul>
+
+      <h2>Summary</h2>
+      <p>Mornye Network Storage proves that modern private cloud storage does not require gigabytes of bloated frameworks. By focusing on protocol compliance, cryptographic defense, and unprivileged containerization, Mornye provides a robust, developer-first private cloud for Linux servers.</p>
+
+      <div class="callout callout-success">
+        <strong>Deploy Mornye Today</strong>
+        <p>Install Mornye on your server in under 2 minutes using our single-line installer:</p>
+        <pre><code>curl -fsSL https://raw.githubusercontent.com/navyaXdev/Mornye-Network-Storage/main/setup.sh | bash</code></pre>
+      </div>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <h4>Mornye Network Storage</h4>
+        <p>Open-source, self-hosted private cloud storage and WebDAV engine for Linux. Created and maintained by <strong>NavyaXdev</strong>.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Product</h5>
+        <ul>
+          <li><a href="/Mornye-Network-Storage/features/">Features</a></li>
+          <li><a href="/Mornye-Network-Storage/installation/">Installation</a></li>
+          <li><a href="/Mornye-Network-Storage/docker/">Docker Setup</a></li>
+          <li><a href="/Mornye-Network-Storage/cloudflare/">Cloudflare Tunnel</a></li>
+          <li><a href="/Mornye-Network-Storage/download/">Download</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Resources</h5>
+        <ul>
+          <li><a href="/Mornye-Network-Storage/documentation/">Documentation</a></li>
+          <li><a href="/Mornye-Network-Storage/guides/">Guides &amp; Tutorials</a></li>
+          <li><a href="/Mornye-Network-Storage/faq/">FAQ</a></li>
+          <li><a href="/Mornye-Network-Storage/about/">About the Creator</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Open Source</h5>
+        <ul>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage" target="_blank" rel="noopener">GitHub Repository</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/SECURITY.md" target="_blank" rel="noopener">Security Policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 NavyaXdev. Released under the MIT License.</p>
+      <p>Official Project Website &bull; Built with semantic HTML &amp; CSS &bull; Zero Trackers</p>
+    </div>
+  </footer>
+
+  <script src="/Mornye-Network-Storage/assets/main.js"></script>
+</body>
+</html>

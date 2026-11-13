@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentation Hub — Mornye Network Storage Guide</title>
+  <meta name="description" content="Complete documentation for Mornye Network Storage: CLI manual, configuration reference, Docker deployment, and networking architecture.">
+  <meta name="keywords" content="Mornye documentation, Mornye CLI manual, Linux WebDAV docs, Mornye guide, self-hosted storage documentation">
+  <meta name="author" content="NavyaXdev">
+  <link rel="canonical" href="https://navyaxdev.github.io/Mornye-Network-Storage/documentation/">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://navyaxdev.github.io/Mornye-Network-Storage/documentation/">
+  <meta property="og:title" content="Documentation Hub — Mornye Network Storage Guide">
+  <meta property="og:description" content="Official technical manuals, CLI references, and architecture guides for Mornye Network Storage.">
+  <meta property="og:image" content="https://navyaxdev.github.io/Mornye-Network-Storage/assets/mornye-social-preview.png">
+  <meta property="og:site_name" content="Mornye Network Storage">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Documentation Hub — Mornye Network Storage Guide">
+  <meta name="twitter:description" content="Official technical manuals, CLI references, and architecture guides for Mornye Network Storage.">
+  <meta name="twitter:image" content="https://navyaxdev.github.io/Mornye-Network-Storage/assets/mornye-social-preview.png">
+
+  <link rel="icon" type="image/svg+xml" href="/Mornye-Network-Storage/assets/favicon.svg">
+  <link rel="stylesheet" href="/Mornye-Network-Storage/assets/style.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://navyaxdev.github.io/Mornye-Network-Storage/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Documentation",
+            "item": "https://navyaxdev.github.io/Mornye-Network-Storage/documentation/"
+          }
+        ]
+      },
+      {
+        "@type": "TechArticle",
+        "headline": "Mornye Network Storage Technical Documentation Hub",
+        "description": "Comprehensive reference guide covering Mornye CLI commands, Docker container architecture, and security policies.",
+        "url": "https://navyaxdev.github.io/Mornye-Network-Storage/documentation/",
+        "author": {
+          "@type": "Person",
+          "name": "NavyaXdev"
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header class="site-header">
+    <div class="nav-container">
+      <a href="/Mornye-Network-Storage/" class="brand-link">
+        <div class="brand-logo">M</div>
+        <span>Mornye Storage</span>
+      </a>
+
+      <nav aria-label="Main Navigation">
+        <ul class="nav-links">
+          <li><a href="/Mornye-Network-Storage/">Home</a></li>
+          <li><a href="/Mornye-Network-Storage/features/">Features</a></li>
+          <li><a href="/Mornye-Network-Storage/installation/">Installation</a></li>
+          <li><a href="/Mornye-Network-Storage/docker/">Docker</a></li>
+          <li><a href="/Mornye-Network-Storage/cloudflare/">Cloudflare</a></li>
+          <li><a href="/Mornye-Network-Storage/guides/">Guides</a></li>
+          <li><a href="/Mornye-Network-Storage/faq/">FAQ</a></li>
+          <li><a href="/Mornye-Network-Storage/documentation/" class="active">Docs</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="https://github.com/navyaXdev/Mornye-Network-Storage" class="btn-github" target="_blank" rel="noopener noreferrer">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>GitHub</span>
+        </a>
+        <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">&#9776;</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content" class="container">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/Mornye-Network-Storage/">Home</a>
+      <span class="divider">/</span>
+      <span class="current">Documentation Hub</span>
+    </nav>
+
+    <header class="article-header">
+      <h1>Mornye Documentation Hub</h1>
+      <div class="article-meta">
+        <span>Complete architectural specifications, CLI manuals, and administrator playbooks.</span>
+      </div>
+    </header>
+
+    <article class="content-body">
+      <h2>Core Documentation Directory</h2>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Document</th>
+              <th>Description</th>
+              <th>Repository Link</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Installation Guide</strong></td>
+              <td>Universal 6-stage lifecycle wizard, flags, and distribution setup</td>
+              <td><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/docs/INSTALLATION.md" target="_blank" rel="noopener">docs/INSTALLATION.md</a></td>
+            </tr>
+            <tr>
+              <td><strong>Supported Linux Matrix</strong></td>
+              <td>Verification details for APT, Pacman, DNF, Zypper, and APK</td>
+              <td><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/docs/SUPPORTED_LINUX.md" target="_blank" rel="noopener">docs/SUPPORTED_LINUX.md</a></td>
+            </tr>
+            <tr>
+              <td><strong>Docker Architecture</strong></td>
+              <td>Rootless configuration, compose profiles, and volume security</td>
+              <td><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/docs/DOCKER_SETUP.md" target="_blank" rel="noopener">docs/DOCKER_SETUP.md</a></td>
+            </tr>
+            <tr>
+              <td><strong>Cloudflare Ingress</strong></td>
+              <td>Zero-Trust ingress, automatic subdomain mapping, and edge SSL</td>
+              <td><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/docs/CLOUDFLARE_TUNNEL.md" target="_blank" rel="noopener">docs/CLOUDFLARE_TUNNEL.md</a></td>
+            </tr>
+            <tr>
+              <td><strong>CLI Manual</strong></td>
+              <td>Comprehensive manual for all <code>./mornye.sh</code> subcommands</td>
+              <td><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/docs/MORNYE_CLI_MANUAL.md" target="_blank" rel="noopener">docs/MORNYE_CLI_MANUAL.md</a></td>
+            </tr>
+            <tr>
+              <td><strong>Troubleshooting Playbook</strong></td>
+              <td>Solutions for common tunnel errors, HTTP 502, and auth failures</td>
+              <td><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/docs/TUNNEL_TROUBLESHOOTING.md" target="_blank" rel="noopener">docs/TUNNEL_TROUBLESHOOTING.md</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Quick CLI Reference</h2>
+      <pre><code># Check system diagnostics & auto-repair issues
+./mornye.sh doctor --fix
+
+# Start / stop / restart services
+./mornye.sh start
+./mornye.sh stop
+./mornye.sh restart
+
+# Check WebDAV endpoint health
+./mornye.sh health
+./mornye.sh webdav test
+
+# Create hot online backup of SQLite database
+./mornye.sh backup create</code></pre>
+
+      <div class="callout">
+        <strong>Looking for Step-by-Step Tutorials?</strong>
+        <p>Explore our full collection of in-depth operational guides covering Windows WebDAV mapping, Docker hardening, Kali Linux setup, and building DIY Linux NAS servers.</p>
+        <p style="margin-top: 0.5rem;"><a href="/Mornye-Network-Storage/guides/" class="btn-primary" style="display: inline-block;">Browse All Guides &rarr;</a></p>
+      </div>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <h4>Mornye Network Storage</h4>
+        <p>Open-source, self-hosted private cloud storage and WebDAV engine for Linux. Created and maintained by <strong>NavyaXdev</strong>.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Product</h5>
+        <ul>
+          <li><a href="/Mornye-Network-Storage/features/">Features</a></li>
+          <li><a href="/Mornye-Network-Storage/installation/">Installation</a></li>
+          <li><a href="/Mornye-Network-Storage/docker/">Docker Setup</a></li>
+          <li><a href="/Mornye-Network-Storage/cloudflare/">Cloudflare Tunnel</a></li>
+          <li><a href="/Mornye-Network-Storage/download/">Download</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Resources</h5>
+        <ul>
+          <li><a href="/Mornye-Network-Storage/documentation/">Documentation</a></li>
+          <li><a href="/Mornye-Network-Storage/guides/">Guides &amp; Tutorials</a></li>
+          <li><a href="/Mornye-Network-Storage/faq/">FAQ</a></li>
+          <li><a href="/Mornye-Network-Storage/about/">About the Creator</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Open Source</h5>
+        <ul>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage" target="_blank" rel="noopener">GitHub Repository</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/SECURITY.md" target="_blank" rel="noopener">Security Policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 NavyaXdev. Released under the MIT License.</p>
+      <p>Official Project Website &bull; Built with semantic HTML &amp; CSS &bull; Zero Trackers</p>
+    </div>
+  </footer>
+
+  <script src="/Mornye-Network-Storage/assets/main.js"></script>
+</body>
+</html>
+

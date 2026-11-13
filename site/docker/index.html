@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Docker Deployment — Mornye Network Storage Rootless Guide</title>
+  <meta name="description" content="Deploy Mornye Network Storage using rootless Docker Compose. Learn volume mounting, non-root UID 1000 configuration, and port 8001 host binding.">
+  <meta name="keywords" content="Mornye Docker, Docker WebDAV storage, rootless Docker NAS, compose.yaml storage, self-hosted Docker cloud">
+  <meta name="author" content="NavyaXdev">
+  <link rel="canonical" href="https://navyaxdev.github.io/Mornye-Network-Storage/docker/">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://navyaxdev.github.io/Mornye-Network-Storage/docker/">
+  <meta property="og:title" content="Docker Deployment — Mornye Network Storage Rootless Guide">
+  <meta property="og:description" content="Production guide for running Mornye WebDAV in hardened, rootless Docker containers.">
+  <meta property="og:image" content="https://navyaxdev.github.io/Mornye-Network-Storage/assets/mornye-social-preview.png">
+  <meta property="og:site_name" content="Mornye Network Storage">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Docker Deployment — Mornye Network Storage Rootless Guide">
+  <meta name="twitter:description" content="Production guide for running Mornye WebDAV in hardened, rootless Docker containers.">
+  <meta name="twitter:image" content="https://navyaxdev.github.io/Mornye-Network-Storage/assets/mornye-social-preview.png">
+
+  <link rel="icon" type="image/svg+xml" href="/Mornye-Network-Storage/assets/favicon.svg">
+  <link rel="stylesheet" href="/Mornye-Network-Storage/assets/style.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://navyaxdev.github.io/Mornye-Network-Storage/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Docker",
+            "item": "https://navyaxdev.github.io/Mornye-Network-Storage/docker/"
+          }
+        ]
+      },
+      {
+        "@type": "TechArticle",
+        "headline": "Mornye Network Storage Docker Deployment Guide",
+        "description": "Production Docker Compose architecture, volume permissions, and rootless UID 1000 configuration for Mornye.",
+        "url": "https://navyaxdev.github.io/Mornye-Network-Storage/docker/",
+        "author": {
+          "@type": "Person",
+          "name": "NavyaXdev"
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header class="site-header">
+    <div class="nav-container">
+      <a href="/Mornye-Network-Storage/" class="brand-link">
+        <div class="brand-logo">M</div>
+        <span>Mornye Storage</span>
+      </a>
+
+      <nav aria-label="Main Navigation">
+        <ul class="nav-links">
+          <li><a href="/Mornye-Network-Storage/">Home</a></li>
+          <li><a href="/Mornye-Network-Storage/features/">Features</a></li>
+          <li><a href="/Mornye-Network-Storage/installation/">Installation</a></li>
+          <li><a href="/Mornye-Network-Storage/docker/" class="active">Docker</a></li>
+          <li><a href="/Mornye-Network-Storage/cloudflare/">Cloudflare</a></li>
+          <li><a href="/Mornye-Network-Storage/guides/">Guides</a></li>
+          <li><a href="/Mornye-Network-Storage/faq/">FAQ</a></li>
+          <li><a href="/Mornye-Network-Storage/documentation/">Docs</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="https://github.com/navyaXdev/Mornye-Network-Storage" class="btn-github" target="_blank" rel="noopener noreferrer">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>GitHub</span>
+        </a>
+        <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">&#9776;</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content" class="container">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/Mornye-Network-Storage/">Home</a>
+      <span class="divider">/</span>
+      <span class="current">Docker Deployment</span>
+    </nav>
+
+    <header class="article-header">
+      <h1>Docker Deployment &amp; Hardened Architecture</h1>
+      <div class="article-meta">
+        <span>Engineered by <strong>NavyaXdev</strong></span>
+        <span>&bull;</span>
+        <span>Docker Compose v2</span>
+        <span>&bull;</span>
+        <span>Unprivileged UID: 1000</span>
+      </div>
+    </header>
+
+    <article class="content-body">
+      <p>Mornye Network Storage is built strictly following the principle of least privilege. In contrast to many containerized NAS apps that run their inner processes as <code>root</code> (UID 0), Mornye enforces strict non-root operation with an unprivileged system user (<code>mornye</code>, UID/GID 1000) and dropped Linux kernel capabilities.</p>
+
+      <h2>Production Compose Specification (`compose.yaml`)</h2>
+      <p>Mornye utilizes a streamlined, hardened Docker Compose service configuration:</p>
+
+      <pre><code>services:
+  mornye-webdav:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mornye-webdav
+    restart: unless-stopped
+    user: "1000:1000"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    ports:
+      - "127.0.0.1:${MORNYE_HOST_PORT:-8001}:8000"
+    volumes:
+      - ./database:/data
+      - ./storage:/storage
+      - ./logs:/logs
+    environment:
+      - MORNYE_PORT=8000
+      - MORNYE_STORAGE_ROOT=/storage
+      - MORNYE_DB_PATH=/data/mornye.db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s</code></pre>
+
+      <h2>Host Port Binding &amp; Port Protection</h2>
+      <p>Mornye maps host port <code>8001</code> to container port <code>8000</code> by default:</p>
+      <ul>
+        <li><strong>Protected Coexistence:</strong> If your host is running another service on port 8000 (such as a local API bridge, legacy server, or proxy), Mornye will not collide with it or terminate it.</li>
+        <li><strong>Loopback Isolation:</strong> The port is bound explicitly to <code>127.0.0.1</code> (loopback) rather than <code>0.0.0.0</code> (public WAN). This prevents inadvertent exposure to local network scanners or unsecured Wi-Fi.</li>
+      </ul>
+
+      <h2>Volume Mounts &amp; Permission Hardening</h2>
+      <p>Mornye maps three primary directories from the host filesystem into the container:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Host Directory</th>
+              <th>Container Path</th>
+              <th>Owner / Permissions</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>./database</code></td>
+              <td><code>/data</code></td>
+              <td><code>1000:1000 (0700)</code></td>
+              <td>SQLite <code>mornye.db</code> database, WAL journals, and virtual folder indices</td>
+            </tr>
+            <tr>
+              <td><code>./storage</code></td>
+              <td><code>/storage</code></td>
+              <td><code>1000:1000 (0700)</code></td>
+              <td>Physical storage repository for uploaded files and audio media</td>
+            </tr>
+            <tr>
+              <td><code>./logs</code></td>
+              <td><code>/logs</code></td>
+              <td><code>1000:1000 (0700)</code></td>
+              <td>WebDAV access logs and daemon runtime logs</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Quick Docker CLI Commands</h2>
+      <p>Manage the container stack using standard Docker commands or the unified Mornye CLI:</p>
+
+      <pre><code># Start container in background
+docker compose up -d
+
+# Verify container status and healthcheck
+docker compose ps
+
+# View live container logs
+docker compose logs -f mornye-webdav
+
+# Execute diagnostic probe via Mornye CLI
+./mornye.sh docker health</code></pre>
+
+      <div class="callout">
+        <strong>Self-Healing Permissions</strong>
+        <p>If you encounter <code>Permission Denied</code> when mounting volumes, run:</p>
+        <pre><code>./mornye.sh doctor --fix</code></pre>
+        <p>The diagnostic engine will automatically adjust host directory ownership to match the container's unprivileged UID.</p>
+      </div>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <h4>Mornye Network Storage</h4>
+        <p>Open-source, self-hosted private cloud storage and WebDAV engine for Linux. Created and maintained by <strong>NavyaXdev</strong>.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Product</h5>
+        <ul>
+          <li><a href="/Mornye-Network-Storage/features/">Features</a></li>
+          <li><a href="/Mornye-Network-Storage/installation/">Installation</a></li>
+          <li><a href="/Mornye-Network-Storage/docker/">Docker Setup</a></li>
+          <li><a href="/Mornye-Network-Storage/cloudflare/">Cloudflare Tunnel</a></li>
+          <li><a href="/Mornye-Network-Storage/download/">Download</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Resources</h5>
+        <ul>
+          <li><a href="/Mornye-Network-Storage/documentation/">Documentation</a></li>
+          <li><a href="/Mornye-Network-Storage/guides/">Guides &amp; Tutorials</a></li>
+          <li><a href="/Mornye-Network-Storage/faq/">FAQ</a></li>
+          <li><a href="/Mornye-Network-Storage/about/">About the Creator</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Open Source</h5>
+        <ul>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage" target="_blank" rel="noopener">GitHub Repository</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/SECURITY.md" target="_blank" rel="noopener">Security Policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 NavyaXdev. Released under the MIT License.</p>
+      <p>Official Project Website &bull; Built with semantic HTML &amp; CSS &bull; Zero Trackers</p>
+    </div>
+  </footer>
+
+  <script src="/Mornye-Network-Storage/assets/main.js"></script>
+</body>
+</html>
+

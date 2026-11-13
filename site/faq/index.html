@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frequently Asked Questions — Mornye Network Storage</title>
+  <meta name="description" content="Find answers to common questions about Mornye Network Storage: WebDAV setup, port coexistence, Argon2id passwords, and Cloudflare Tunnels.">
+  <meta name="keywords" content="Mornye FAQ, WebDAV questions, Mornye Network Storage troubleshooting, Linux storage FAQ, Cloudflare tunnel storage help">
+  <meta name="author" content="NavyaXdev">
+  <link rel="canonical" href="https://navyaxdev.github.io/Mornye-Network-Storage/faq/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://navyaxdev.github.io/Mornye-Network-Storage/faq/">
+  <meta property="og:title" content="Frequently Asked Questions — Mornye Network Storage">
+  <meta property="og:description" content="Get clear, technical answers to common questions about Mornye Network Storage setup, security, and operation.">
+  <meta property="og:image" content="https://navyaxdev.github.io/Mornye-Network-Storage/assets/mornye-social-preview.png">
+  <meta property="og:site_name" content="Mornye Network Storage">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Frequently Asked Questions — Mornye Network Storage">
+  <meta name="twitter:description" content="Get clear, technical answers to common questions about Mornye Network Storage setup, security, and operation.">
+  <meta name="twitter:image" content="https://navyaxdev.github.io/Mornye-Network-Storage/assets/mornye-social-preview.png">
+
+  <link rel="icon" type="image/svg+xml" href="/Mornye-Network-Storage/assets/favicon.svg">
+  <link rel="stylesheet" href="/Mornye-Network-Storage/assets/style.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://navyaxdev.github.io/Mornye-Network-Storage/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "FAQ",
+            "item": "https://navyaxdev.github.io/Mornye-Network-Storage/faq/"
+          }
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is Mornye Network Storage?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Mornye Network Storage is an open-source, rootless containerized network storage server and RFC 4918 WebDAV engine for Linux. It provides high-performance file and music storage accessible natively from Windows, macOS, Linux, and mobile devices."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Why does Mornye use port 8001 on the host instead of 8000?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Mornye maps host port 8001 to container port 8000 to enable protected coexistence with existing services running on port 8000 (such as local APIs, legacy streaming bridges, or reverse proxies), avoiding port conflicts and service shutdowns."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How does Cloudflare Tunnel eliminate port forwarding?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Cloudflare Tunnel establishes an outbound, encrypted QUIC connection from the server to Cloudflare edge nodes. Incoming traffic reaches the edge and is routed securely through the outbound tunnel, completely bypassing residential routers and firewalls."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I map Mornye WebDAV as a drive in Windows 11/10?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Windows Explorer natively supports WebDAV via Map Network Drive. You simply connect to https://mornye.yourdomain.com/dav/ and provide your credentials. For files larger than 50 MB, a simple registry adjustment increases the Windows WebClient limit."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What user does the Docker container run as?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "The container executes as an unprivileged user 'mornye' with UID 1000 and GID 1000, dropping all Linux capabilities (cap_drop: ALL) and preventing privilege escalation for defense-in-depth security."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header class="site-header">
+    <div class="nav-container">
+      <a href="/Mornye-Network-Storage/" class="brand-link">
+        <div class="brand-logo">M</div>
+        <span>Mornye Storage</span>
+      </a>
+
+      <nav aria-label="Main Navigation">
+        <ul class="nav-links">
+          <li><a href="/Mornye-Network-Storage/">Home</a></li>
+          <li><a href="/Mornye-Network-Storage/features/">Features</a></li>
+          <li><a href="/Mornye-Network-Storage/installation/">Installation</a></li>
+          <li><a href="/Mornye-Network-Storage/docker/">Docker</a></li>
+          <li><a href="/Mornye-Network-Storage/cloudflare/">Cloudflare</a></li>
+          <li><a href="/Mornye-Network-Storage/guides/">Guides</a></li>
+          <li><a href="/Mornye-Network-Storage/faq/" class="active">FAQ</a></li>
+          <li><a href="/Mornye-Network-Storage/documentation/">Docs</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="https://github.com/navyaXdev/Mornye-Network-Storage" class="btn-github" target="_blank" rel="noopener noreferrer">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>GitHub</span>
+        </a>
+        <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">&#9776;</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content" class="container">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/Mornye-Network-Storage/">Home</a>
+      <span class="divider">/</span>
+      <span class="current">FAQ</span>
+    </nav>
+
+    <header class="article-header">
+      <h1>Frequently Asked Questions</h1>
+      <div class="article-meta">
+        <span>Find answers to common questions about deployment, networking, and performance.</span>
+      </div>
+    </header>
+
+    <div style="max-width: 860px; margin: 0 auto;">
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          <span>What is Mornye Network Storage?</span>
+          <span>&darr;</span>
+        </button>
+        <div class="faq-answer" hidden>
+          <p>Mornye Network Storage is an open-source, rootless containerized network storage platform and RFC 4918 WebDAV engine for modern Linux systems. Created by NavyaXdev, it provides high-performance storage that natively mounts across Windows, macOS, Linux, and mobile media players without heavy web UI bloat.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          <span>Why does Mornye bind to host port 8001 instead of 8000?</span>
+          <span>&darr;</span>
+        </button>
+        <div class="faq-answer" hidden>
+          <p>Mornye binds its host port to <code>8001</code> (mapped to container internal port <code>8000</code>) to ensure protected coexistence. This ensures that existing daemons or API bridges running on host port 8000 are not killed or interrupted during Mornye operations.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          <span>How does Cloudflare Tunnel eliminate port forwarding?</span>
+          <span>&darr;</span>
+        </button>
+        <div class="faq-answer" hidden>
+          <p>Instead of requiring incoming open ports through your router firewall, the <code>cloudflared</code> connector establishes an outbound, multiplexed encrypted connection directly to the Cloudflare Edge network. All traffic routes through this secure outbound pipe, completely bypassing CGNAT and residential firewall restrictions.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          <span>Can I map Mornye WebDAV as a drive in Windows 11/10?</span>
+          <span>&darr;</span>
+        </button>
+        <div class="faq-answer" hidden>
+          <p>Yes! In Windows File Explorer, click <em>This PC</em> &rarr; <em>Map Network Drive</em>, enter your WebDAV URL (e.g. <code>https://mornye.yourdomain.com/dav/</code>), and enter your credentials. Windows natively mounts it as a drive letter. For transferring files over 50 MB, check our Windows connection guide for the standard registry tweak.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          <span>How secure is the password hashing?</span>
+          <span>&darr;</span>
+        </button>
+        <div class="faq-answer" hidden>
+          <p>Mornye uses OWASP-recommended Argon2id parameters (64 MB memory cost, 3 iterations, and 4 parallel threads). Passwords are never stored in plaintext or logged to terminal outputs or reports.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question" aria-expanded="false">
+          <span>What happens during an uninstallation?</span>
+          <span>&darr;</span>
+        </button>
+        <div class="faq-answer" hidden>
+          <p>By default, running <code>sudo ./delete.sh</code> executes a <strong>Safe Uninstall</strong>: it stops and removes Mornye containers and temporary caches, but <strong>strictly preserves</strong> your files (<code>storage/</code>), SQLite databases (<code>database/</code>), and backup archives. A complete wipe requires explicit confirmation via <code>--purge</code>.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <h4>Mornye Network Storage</h4>
+        <p>Open-source, self-hosted private cloud storage and WebDAV engine for Linux. Created and maintained by <strong>NavyaXdev</strong>.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Product</h5>
+        <ul>
+          <li><a href="/Mornye-Network-Storage/features/">Features</a></li>
+          <li><a href="/Mornye-Network-Storage/installation/">Installation</a></li>
+          <li><a href="/Mornye-Network-Storage/docker/">Docker Setup</a></li>
+          <li><a href="/Mornye-Network-Storage/cloudflare/">Cloudflare Tunnel</a></li>
+          <li><a href="/Mornye-Network-Storage/download/">Download</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Resources</h5>
+        <ul>
+          <li><a href="/Mornye-Network-Storage/documentation/">Documentation</a></li>
+          <li><a href="/Mornye-Network-Storage/guides/">Guides &amp; Tutorials</a></li>
+          <li><a href="/Mornye-Network-Storage/faq/">FAQ</a></li>
+          <li><a href="/Mornye-Network-Storage/about/">About the Creator</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Open Source</h5>
+        <ul>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage" target="_blank" rel="noopener">GitHub Repository</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/SECURITY.md" target="_blank" rel="noopener">Security Policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 NavyaXdev. Released under the MIT License.</p>
+      <p>Official Project Website &bull; Built with semantic HTML &amp; CSS &bull; Zero Trackers</p>
+    </div>
+  </footer>
+
+  <script src="/Mornye-Network-Storage/assets/main.js"></script>
+</body>
+</html>
+

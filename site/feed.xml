@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Mornye Network Storage Updates</title>
+    <link>https://navyaxdev.github.io/Mornye-Network-Storage/</link>
+    <description>Latest releases, engineering guides, and documentation for Mornye Network Storage.</description>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 12 Nov 2026 12:00:00 GMT</lastBuildDate>
+    <atom:link href="https://navyaxdev.github.io/Mornye-Network-Storage/feed.xml" rel="self" type="application/rss+xml"/>
+    
+    <item>
+      <title>Mornye Network Storage v3.3.0 Released</title>
+      <link>https://navyaxdev.github.io/Mornye-Network-Storage/download/</link>
+      <guid>https://navyaxdev.github.io/Mornye-Network-Storage/download/#v3.3.0</guid>
+      <pubDate>Thu, 12 Nov 2026 12:00:00 GMT</pubDate>
+      <description>Automated Cloudflare dedicated subdomain provisioning, rootless Docker UID 1000 hardening, interactive setup authentication wizard, and universal diagnostic repairs.</description>
+    </item>
+    
+    <item>
+      <title>Guide: How to Connect Windows 11 &amp; 10 to Mornye WebDAV</title>
+      <link>https://navyaxdev.github.io/Mornye-Network-Storage/guides/how-to-connect-windows-to-mornye-webdav/</link>
+      <guid>https://navyaxdev.github.io/Mornye-Network-Storage/guides/how-to-connect-windows-to-mornye-webdav/</guid>
+      <pubDate>Thu, 12 Nov 2026 11:30:00 GMT</pubDate>
+      <description>Complete walkthrough to map Mornye WebDAV network drives in Windows Explorer, fix WebClient 50MB file size limits, and configure persistent authentication.</description>
+    </item>
+
+    <item>
+      <title>Guide: How to Install Mornye on Kali Linux</title>
+      <link>https://navyaxdev.github.io/Mornye-Network-Storage/guides/how-to-install-mornye-on-kali-linux/</link>
+      <guid>https://navyaxdev.github.io/Mornye-Network-Storage/guides/how-to-install-mornye-on-kali-linux/</guid>
+      <pubDate>Thu, 12 Nov 2026 11:00:00 GMT</pubDate>
+      <description>Step-by-step instructions for installing Mornye on Kali Linux Rolling (x86_64, kernel 7.1.5+) with non-root Docker and port coexistence.</description>
+    </item>
+  </channel>
+</rss>
+

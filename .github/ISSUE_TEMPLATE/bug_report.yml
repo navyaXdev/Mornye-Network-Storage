@@ -1,0 +1,55 @@
+name: "Bug Report"
+description: "File an issue describing a reproducible bug or failure in Mornye Network Storage"
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report an issue! Please search existing issues to avoid duplicates.
+  - type: textarea
+    id: description
+    attributes:
+      label: "Bug Description"
+      description: "A clear and concise description of what the bug is."
+      placeholder: "When running ./mornye.sh start, the following error occurs..."
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: "Environment Information"
+      description: "Distribution, Kernel version, and Docker version."
+      placeholder: "Kali Linux Rolling 7.1.5+kali-amd64, Docker 27.3.1, Compose v2.29.7"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Steps to Reproduce"
+      description: "Exact numbered steps to reproduce the behavior."
+      placeholder: |
+        1. Run './setup.sh'
+        2. Select Option 2 (Permanent Cloudflare Tunnel)
+        3. Enter domain 'example.com'
+        4. See error message
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: "Relevant Logs or Diagnostic Output"
+      description: "Paste relevant output from './mornye.sh doctor' or './mornye.sh logs'. Do NOT include passwords, tokens, or private keys."
+      render: shell
+    validations:
+      required: false
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: "Pre-submission Checklist"
+      options:
+        - label: "I have confirmed that no secrets, passwords, or credentials are included in the logs above."
+          required: true
+        - label: "I have verified that this issue has not already been reported."
+          required: true
+

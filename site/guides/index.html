@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Technical Guides &amp; Tutorials — Mornye Network Storage</title>
+  <meta name="description" content="Step-by-step technical guides for Mornye Network Storage: installation on Kali Linux, rootless Docker deployment, Cloudflare Tunnels, and Windows WebDAV.">
+  <meta name="keywords" content="Mornye guides, WebDAV tutorials, Linux storage tutorials, Docker WebDAV guide, Cloudflare tunnel guide">
+  <meta name="author" content="NavyaXdev">
+  <link rel="canonical" href="https://navyaxdev.github.io/Mornye-Network-Storage/guides/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://navyaxdev.github.io/Mornye-Network-Storage/guides/">
+  <meta property="og:title" content="Technical Guides &amp; Tutorials — Mornye Network Storage">
+  <meta property="og:description" content="In-depth tutorials, architectural deep-dives, and client configuration guides for Mornye Network Storage.">
+  <meta property="og:image" content="https://navyaxdev.github.io/Mornye-Network-Storage/assets/mornye-social-preview.png">
+  <meta property="og:site_name" content="Mornye Network Storage">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Technical Guides &amp; Tutorials — Mornye Network Storage">
+  <meta name="twitter:description" content="In-depth tutorials, architectural deep-dives, and client configuration guides for Mornye Network Storage.">
+  <meta name="twitter:image" content="https://navyaxdev.github.io/Mornye-Network-Storage/assets/mornye-social-preview.png">
+
+  <link rel="icon" type="image/svg+xml" href="/Mornye-Network-Storage/assets/favicon.svg">
+  <link rel="stylesheet" href="/Mornye-Network-Storage/assets/style.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://navyaxdev.github.io/Mornye-Network-Storage/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Guides",
+            "item": "https://navyaxdev.github.io/Mornye-Network-Storage/guides/"
+          }
+        ]
+      },
+      {
+        "@type": "CollectionPage",
+        "name": "Mornye Network Storage Technical Guides",
+        "url": "https://navyaxdev.github.io/Mornye-Network-Storage/guides/",
+        "author": {
+          "@type": "Person",
+          "name": "NavyaXdev"
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header class="site-header">
+    <div class="nav-container">
+      <a href="/Mornye-Network-Storage/" class="brand-link">
+        <div class="brand-logo">M</div>
+        <span>Mornye Storage</span>
+      </a>
+
+      <nav aria-label="Main Navigation">
+        <ul class="nav-links">
+          <li><a href="/Mornye-Network-Storage/">Home</a></li>
+          <li><a href="/Mornye-Network-Storage/features/">Features</a></li>
+          <li><a href="/Mornye-Network-Storage/installation/">Installation</a></li>
+          <li><a href="/Mornye-Network-Storage/docker/">Docker</a></li>
+          <li><a href="/Mornye-Network-Storage/cloudflare/">Cloudflare</a></li>
+          <li><a href="/Mornye-Network-Storage/guides/" class="active">Guides</a></li>
+          <li><a href="/Mornye-Network-Storage/faq/">FAQ</a></li>
+          <li><a href="/Mornye-Network-Storage/documentation/">Docs</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="https://github.com/navyaXdev/Mornye-Network-Storage" class="btn-github" target="_blank" rel="noopener noreferrer">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>GitHub</span>
+        </a>
+        <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">&#9776;</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content" class="container">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/Mornye-Network-Storage/">Home</a>
+      <span class="divider">/</span>
+      <span class="current">Guides Hub</span>
+    </nav>
+
+    <header class="article-header">
+      <h1>Technical Guides &amp; Tutorials</h1>
+      <div class="article-meta">
+        <span>In-depth operational playbooks, architecture deep dives, and setup tutorials.</span>
+      </div>
+    </header>
+
+    <div class="guides-grid">
+      <a href="/Mornye-Network-Storage/guides/what-is-mornye-network-storage/" class="guide-card">
+        <span class="guide-tag">Architecture</span>
+        <h3>What is Mornye Network Storage? Architecture &amp; Comparative Analysis</h3>
+        <p>A comprehensive architectural breakdown of Mornye Network Storage. Discover why it was built, its internal components, and how it compares honestly with Nextcloud, TrueNAS, and Samba.</p>
+        <span class="guide-readmore">Read Full Guide &rarr;</span>
+      </a>
+
+      <a href="/Mornye-Network-Storage/guides/how-to-install-mornye-on-kali-linux/" class="guide-card">
+        <span class="guide-tag">Distribution Guide</span>
+        <h3>How to Install Mornye on Kali Linux Step-by-Step</h3>
+        <p>A complete operational guide to running Mornye Network Storage on Kali Linux Rolling (x86_64, kernel 7.1.5+). Covers APT dependencies, non-root Docker UID 1000, and port coexistence.</p>
+        <span class="guide-readmore">Read Full Guide &rarr;</span>
+      </a>
+
+      <a href="/Mornye-Network-Storage/guides/how-to-deploy-mornye-using-docker/" class="guide-card">
+        <span class="guide-tag">Containerization</span>
+        <h3>How to Deploy Mornye Using Rootless Docker Compose</h3>
+        <p>Deep dive into Mornye's container architecture. Learn how to configure persistent volume mounts, manage environment variables, drop Linux capabilities, and automate healthchecks.</p>
+        <span class="guide-readmore">Read Full Guide &rarr;</span>
+      </a>
+
+      <a href="/Mornye-Network-Storage/guides/how-to-configure-cloudflare-tunnel-for-mornye/" class="guide-card">
+        <span class="guide-tag">Networking</span>
+        <h3>How to Configure Cloudflare Tunnel Subdomains for Mornye</h3>
+        <p>Master zero-trust remote access. Learn how Mornye automatically routes mornye.&lt;domain&gt; through Cloudflare Edge, bypasses Carrier-Grade NAT, and resolves DNS conflicts.</p>
+        <span class="guide-readmore">Read Full Guide &rarr;</span>
+      </a>
+
+      <a href="/Mornye-Network-Storage/guides/how-to-connect-windows-to-mornye-webdav/" class="guide-card">
+        <span class="guide-tag">Client Setup</span>
+        <h3>How to Connect Windows 11 &amp; 10 to Mornye WebDAV</h3>
+        <p>Map your Mornye storage server natively in Windows Explorer. Includes registry tweaks to fix the 50 MB WebClient file size transfer limitation and enable persistent Basic Authentication.</p>
+        <span class="guide-readmore">Read Full Guide &rarr;</span>
+      </a>
+
+      <a href="/Mornye-Network-Storage/guides/build-self-hosted-network-storage-server-linux/" class="guide-card">
+        <span class="guide-tag">Hardware &amp; NAS</span>
+        <h3>Build a Self-Hosted Linux Network Storage Server with Mornye</h3>
+        <p>The definitive guide to transforming spare hardware, old PCs, or mini PCs into an enterprise-grade private cloud server with Linux, Docker, and Mornye Network Storage.</p>
+        <span class="guide-readmore">Read Full Guide &rarr;</span>
+      </a>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <h4>Mornye Network Storage</h4>
+        <p>Open-source, self-hosted private cloud storage and WebDAV engine for Linux. Created and maintained by <strong>NavyaXdev</strong>.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Product</h5>
+        <ul>
+          <li><a href="/Mornye-Network-Storage/features/">Features</a></li>
+          <li><a href="/Mornye-Network-Storage/installation/">Installation</a></li>
+          <li><a href="/Mornye-Network-Storage/docker/">Docker Setup</a></li>
+          <li><a href="/Mornye-Network-Storage/cloudflare/">Cloudflare Tunnel</a></li>
+          <li><a href="/Mornye-Network-Storage/download/">Download</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Resources</h5>
+        <ul>
+          <li><a href="/Mornye-Network-Storage/documentation/">Documentation</a></li>
+          <li><a href="/Mornye-Network-Storage/guides/">Guides &amp; Tutorials</a></li>
+          <li><a href="/Mornye-Network-Storage/faq/">FAQ</a></li>
+          <li><a href="/Mornye-Network-Storage/about/">About the Creator</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Open Source</h5>
+        <ul>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage" target="_blank" rel="noopener">GitHub Repository</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/SECURITY.md" target="_blank" rel="noopener">Security Policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 NavyaXdev. Released under the MIT License.</p>
+      <p>Official Project Website &bull; Built with semantic HTML &amp; CSS &bull; Zero Trackers</p>
+    </div>
+  </footer>
+
+  <script src="/Mornye-Network-Storage/assets/main.js"></script>
+</body>
+</html>
+
