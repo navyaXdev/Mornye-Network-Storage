@@ -8,6 +8,7 @@ Verifies:
   4. Open Graph & Twitter Card tags
   5. JSON-LD structured data syntax and types
   6. Sitemap.xml coverage and URL validity
+  7. Google Search Console & search engine verification file exemption
 """
 
 import os
@@ -21,15 +22,39 @@ BASE_URL = "https://navyaxdev.github.io/Mornye-Network-Storage/"
 
 errors = []
 warnings = []
+verification_files = []
 checked_files = 0
 
-def check_html_file(file_path):
+def is_google_verification_file(file_path: str, content: str) -> bool:
+    """
+    Detect Google Search Console site verification HTML files.
+    Google verification files follow the format 'google<token>.html' and contain
+    'google-site-verification: google<token>.html'. These files must reside at the
+    website root for search engine ownership verification, but are exempt from
+    normal webpage SEO metadata checks (title, description, canonical, OG, JSON-LD).
+    """
+    base = os.path.basename(file_path).lower()
+    # Match standard Google verification filename pattern: google<hex/alphanumeric>.html
+    if re.match(r"^google[a-f0-9_\-]+\.html$", base, re.IGNORECASE):
+        return True
+    # Match verification token content inside the file
+    if "google-site-verification:" in content.lower():
+        return True
+    return False
+
+def check_html_file(file_path: str):
     global checked_files
-    checked_files += 1
     rel_path = os.path.relpath(file_path, SITE_DIR).replace("\\", "/")
     
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
+
+    # Exclude Google verification files from standard webpage metadata checks
+    if is_google_verification_file(file_path, content):
+        verification_files.append(rel_path)
+        return
+
+    checked_files += 1
 
     # Skip 404.html from title/description length limits
     is_404 = "404.html" in rel_path
@@ -121,7 +146,15 @@ def check_sitemap():
     except Exception as e:
         errors.append(f"Failed to parse sitemap.xml: {e}")
 
-def run_audit():
+def run_audit(site_dir=None, exit_on_finish=True):
+    global SITE_DIR, errors, warnings, checked_files, verification_files
+    if site_dir:
+        SITE_DIR = site_dir
+    errors = []
+    warnings = []
+    verification_files = []
+    checked_files = 0
+
     print(f"[*] Starting Mornye SEO Quality Audit on: {SITE_DIR}")
     for root, _, files in os.walk(SITE_DIR):
         for f in files:
@@ -131,6 +164,10 @@ def run_audit():
     check_sitemap()
 
     print(f"[+] Audited {checked_files} HTML documents.")
+    if verification_files:
+        print(f"[+] Recognized {len(verification_files)} site verification file(s) (exempt from webpage SEO tags):")
+        for vf in verification_files:
+            print(f"    - {vf}")
 
     if warnings:
         print(f"\n[!] WARNINGS ({len(warnings)}):")
@@ -141,11 +178,14 @@ def run_audit():
         print(f"\n[-] FAILED: Found {len(errors)} SEO errors:")
         for err in errors:
             print(f"  - {err}")
-        sys.exit(1)
+        if exit_on_finish:
+            sys.exit(1)
+        return False
     else:
         print("\n[+] SUCCESS: All SEO, metadata, JSON-LD, and sitemap quality checks passed!")
-        sys.exit(0)
+        if exit_on_finish:
+            sys.exit(0)
+        return True
 
 if __name__ == "__main__":
     run_audit()
-

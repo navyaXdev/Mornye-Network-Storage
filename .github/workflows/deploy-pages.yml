@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'site/**'
+      - 'scripts/seo_audit.py'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 

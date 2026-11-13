@@ -30,6 +30,7 @@ async def test_webdav_unauthorized_propfind():
 @pytest.mark.asyncio
 async def test_webdav_invalid_credentials_propfind():
     """Verify that PROPFIND with invalid credentials returns HTTP 401."""
+    await init_db()
     settings.WEBDAV_AUTH_ENABLED = True
     transport = httpx.ASGITransport(app=webdav_app)
     async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:

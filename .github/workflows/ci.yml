@@ -34,4 +34,4 @@ jobs:
         run: python3 scripts/seo_audit.py
 
       - name: Run Pytest Test Suite
-        run: pytest tests/test_quota.py tests/test_webdav_rfc4918.py -v
+        run: pytest tests/test_quota.py tests/test_seo_audit.py tests/test_webdav_rfc4918.py -v
