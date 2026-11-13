@@ -102,3 +102,12 @@ def test_relative_asset_paths_and_internal_links_resolve():
                 assert os.path.exists(target_file), f"[{rel_html}] Link target '{target}' resolves to missing file: {target_file}"
                 verified += 1
     assert verified > 300, f"Expected >300 relative assets/links verified, got {verified}"
+
+def test_homepage_google_site_verification_meta_tag():
+    """Verify that site/index.html includes the required Google Search Console verification meta tag."""
+    homepage_path = Path(SITE_DIR) / "index.html"
+    assert homepage_path.exists(), "site/index.html must exist"
+    content = homepage_path.read_text(encoding="utf-8")
+    expected_meta = '<meta name="google-site-verification" content="lDMOKFi9WK_pAPEJ3o0gVjCKM1wT-JbVlFQXy7G2v5M" />'
+    assert expected_meta in content, f"Missing Google Search Console verification meta tag in {homepage_path}"
+
