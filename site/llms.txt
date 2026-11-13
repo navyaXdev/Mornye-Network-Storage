@@ -1,7 +1,10 @@
 # Mornye Network Storage
 > High-performance, self-hosted private cloud storage and RFC 4918 WebDAV server for modern Linux distributions.
 
-Mornye Network Storage is an open-source, rootless containerized network storage platform created by NavyaXdev. It allows individuals, home labs, and small engineering teams to host high-performance private storage accessible across LAN and WAN without open router ports or CGNAT headaches.
+Mornye Network Storage is an open-source, rootless containerized network storage platform created and maintained by NavyaXdev. It allows individuals, home labs, and engineering teams to host high-performance private storage accessible across LAN and WAN without open router ports or CGNAT headaches.
+
+## Project Identity & Brand Distinction
+Mornye Network Storage is an open-source Linux self-hosted network storage system and RFC 4918 WebDAV server. It is completely independent and separate from the Flutter/Rust desktop music player application known as Mornye (mornyeapp).
 
 ## Core Capabilities
 - WebDAV Engine: Fully compliant RFC 4918 server implementing PROPFIND, GET, PUT, MKCOL, MOVE, and DELETE.

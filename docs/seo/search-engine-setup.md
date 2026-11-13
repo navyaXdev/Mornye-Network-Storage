@@ -99,9 +99,20 @@ IndexNow enables instant crawling of updated content across Bing, Yandex, and Se
 GitHub's internal search algorithm indexes repository metadata, topics, README content, and release descriptions.
 
 ### Repository Optimization Checklist:
-- [x] **Description**: Up to date, under 350 characters, containing core search keywords.
-- [x] **Repository Homepage**: Set to `https://navyaxdev.github.io/Mornye-Network-Storage/`.
-- [x] **Topics (20)**: `argon2id`, `cloud-storage`, `cloudflare-tunnel`, `debian`, `docker`, `docker-compose`, `file-server`, `kali-linux`, `linux`, `nas`, `network-storage`, `open-source`, `private-cloud`, `python`, `self-hosted`, `storage-server`, `ubuntu`, `webdav`, `webdav-server`, `zero-trust`.
+- [x] **Repository Display Name**: `Mornye Network Storage`
+- [x] **Description**: Up to date, under 350 characters, containing core search keywords:
+  ```text
+  Mornye Network Storage is an open-source Linux self-hosted network storage & RFC 4918 WebDAV server created by NavyaXdev. Features rootless Docker, Argon2id security, zero-port-forward Cloudflare Tunnels, and automated multi-distro installation.
+  ```
+- [x] **Repository Homepage URL**: `https://navyaxdev.github.io/Mornye-Network-Storage/`
+- [x] **Topics (20)**: `mornye`, `mornye-network-storage`, `webdav`, `webdav-server`, `self-hosted`, `network-storage`, `linux`, `docker`, `docker-compose`, `rootless-docker`, `cloudflare-tunnel`, `zero-trust`, `argon2id`, `private-cloud`, `nas`, `storage-server`, `kali-linux`, `debian`, `ubuntu`, `python`.
+- [x] **Target Search Queries**:
+  - `Mornye Network Storage GitHub`
+  - `Mornye Network Storage repository`
+  - `Mornye Linux WebDAV server`
+  - `Mornye self-hosted storage`
+  - `Mornye Network Storage installation`
+- [x] **Brand Distinction Clarified**: Distinct from the Flutter/Rust desktop music app `mornyeapp`.
 - [x] **Social Preview Image**: 1280x640 PNG uploaded to GitHub repository Settings &rarr; General &rarr; Social preview.
 - [x] **GitHub Releases**: Semantic version tags (e.g. `v3.3.0`) with structured release notes.
 - [x] **Citation Metadata**: `CITATION.cff` for academic and software index attribution.

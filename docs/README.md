@@ -1,6 +1,9 @@
 # Mornye Network Storage Documentation Hub
 
-Welcome to the official technical documentation directory for **Mornye Network Storage**, an open-source, self-hosted network storage system and RFC 4918 WebDAV server engineered by **NavyaXdev**.
+Welcome to the official technical documentation directory for **Mornye Network Storage**, an open-source, self-hosted network storage system and RFC 4918 WebDAV server engineered and maintained by **NavyaXdev**.
+
+> [!NOTE]
+> **Project Identity & Brand Distinction**: Mornye Network Storage is an open-source Linux self-hosted network storage and RFC 4918 WebDAV server created by **NavyaXdev**. It is completely independent and separate from the Flutter/Rust desktop music application named Mornye (mornyeapp).
 
 ---
 

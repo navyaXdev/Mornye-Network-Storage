@@ -4,7 +4,7 @@
 
 # Mornye Network Storage
 
-### High-Performance Self-Hosted Private Cloud & RFC 4918 WebDAV Server for Linux
+### Open-Source Linux Self-Hosted Network Storage & RFC 4918 WebDAV Server
 
 [![Official Website](https://img.shields.io/badge/Website-navyaxdev.github.io-blue.svg)](https://navyaxdev.github.io/Mornye-Network-Storage/)
 [![GitHub Release](https://img.shields.io/github/v/release/navyaXdev/Mornye-Network-Storage?color=blue)](https://github.com/navyaXdev/Mornye-Network-Storage/releases)
@@ -16,7 +16,7 @@
 [![Auth: Argon2id](https://img.shields.io/badge/Auth-Argon2id-emerald.svg)](SECURITY.md)
 [![Zero-Trust Tunnel](https://img.shields.io/badge/Cloudflare-Zero--Trust%20Tunnel-F38020.svg)](docs/CLOUDFLARE_TUNNEL.md)
 
-[**Website**](https://navyaxdev.github.io/Mornye-Network-Storage/) • [**Documentation**](docs/README.md) • [**Installation Guide**](docs/INSTALLATION.md) • [**Guides & Tutorials**](https://navyaxdev.github.io/Mornye-Network-Storage/guides/) • [**Changelog**](CHANGELOG.md) • [**Security**](SECURITY.md)
+[**Official Website**](https://navyaxdev.github.io/Mornye-Network-Storage/) • [**GitHub Repository**](https://github.com/navyaXdev/Mornye-Network-Storage) • [**Documentation**](docs/README.md) • [**Installation Guide**](docs/INSTALLATION.md) • [**Guides & Tutorials**](https://navyaxdev.github.io/Mornye-Network-Storage/guides/) • [**Changelog**](CHANGELOG.md) • [**Security**](SECURITY.md)
 
 </div>
 
@@ -24,9 +24,12 @@
 
 ## 1. What is Mornye Network Storage?
 
-**Mornye Network Storage** is an open-source, self-hosted network storage system and RFC 4918 WebDAV server engineered specifically for modern Linux distributions. Created by [**NavyaXdev**](https://github.com/navyaXdev), it delivers a hardened, lightweight private cloud storage platform designed for seamless multi-client access, rootless container security, and zero-port-forward remote accessibility via Cloudflare Tunnels.
+**Mornye Network Storage** is an open-source, self-hosted network storage system and RFC 4918 WebDAV server engineered and maintained by [**NavyaXdev**](https://github.com/navyaXdev) for modern Linux distributions. It delivers a hardened, lightweight private cloud storage platform designed for multi-client access, rootless container security, and zero-port-forward remote accessibility via Cloudflare Tunnels.
 
-Whether deployed as a dedicated home network-attached storage (NAS) server, a self-hosted personal music streaming backend, or an encrypted developer file repository, Mornye eliminates bloated web UI dependencies in favor of a lean, high-throughput POSIX architecture.
+This repository serves as the official **Mornye Network Storage GitHub repository**, providing an audited **Mornye Linux WebDAV server** and **Mornye self-hosted storage** architecture. Whether deployed as a dedicated home network-attached storage (NAS) server, a self-hosted personal media backend, or an encrypted developer file repository, Mornye eliminates bloated web UI dependencies in favor of a lean, high-throughput POSIX architecture.
+
+> [!NOTE]
+> **Project Identity & Brand Distinction**: **Mornye Network Storage** is an independent Linux self-hosted storage and RFC 4918 WebDAV server project created and maintained by **NavyaXdev**. It is completely separate and distinct from the Flutter/Rust desktop music player application named Mornye (mornyeapp).
 
 ### Key Highlights
 - **Universal Linux Compatibility**: Native automated setup for Debian, Ubuntu, Kali Linux, Arch, Fedora, openSUSE, and Alpine across `x86_64` and `aarch64`.
@@ -62,6 +65,8 @@ chmod +x setup.sh mornye.sh
 ```
 
 The installer automatically audits prerequisites, provisions storage volumes with hardened `chmod 700` permissions, configures WebDAV authentication, builds the container image, provisions Cloudflare Tunnels (if selected), and validates end-to-end service health.
+
+For comprehensive prerequisites and distribution-specific flags, explore the [Online Installation Guide](https://navyaxdev.github.io/Mornye-Network-Storage/installation/) and [docs/INSTALLATION.md](docs/INSTALLATION.md).
 
 ---
 
@@ -269,14 +274,14 @@ Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTIN
 
 ---
 
-## 12. Author & Citation
+## 12. Author, Maintainer & Citation
 
-Created and engineered by **NavyaXdev**:
-- GitHub: [@navyaXdev](https://github.com/navyaXdev)
-- Repository: [https://github.com/navyaXdev/Mornye-Network-Storage](https://github.com/navyaXdev/Mornye-Network-Storage)
-- Website: [https://navyaxdev.github.io/Mornye-Network-Storage/](https://navyaxdev.github.io/Mornye-Network-Storage/)
+Created, engineered, and maintained by **NavyaXdev**:
+- GitHub Profile: [@navyaXdev](https://github.com/navyaXdev)
+- Official GitHub Repository: [https://github.com/navyaXdev/Mornye-Network-Storage](https://github.com/navyaXdev/Mornye-Network-Storage)
+- Official Website: [https://navyaxdev.github.io/Mornye-Network-Storage/](https://navyaxdev.github.io/Mornye-Network-Storage/)
 
-To cite this project in academic research, technical papers, or open-source indexes, refer to [CITATION.cff](CITATION.cff).
+To cite Mornye Network Storage in academic research, technical papers, or open-source indexes, refer to [CITATION.cff](CITATION.cff).
 
 ---
 

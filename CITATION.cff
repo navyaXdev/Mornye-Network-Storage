@@ -9,6 +9,8 @@ date-released: 2026-11-12
 url: "https://github.com/navyaXdev/Mornye-Network-Storage"
 repository-code: "https://github.com/navyaXdev/Mornye-Network-Storage"
 keywords:
+  - "mornye"
+  - "mornye-network-storage"
   - "network storage"
   - "webdav"
   - "self-hosted"
