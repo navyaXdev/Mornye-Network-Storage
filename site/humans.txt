@@ -10,6 +10,6 @@ The open-source community, Linux kernel developers, Docker team, Cloudflare Zero
 /* SITE */
 Standards: HTML5, CSS3, Vanilla JavaScript, Schema.org JSON-LD
 Components: 100% hand-crafted semantic markup, zero external tracking, zero CDN dependencies
-Hosting: GitHub Pages via GitHub Actions workflow
+Hosting: Cloudflare Edge & GitHub Pages deployment (Domain: https://mornye-network-project.navya.dpdns.org/)
 Design: Accessible, Dark-mode first, Mobile-responsive
 

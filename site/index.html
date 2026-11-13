@@ -74,8 +74,7 @@
         "url": "https://mornye-network-project.navya.dpdns.org/",
         "author": {
           "@type": "Person",
-          "name": "NavyaXdev",
-          "url": "https://github.com/navyaXdev"
+          "name": "NavyaXdev"
         },
         "sameAs": [
           "https://github.com/navyaXdev/Mornye-Network-Storage"
@@ -90,9 +89,14 @@
 
   <header class="site-header">
     <div class="nav-container">
-      <a href="./" class="brand-link">
-        <div class="brand-logo">M</div>
-        <span>Mornye Storage</span>
+      <a href="./" class="brand-link" aria-label="Mornye Network Storage Homepage">
+        <div class="brand-icon-wrapper">
+          <img src="assets/logo.svg" alt="Mornye Network Storage Emblem" width="28" height="28">
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">Mornye</span>
+          <span class="brand-badge">Storage</span>
+        </div>
       </a>
 
       <nav aria-label="Main Navigation">
@@ -110,7 +114,7 @@
 
       <div class="nav-actions">
         <a href="https://github.com/navyaXdev/Mornye-Network-Storage" class="btn-github" target="_blank" rel="noopener noreferrer">
-          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
           <span>GitHub</span>
         </a>
         <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">&#9776;</button>
@@ -119,112 +123,233 @@
   </header>
 
   <main id="main-content">
+    <!-- Hero Section -->
     <section class="hero">
-      <div class="container">
-        <span class="hero-tag">Official Release v3.3.0 &bull; RFC 4918 Compliant</span>
-        <h1>Mornye Network Storage — Open-Source Linux WebDAV Server</h1>
-        <p>A hardened, lightweight self-hosted network storage system and RFC 4918 WebDAV server for Linux, created and maintained by <strong>NavyaXdev</strong>. Engineered with rootless Docker, Argon2id encryption, and automated Cloudflare Zero-Trust Tunnels.</p>
+      <div class="container" style="padding-top: 0; padding-bottom: 0;">
+        <div class="hero-pill-badge">
+          <span class="dot"></span>
+          <span>v3.3.0 Release</span>
+          <span style="opacity: 0.3;">|</span>
+          <span class="highlight">RFC 4918 WebDAV &bull; Zero-Trust Ingress</span>
+        </div>
+
+        <h1>
+          Next-Generation Network Storage <br>
+          <span class="gradient-text">for Modern Linux Systems</span>
+        </h1>
+
+        <p class="lead">
+          A high-performance, self-hosted private cloud storage engine and RFC 4918 WebDAV server engineered with rootless Docker, Argon2id cryptography, and automated Cloudflare Zero-Trust Tunnels. Created and maintained by <strong>NavyaXdev</strong>.
+        </p>
 
         <div class="hero-cta">
-          <a href="installation/" class="btn-primary">Get Started &rarr;</a>
+          <a href="installation/" class="btn-primary">
+            <span>Get Started</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </a>
           <a href="guides/" class="btn-secondary">Explore Guides</a>
-          <a href="https://github.com/navyaXdev/Mornye-Network-Storage" class="btn-secondary" target="_blank" rel="noopener noreferrer">View on GitHub &rarr;</a>
+          <a href="https://github.com/navyaXdev/Mornye-Network-Storage" class="btn-secondary" target="_blank" rel="noopener noreferrer">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            <span>Star on GitHub</span>
+          </a>
         </div>
 
-        <div class="quickstart-box">
-          <div class="quickstart-code">
-            <span class="quickstart-prompt">$ </span>curl -fsSL https://raw.githubusercontent.com/navyaXdev/Mornye-Network-Storage/main/setup.sh | bash
+        <!-- Terminal Quickstart Component -->
+        <div class="terminal-card">
+          <div class="terminal-header">
+            <div class="terminal-controls">
+              <span class="terminal-dot red"></span>
+              <span class="terminal-dot yellow"></span>
+              <span class="terminal-dot green"></span>
+            </div>
+            <span class="terminal-tab">curl | bash &bull; automated setup</span>
+            <span style="width: 40px;"></span>
           </div>
-          <button class="btn-copy" type="button" aria-label="Copy installation command">
-            <span>Copy</span>
-          </button>
+          <div class="terminal-body">
+            <div class="terminal-code">
+              <span class="terminal-prompt">$</span>curl -fsSL https://raw.githubusercontent.com/navyaXdev/Mornye-Network-Storage/main/setup.sh | bash
+            </div>
+            <button class="btn-copy" type="button" aria-label="Copy installation command">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              <span>Copy</span>
+            </button>
+          </div>
         </div>
 
-        <div class="callout" style="margin-top: 1.5rem; text-align: left; font-size: 0.95rem;">
-          <strong>Project Identity &amp; Distinction:</strong> Mornye Network Storage is an open-source Linux self-hosted network storage system and WebDAV server created and maintained by <strong>NavyaXdev</strong>. It is completely independent of the Flutter/Rust desktop music application (mornyeapp).
+        <div class="callout" style="max-width: 860px; margin: 1.75rem auto 0; text-align: left;">
+          <strong>Project Identity &amp; Distinction:</strong>
+          Mornye Network Storage is an open-source Linux self-hosted storage system and RFC 4918 WebDAV server created and maintained by <strong>NavyaXdev</strong>. It is completely independent of the desktop audio client application (mornyeapp).
         </div>
       </div>
     </section>
 
+    <!-- Key Metrics Ribbon -->
+    <section class="stats-ribbon">
+      <div class="stat-box">
+        <div class="stat-number">100 GB</div>
+        <div class="stat-label">Quota Boundary</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number">UID 1000</div>
+        <div class="stat-label">Rootless Sandbox</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number">RFC 4918</div>
+        <div class="stat-label">Standard WebDAV</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number">Zero</div>
+        <div class="stat-label">Open Router Ports</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number">8+ Distros</div>
+        <div class="stat-label">Automated Tiers</div>
+      </div>
+    </section>
+
+    <!-- Architecture Visualization -->
     <section class="container">
-      <div style="text-align: center; margin-bottom: 2rem;">
-        <h2 style="font-size: 2rem; margin-bottom: 0.5rem; color: #fff;">Engineered for Performance, Security &amp; Control</h2>
-        <p style="color: var(--text-secondary); max-width: 650px; margin: 0 auto;">Everything you need to replace proprietary cloud storage with your own sovereign private server.</p>
+      <div class="architecture-showcase">
+        <div style="text-align: center; margin-bottom: 2.5rem;">
+          <span style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--accent-cyan); letter-spacing: 0.1em;">End-to-End Ingress Flow</span>
+          <h2 style="font-size: 2rem; color: #fff; margin-top: 0.4rem;">Zero-Trust Ingress &amp; Container Architecture</h2>
+          <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto;">How Mornye connects clients to your physical disks without exposing ports to public scanners.</p>
+        </div>
+
+        <div class="architecture-grid">
+          <div class="arch-node">
+            <span class="node-badge">Client Layer</span>
+            <h4>Remote Devices</h4>
+            <p>Windows Explorer, macOS Finder, GNOME Files, VLC, and mobile players connect natively over WebDAV.</p>
+          </div>
+
+          <div class="arch-node">
+            <span class="node-badge">Edge Boundary</span>
+            <h4>Cloudflare Zero-Trust</h4>
+            <p>Automated <code>mornye.&lt;domain&gt;</code> routing with edge TLS 1.3 termination over encrypted QUIC tunnels.</p>
+          </div>
+
+          <div class="arch-node">
+            <span class="node-badge">Runtime Security</span>
+            <h4>Rootless Docker</h4>
+            <p>Runs as unprivileged user <code>mornye</code> (UID: 1000) with loopback isolation on host port 8001.</p>
+          </div>
+
+          <div class="arch-node">
+            <span class="node-badge">Storage Layer</span>
+            <h4>ACID &amp; Flat Media</h4>
+            <p>Two-phase atomic upload staging with puremagic MIME verification and SQLite WAL indexing.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Core Features Matrix -->
+    <section class="container">
+      <div style="text-align: center; margin-bottom: 2.5rem;">
+        <span style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--accent-cyan); letter-spacing: 0.1em;">Engineered for Autonomy</span>
+        <h2 style="font-size: 2.3rem; margin-top: 0.4rem; color: #fff;">Enterprise Capabilities Without the SaaS Bloat</h2>
+        <p style="color: var(--text-muted); max-width: 650px; margin: 0 auto;">Everything required to replace proprietary cloud subscriptions with private infrastructure.</p>
       </div>
 
       <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">&#128274;</div>
+        <div class="luxury-card">
+          <div class="luxury-icon">&#128274;</div>
           <h3>Argon2id Authentication</h3>
-          <p>OWASP-recommended cryptographic password hashing with 64 MB memory cost and 4 threads. High entropy secrets with zero hardcoded defaults.</p>
+          <p>OWASP-recommended cryptographic password hashing with 64 MB memory cost and 4 threads. High-entropy generated secrets with zero hardcoded defaults.</p>
         </div>
 
-        <div class="feature-card">
-          <div class="feature-icon">&#9729;</div>
+        <div class="luxury-card">
+          <div class="luxury-icon">&#9729;</div>
           <h3>Zero-Trust Cloudflare Tunnels</h3>
-          <p>Access your storage globally without opening firewall ports, forwarding router ports, or dealing with CGNAT. Automated dedicated subdomain routing.</p>
+          <p>Access storage globally without router port forwarding or exposing your IP. Automated dedicated subdomain routing with edge SSL certificates.</p>
         </div>
 
-        <div class="feature-card">
-          <div class="feature-icon">&#128039;</div>
+        <div class="luxury-card">
+          <div class="luxury-icon">&#128039;</div>
           <h3>Universal Linux Support</h3>
-          <p>Tested and automated across Debian, Ubuntu, Kali Linux, Arch, Fedora, openSUSE, and Alpine on both x86_64 and aarch64 architectures.</p>
+          <p>Automated package manager integration for Debian, Ubuntu, Kali Linux, Arch, Fedora, openSUSE, and Alpine across both x86_64 and aarch64.</p>
         </div>
 
-        <div class="feature-card">
-          <div class="feature-icon">&#128051;</div>
+        <div class="luxury-card">
+          <div class="luxury-icon">&#128051;</div>
           <h3>Hardened Rootless Docker</h3>
-          <p>Container operates strictly as unprivileged user <code>mornye</code> (UID: 1000) with <code>cap_drop: ALL</code> and loopback host port coexistence.</p>
+          <p>Operates strictly as unprivileged user <code>mornye</code> (UID: 1000) with <code>cap_drop: ALL</code> and protected loopback coexistence on port 8001.</p>
         </div>
 
-        <div class="feature-card">
-          <div class="feature-icon">&#128193;</div>
+        <div class="luxury-card">
+          <div class="luxury-icon">&#128193;</div>
           <h3>Standard RFC 4918 WebDAV</h3>
-          <p>Mount native network drives in Windows 11/10 Explorer, macOS Finder, GNOME Files, and stream directly via VLC or Symfonium audio player.</p>
+          <p>Mount native network drives in Windows 11/10 Explorer, macOS Finder, GNOME Files, and stream directly via VLC or Symfonium media players.</p>
         </div>
 
-        <div class="feature-card">
-          <div class="feature-icon">&#129658;</div>
+        <div class="luxury-card">
+          <div class="luxury-icon">&#129658;</div>
           <h3>Self-Healing System CLI</h3>
-          <p>Unified <code>./mornye.sh doctor --fix</code> audits 11 system categories and automatically resolves permission issues, port conflicts, and config drift.</p>
+          <p>Unified <code>./mornye.sh doctor --fix</code> audits 11 system layers and automatically resolves permissions, port conflicts, and configuration drift.</p>
         </div>
       </div>
     </section>
 
-    <section class="container" style="border-top: 1px solid var(--border-color); padding-top: 3rem;">
-      <h2 style="font-size: 1.8rem; margin-bottom: 1.5rem; text-align: center; color: #fff;">Featured Tutorials &amp; Technical Guides</h2>
+    <!-- Featured Guides Section -->
+    <section class="container" style="border-top: 1px solid var(--border-subtle); padding-top: 4rem;">
+      <div style="text-align: center; margin-bottom: 2.5rem;">
+        <span style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--accent-cyan); letter-spacing: 0.1em;">Knowledge Base</span>
+        <h2 style="font-size: 2.2rem; margin-top: 0.4rem; color: #fff;">Featured Tutorials &amp; Technical Guides</h2>
+      </div>
+
       <div class="guides-grid">
         <a href="guides/what-is-mornye-network-storage/" class="guide-card">
           <span class="guide-tag">Architecture</span>
-          <h3>What is Mornye Network Storage?</h3>
+          <h3>What is Mornye Network Storage? Architecture Guide</h3>
           <p>An in-depth architectural breakdown of Mornye, how it works, and an honest comparison with Nextcloud, TrueNAS, and Samba.</p>
           <span class="guide-readmore">Read Guide &rarr;</span>
         </a>
 
         <a href="guides/how-to-connect-windows-to-mornye-webdav/" class="guide-card">
-          <span class="guide-tag">Integration</span>
-          <h3>Connect Windows 11 &amp; 10 to WebDAV</h3>
+          <span class="guide-tag">Client Setup</span>
+          <h3>How to Connect Windows 11 &amp; 10 to Mornye WebDAV</h3>
           <p>Step-by-step instructions to map Mornye as a Windows network drive, bypass the 50MB file size limitation, and save credentials.</p>
           <span class="guide-readmore">Read Guide &rarr;</span>
         </a>
 
         <a href="guides/how-to-configure-cloudflare-tunnel-for-mornye/" class="guide-card">
           <span class="guide-tag">Networking</span>
-          <h3>Cloudflare Dedicated Subdomains</h3>
-          <p>Learn how Mornye automatically routes <code>mornye.yourdomain.com</code> without router port-forwarding or public IP exposure.</p>
+          <h3>Cloudflare Dedicated Subdomain Setup Guide</h3>
+          <p>Learn how Mornye automatically routes <code>mornye.yourdomain.com</code> without router port forwarding or public IP exposure.</p>
           <span class="guide-readmore">Read Guide &rarr;</span>
         </a>
       </div>
-      <div style="text-align: center; margin-top: 1.5rem;">
+
+      <div style="text-align: center; margin-top: 2rem;">
         <a href="guides/" class="btn-secondary">View All 6 Guides &rarr;</a>
+      </div>
+
+      <!-- CTA Banner -->
+      <div class="cta-banner">
+        <h2>Ready to Deploy Sovereign Storage?</h2>
+        <p>Get your private cloud running on modern Linux in less than two minutes with our automated installation wizard.</p>
+        <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+          <a href="installation/" class="btn-primary">View Installation Guide &rarr;</a>
+          <a href="documentation/" class="btn-secondary">Read Documentation</a>
+        </div>
       </div>
     </section>
   </main>
 
+  <!-- Luxury Footer -->
   <footer class="site-footer">
     <div class="footer-container">
       <div class="footer-brand">
-        <h4>Mornye Network Storage</h4>
+        <a href="./" class="brand-link" style="margin-bottom: 1rem; display: inline-flex;">
+          <div class="brand-icon-wrapper">
+            <img src="assets/logo.svg" alt="Mornye Logo" width="28" height="28">
+          </div>
+          <div class="brand-text">
+            <span class="brand-title">Mornye</span>
+            <span class="brand-badge">Storage</span>
+          </div>
+        </a>
         <p>Open-source, self-hosted private cloud storage and WebDAV engine for Linux. Created and maintained by <strong>NavyaXdev</strong>.</p>
       </div>
 
@@ -253,10 +378,10 @@
       <div class="footer-col">
         <h5>Open Source</h5>
         <ul>
-          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage" target="_blank" rel="noopener">GitHub Repository</a></li>
-          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></li>
-          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/SECURITY.md" target="_blank" rel="noopener">Security Policy</a></li>
-          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security Policy</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">Contributing</a></li>
           <li><a href="llms.txt">llms.txt</a></li>
         </ul>
       </div>
@@ -271,4 +396,3 @@
   <script src="assets/main.js"></script>
 </body>
 </html>
-

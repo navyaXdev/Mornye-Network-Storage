@@ -64,9 +64,14 @@
 
   <header class="site-header">
     <div class="nav-container">
-      <a href="../" class="brand-link">
-        <div class="brand-logo">M</div>
-        <span>Mornye Storage</span>
+      <a href="../" class="brand-link" aria-label="Mornye Network Storage Homepage">
+        <div class="brand-icon-wrapper">
+          <img src="../assets/logo.svg" alt="Mornye Network Storage Emblem" width="28" height="28">
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">Mornye</span>
+          <span class="brand-badge">Storage</span>
+        </div>
       </a>
 
       <nav aria-label="Main Navigation">
@@ -84,7 +89,7 @@
 
       <div class="nav-actions">
         <a href="https://github.com/navyaXdev/Mornye-Network-Storage" class="btn-github" target="_blank" rel="noopener noreferrer">
-          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
           <span>GitHub</span>
         </a>
         <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">&#9776;</button>
@@ -92,99 +97,252 @@
     </div>
   </header>
 
-  <main id="main-content" class="container">
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      <a href="../">Home</a>
-      <span class="divider">/</span>
-      <span class="current">Installation</span>
-    </nav>
+  <main id="main-content">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../">Home</a>
+        <span class="divider">/</span>
+        <span class="current">Installation</span>
+      </nav>
 
-    <header class="article-header">
-      <h1>Mornye Network Storage Installation Guide</h1>
-      <div class="article-meta">
-        <span>Engineered by <strong>NavyaXdev</strong></span>
-        <span>&bull;</span>
-        <span>Version: <strong>v3.3.0</strong></span>
-        <span>&bull;</span>
-        <span>Estimated Time: <strong>2 Minutes</strong></span>
-      </div>
-    </header>
+      <section class="section" style="padding-top: 1rem;">
+        <div class="section-badge">DEPLOYMENT LIFECYCLE</div>
+        <h1 style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 1rem;">
+          Deploy in Seconds. <br>
+          <span class="gradient-text">Run Sovereign Storage Anywhere.</span>
+        </h1>
+        <p class="section-lead" style="margin-left: 0; text-align: left; max-width: 820px;">
+          Mornye features an intelligent, universal POSIX installer that detects your native package manager (APT, Pacman, DNF, Zypper, APK) and provisions rootless Docker, volumes, and ingress in under 2 minutes.
+        </p>
 
-    <article class="content-body">
-      <p>This guide covers installing and configuring Mornye Network Storage on modern Linux servers. Thanks to Mornye's universal package manager detection, installation is automated regardless of whether you run Debian, Ubuntu, Kali Linux, Arch Linux, Fedora, openSUSE, or Alpine Linux.</p>
+        <!-- System Prerequisites Grid -->
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-top: 2.5rem; margin-bottom: 1rem;">System Prerequisites</h2>
+        <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 3rem;">
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.25rem;">
+            <div style="color: var(--accent-cyan); font-weight: 700; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 0.25rem;">Operating System</div>
+            <div style="font-weight: 600; color: #fff; font-size: 1.1rem; margin-bottom: 0.25rem;">Linux Kernel &ge; 5.10</div>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Debian, Ubuntu, Kali, Arch, Fedora, openSUSE, Alpine (Tested up to Kernel 7.1.5+).</p>
+          </div>
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.25rem;">
+            <div style="color: var(--accent-cyan); font-weight: 700; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 0.25rem;">CPU Architectures</div>
+            <div style="font-weight: 600; color: #fff; font-size: 1.1rem; margin-bottom: 0.25rem;">x86_64 / ARM64</div>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Full multi-arch support for standard servers, VPS, Raspberry Pi 4/5, and SBC clusters.</p>
+          </div>
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.25rem;">
+            <div style="color: var(--accent-cyan); font-weight: 700; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 0.25rem;">RAM &amp; Storage</div>
+            <div style="font-weight: 600; color: #fff; font-size: 1.1rem; margin-bottom: 0.25rem;">1 GB RAM / 2 GB Free</div>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Ultralight footprint. 2 GB disk for runtime binaries, container layers, and SQLite DB.</p>
+          </div>
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.25rem;">
+            <div style="color: var(--accent-cyan); font-weight: 700; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 0.25rem;">Security Boundary</div>
+            <div style="font-weight: 600; color: #fff; font-size: 1.1rem; margin-bottom: 0.25rem;">Rootless Non-Root</div>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Runs as unprivileged user UID 1000 with <code>cap_drop: ALL</code> and local loopback isolation.</p>
+          </div>
+        </div>
 
-      <h2>System Prerequisites</h2>
-      <ul>
-        <li><strong>Operating System:</strong> Any modern Linux distribution (Kernel &ge; 5.10; verified up to Kernel 7.1.5+).</li>
-        <li><strong>Architecture:</strong> <code>x86_64</code> (amd64), <code>aarch64</code> (ARM64), or <code>armv7l</code>.</li>
-        <li><strong>Memory:</strong> Minimum 1 GB RAM (2 GB recommended).</li>
-        <li><strong>Disk Space:</strong> Minimum 2 GB free disk space for the base container and database; additional disk space for file storage.</li>
-        <li><strong>Privileges:</strong> Sudo or root access during initial package installation.</li>
-      </ul>
+        <!-- Installation Methods -->
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">Deployment Methods</h2>
 
-      <h2>Method 1: One-Line Quick Installation (Recommended)</h2>
-      <p>The fastest way to install Mornye is via the official curl installer:</p>
+        <!-- Method 1 -->
+        <div class="luxury-card" style="margin-bottom: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+              <span class="category-badge">METHOD 1 (RECOMMENDED)</span>
+              <h3 style="font-size: 1.35rem; font-weight: 700; margin-top: 0.25rem;">One-Line Automated Curl Quickstart</h3>
+            </div>
+            <span style="background: rgba(16,185,129,0.15); color: #34d399; font-size: 0.75rem; font-weight: 700; padding: 0.35rem 0.75rem; border-radius: 9999px; border: 1px solid rgba(16,185,129,0.3);">FASTEST (~2 MIN)</span>
+          </div>
+          <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 1rem;">
+            Run this single command in your Linux terminal. The script downloads the official Mornye release, audits your hardware, auto-installs Docker and Cloudflare prerequisites, and launches the configuration wizard:
+          </p>
+          <div class="terminal-card" style="margin-bottom: 0;">
+            <div class="terminal-header">
+              <div class="terminal-dots">
+                <span class="dot-red"></span>
+                <span class="dot-yellow"></span>
+                <span class="dot-green"></span>
+              </div>
+              <span class="terminal-title">bash — automated-installer</span>
+              <button class="copy-btn" data-target="curl-install" aria-label="Copy curl command">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span>Copy</span>
+              </button>
+            </div>
+            <div class="terminal-body">
+              <pre><code id="curl-install">curl -fsSL https://raw.githubusercontent.com/navyaXdev/Mornye-Network-Storage/main/setup.sh | bash</code></pre>
+            </div>
+          </div>
+        </div>
 
-      <pre><code>curl -fsSL https://raw.githubusercontent.com/navyaXdev/Mornye-Network-Storage/main/setup.sh | bash</code></pre>
-
-      <p>This command securely downloads the automated setup installer and launches the interactive configuration wizard.</p>
-
-      <h2>Method 2: Git Clone &amp; Guided Setup Wizard</h2>
-      <p>If you prefer inspecting the source code before running, clone directly from the <a href="https://github.com/navyaXdev/Mornye-Network-Storage" target="_blank" rel="noopener">official Mornye Network Storage GitHub repository</a>:</p>
-
-      <pre><code># 1. Clone the official repository
+        <!-- Method 2 -->
+        <div class="luxury-card" style="margin-bottom: 3rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+              <span class="category-badge">METHOD 2</span>
+              <h3 style="font-size: 1.35rem; font-weight: 700; margin-top: 0.25rem;">Git Clone &amp; Guided CLI Wizard</h3>
+            </div>
+            <span style="background: rgba(56,189,248,0.15); color: #38bdf8; font-size: 0.75rem; font-weight: 700; padding: 0.35rem 0.75rem; border-radius: 9999px; border: 1px solid rgba(56,189,248,0.3);">INSPECT SOURCE</span>
+          </div>
+          <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 1rem;">
+            Ideal for system administrators who wish to inspect repository files and Docker configurations before execution:
+          </p>
+          <div class="terminal-card" style="margin-bottom: 0;">
+            <div class="terminal-header">
+              <div class="terminal-dots">
+                <span class="dot-red"></span>
+                <span class="dot-yellow"></span>
+                <span class="dot-green"></span>
+              </div>
+              <span class="terminal-title">bash — git-clone</span>
+              <button class="copy-btn" data-target="git-install" aria-label="Copy git commands">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span>Copy</span>
+              </button>
+            </div>
+            <div class="terminal-body">
+              <pre><code id="git-install"># 1. Clone the official repository
 git clone https://github.com/navyaXdev/Mornye-Network-Storage.git
 cd Mornye-Network-Storage
 
-# 2. Make scripts executable
+# 2. Grant executable permissions
 chmod +x setup.sh mornye.sh
 
-# 3. Launch the 6-stage setup wizard
+# 3. Launch the guided interactive wizard
 ./mornye.sh install</code></pre>
+            </div>
+          </div>
+        </div>
 
-      <h2>The 6-Stage Installation Wizard Explained</h2>
-      <p>When you launch <code>./mornye.sh install</code> (or <code>setup.sh</code>), the script guides you through six automated lifecycle stages:</p>
+        <!-- 6-Stage Lifecycle Wizard -->
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">The 6-Stage Lifecycle Setup Wizard</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+          When launched, Mornye executes a deterministic, self-healing sequence of automated setup stages:
+        </p>
 
-      <ol>
-        <li><strong>Stage 1: System &amp; Hardware Audit:</strong> Checks CPU architecture, RAM, free disk space, and detects the distribution's native package manager (<code>apt</code>, <code>pacman</code>, <code>dnf</code>, <code>zypper</code>, or <code>apk</code>).</li>
-        <li><strong>Stage 2: Dependency Installation:</strong> Automatically provisions Docker Engine, the Docker Compose v2 plugin, curl, and <code>cloudflared</code> without user intervention.</li>
-        <li><strong>Stage 3: Storage Volume Initialization:</strong> Creates persistent storage directories (<code>database/</code>, <code>storage/</code>, <code>logs/</code>, <code>backups/</code>) and hardens ownership to UID:GID <code>1000:1000</code> with <code>chmod 700</code>.</li>
-        <li><strong>Stage 4: WebDAV Authentication Configuration:</strong> Allows you to enable Basic Authentication with a cryptographically secure generated password or your own custom password.</li>
-        <li><strong>Stage 5: Container Build &amp; Deployment:</strong> Builds the production <code>mornye-webdav</code> image using multi-stage caching and starts the service in detached mode on protected port <code>8001</code>.</li>
-        <li><strong>Stage 6: Network Ingress Selection:</strong> Choose between Local LAN mode, permanent Cloudflare Tunnel with dedicated subdomain routing, or ephemeral Quick Tunnels.</li>
-      </ol>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+          <div class="luxury-card">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+              <span class="category-badge">STAGE 01</span>
+              <span style="color: var(--accent-cyan); font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700;">AUDIT</span>
+            </div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem;">Hardware &amp; System Audit</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0; line-height: 1.6;">
+              Inspects CPU architecture, available memory, disk space availability, and detects the distribution package manager without hardcoded assumptions.
+            </p>
+          </div>
 
-      <h2>Post-Installation Verification</h2>
-      <p>Once setup finishes, verify that your service is healthy and responding:</p>
+          <div class="luxury-card">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+              <span class="category-badge">STAGE 02</span>
+              <span style="color: var(--accent-cyan); font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700;">PROVISION</span>
+            </div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem;">Universal Dependency Provisioning</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0; line-height: 1.6;">
+              Installs Docker Engine, Docker Compose v2, curl, and the official <code>cloudflared</code> binary using native distribution channels.
+            </p>
+          </div>
 
-      <pre><code># Check system diagnostics
+          <div class="luxury-card">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+              <span class="category-badge">STAGE 03</span>
+              <span style="color: var(--accent-cyan); font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700;">HARDEN</span>
+            </div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem;">Volume Initialization &amp; Permissions</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0; line-height: 1.6;">
+              Initializes persistent storage directories (<code>database/</code>, <code>storage/</code>, <code>logs/</code>) and hardens ownership to UID:GID <code>1000:1000</code> with POSIX <code>700</code> permissions.
+            </p>
+          </div>
+
+          <div class="luxury-card">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+              <span class="category-badge">STAGE 04</span>
+              <span style="color: var(--accent-cyan); font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700;">CREDENTIALS</span>
+            </div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem;">WebDAV Authentication Wizard</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0; line-height: 1.6;">
+              Configures credentials with cryptographically secure random password generation or custom passwords, hashed via OWASP-standard Argon2id.
+            </p>
+          </div>
+
+          <div class="luxury-card">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+              <span class="category-badge">STAGE 05</span>
+              <span style="color: var(--accent-cyan); font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700;">CONTAINER</span>
+            </div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem;">Multi-Stage Container Build</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0; line-height: 1.6;">
+              Compiles the lightweight WebDAV production image, binds securely to host loopback port <code>8001</code>, and drops all Linux capabilities.
+            </p>
+          </div>
+
+          <div class="luxury-card">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+              <span class="category-badge">STAGE 06</span>
+              <span style="color: var(--accent-cyan); font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700;">INGRESS</span>
+            </div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem;">Network Ingress Selection</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0; line-height: 1.6;">
+              Select Local LAN mode, automated dedicated Cloudflare Subdomain (<code>mornye.example.com</code>), or ephemeral Quick Tunnels.
+            </p>
+          </div>
+        </div>
+
+        <!-- Verification Section -->
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">Post-Installation Verification</h2>
+        <div class="terminal-card" style="margin-bottom: 3rem;">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <span class="dot-red"></span>
+              <span class="dot-yellow"></span>
+              <span class="dot-green"></span>
+            </div>
+            <span class="terminal-title">bash — health-check</span>
+            <button class="copy-btn" data-target="verify-cli" aria-label="Copy verification commands">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Copy</span>
+            </button>
+          </div>
+          <div class="terminal-body">
+            <pre><code id="verify-cli"># 1. Run 11-category system diagnostics
 ./mornye.sh doctor
 
-# Probe WebDAV endpoint health
+# 2. Probe WebDAV daemon health
 ./mornye.sh health
 
-# Test WebDAV authentication boundary
+# 3. Test authenticated WebDAV response
 ./mornye.sh webdav test</code></pre>
+          </div>
+        </div>
 
-      <div class="callout callout-success">
-        <strong>Next Steps: Client Access &amp; Architecture</strong>
-        <p>Now that your Mornye Network Storage instance is active, connect your clients and explore deployment references:</p>
-        <ul style="margin-top: 0.5rem;">
-          <li><a href="../guides/how-to-connect-windows-to-mornye-webdav/">Windows 11 &amp; 10 WebDAV Connection Tutorial &rarr;</a></li>
-          <li><a href="../docker/">Rootless Docker Deployment &amp; Compose Guide &rarr;</a></li>
-          <li><a href="../cloudflare/">Cloudflare Zero-Trust Tunnel Ingress Guide &rarr;</a></li>
-          <li><a href="../documentation/">Central Technical Documentation Hub &rarr;</a></li>
-        </ul>
-      </div>
-    </article>
+        <!-- Next Steps -->
+        <div class="callout callout-success">
+          <strong>Next Steps &amp; Connection Tutorials</strong>
+          <p>Your Mornye storage is active. Follow our detailed step-by-step guides to connect your devices:</p>
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;">
+            <a href="../guides/how-to-connect-windows-to-mornye-webdav/" class="btn-primary">Windows 11/10 Explorer Setup &rarr;</a>
+            <a href="../cloudflare/" class="btn-secondary">Cloudflare Subdomain Guide</a>
+            <a href="../docker/" class="btn-secondary">Docker Architecture Guide</a>
+          </div>
+        </div>
+      </section>
+    </div>
   </main>
 
   <footer class="site-footer">
     <div class="footer-container">
       <div class="footer-brand">
-        <h4>Mornye Network Storage</h4>
+        <a href="../" class="brand-link" style="margin-bottom: 1rem; display: inline-flex;">
+          <div class="brand-icon-wrapper">
+            <img src="../assets/logo.svg" alt="Mornye Logo" width="28" height="28">
+          </div>
+          <div class="brand-text">
+            <span class="brand-title">Mornye</span>
+            <span class="brand-badge">Storage</span>
+          </div>
+        </a>
         <p>Open-source, self-hosted private cloud storage and WebDAV engine for Linux. Created and maintained by <strong>NavyaXdev</strong>.</p>
       </div>
+
       <div class="footer-col">
         <h5>Product</h5>
         <ul>
@@ -195,6 +353,7 @@ chmod +x setup.sh mornye.sh
           <li><a href="../download/">Download</a></li>
         </ul>
       </div>
+
       <div class="footer-col">
         <h5>Resources</h5>
         <ul>
@@ -202,17 +361,22 @@ chmod +x setup.sh mornye.sh
           <li><a href="../guides/">Guides &amp; Tutorials</a></li>
           <li><a href="../faq/">FAQ</a></li>
           <li><a href="../about/">About the Creator</a></li>
+          <li><a href="../feed.xml">RSS Feed</a></li>
         </ul>
       </div>
+
       <div class="footer-col">
         <h5>Open Source</h5>
         <ul>
-          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage" target="_blank" rel="noopener">GitHub Repository</a></li>
-          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></li>
-          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/SECURITY.md" target="_blank" rel="noopener">Security Policy</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security Policy</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">Contributing</a></li>
+          <li><a href="../llms.txt">llms.txt</a></li>
         </ul>
       </div>
     </div>
+
     <div class="footer-bottom">
       <p>&copy; 2026 NavyaXdev. Released under the MIT License.</p>
       <p>Official Project Website &bull; Built with semantic HTML &amp; CSS &bull; Zero Trackers</p>
@@ -222,4 +386,3 @@ chmod +x setup.sh mornye.sh
   <script src="../assets/main.js"></script>
 </body>
 </html>
-

@@ -64,9 +64,14 @@
 
   <header class="site-header">
     <div class="nav-container">
-      <a href="../" class="brand-link">
-        <div class="brand-logo">M</div>
-        <span>Mornye Storage</span>
+      <a href="../" class="brand-link" aria-label="Mornye Network Storage Homepage">
+        <div class="brand-icon-wrapper">
+          <img src="../assets/logo.svg" alt="Mornye Network Storage Emblem" width="28" height="28">
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">Mornye</span>
+          <span class="brand-badge">Storage</span>
+        </div>
       </a>
 
       <nav aria-label="Main Navigation">
@@ -84,7 +89,7 @@
 
       <div class="nav-actions">
         <a href="https://github.com/navyaXdev/Mornye-Network-Storage" class="btn-github" target="_blank" rel="noopener noreferrer">
-          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
           <span>GitHub</span>
         </a>
         <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">&#9776;</button>
@@ -92,31 +97,41 @@
     </div>
   </header>
 
-  <main id="main-content" class="container">
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      <a href="../">Home</a>
-      <span class="divider">/</span>
-      <span class="current">Docker Deployment</span>
-    </nav>
+  <main id="main-content">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../">Home</a>
+        <span class="divider">/</span>
+        <span class="current">Docker</span>
+      </nav>
 
-    <header class="article-header">
-      <h1>Docker Deployment &amp; Hardened Architecture</h1>
-      <div class="article-meta">
-        <span>Engineered by <strong>NavyaXdev</strong></span>
-        <span>&bull;</span>
-        <span>Docker Compose v2</span>
-        <span>&bull;</span>
-        <span>Unprivileged UID: 1000</span>
-      </div>
-    </header>
+      <section class="section" style="padding-top: 1rem;">
+        <div class="section-badge">CONTAINER HARDENING</div>
+        <h1 style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 1rem;">
+          Hardened Architecture. <br>
+          <span class="gradient-text">Rootless Docker Deployment.</span>
+        </h1>
+        <p class="section-lead" style="margin-left: 0; text-align: left; max-width: 820px;">
+          Mornye Network Storage is engineered around the principle of least privilege. In contrast to legacy container images running as UID 0 (root), Mornye enforces strict non-root execution (UID 1000) with all Linux capabilities dropped.
+        </p>
 
-    <article class="content-body">
-      <p>Mornye Network Storage is built strictly following the principle of least privilege. In contrast to many containerized NAS apps that run their inner processes as <code>root</code> (UID 0), Mornye enforces strict non-root operation with an unprivileged system user (<code>mornye</code>, UID/GID 1000) and dropped Linux kernel capabilities.</p>
-
-      <h2>Production Compose Specification (`compose.yaml`)</h2>
-      <p>Mornye utilizes a streamlined, hardened Docker Compose service configuration:</p>
-
-      <pre><code>services:
+        <!-- Compose Specification Card -->
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-top: 2.5rem; margin-bottom: 1rem;">Production Compose Specification (compose.yaml)</h2>
+        <div class="terminal-card" style="margin-bottom: 2.5rem;">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <span class="dot-red"></span>
+              <span class="dot-yellow"></span>
+              <span class="dot-green"></span>
+            </div>
+            <span class="terminal-title">yaml — compose.yaml</span>
+            <button class="copy-btn" data-target="compose-spec" aria-label="Copy compose specification">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Copy</span>
+            </button>
+          </div>
+          <div class="terminal-body">
+            <pre><code id="compose-spec">services:
   mornye-webdav:
     build:
       context: .
@@ -144,85 +159,132 @@
       timeout: 5s
       retries: 3
       start_period: 10s</code></pre>
+          </div>
+        </div>
 
-      <h2>Host Port Binding &amp; Port Protection</h2>
-      <p>Mornye maps host port <code>8001</code> to container port <code>8000</code> by default:</p>
-      <ul>
-        <li><strong>Protected Coexistence:</strong> If your host is running another service on port 8000 (such as a local API bridge, legacy server, or proxy), Mornye will not collide with it or terminate it.</li>
-        <li><strong>Loopback Isolation:</strong> The port is bound explicitly to <code>127.0.0.1</code> (loopback) rather than <code>0.0.0.0</code> (public WAN). This prevents inadvertent exposure to local network scanners or unsecured Wi-Fi.</li>
-      </ul>
+        <!-- Port Protection Highlights -->
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">Port 8001 Coexistence &amp; Loopback Protection</h2>
+        <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+          <div class="luxury-card">
+            <div style="color: var(--accent-cyan); font-weight: 700; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 0.5rem;">Protected Coexistence</div>
+            <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem;">Host Port 8001 Shield</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0; line-height: 1.6;">
+              Mornye maps host port <code>8001</code> to container port <code>8000</code> by default. If your host is running Icecast relays, dev servers, or proxies on port 8000, Mornye coexists harmoniously without conflicts.
+            </p>
+          </div>
+          <div class="luxury-card">
+            <div style="color: var(--accent-cyan); font-weight: 700; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 0.5rem;">Network Isolation</div>
+            <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem;">Strict 127.0.0.1 Loopback</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0; line-height: 1.6;">
+              The container port binds exclusively to <code>127.0.0.1</code> instead of <code>0.0.0.0</code>. Unauthenticated network sniffers or public interfaces cannot reach raw WebDAV sockets directly.
+            </p>
+          </div>
+        </div>
 
-      <h2>Volume Mounts &amp; Permission Hardening</h2>
-      <p>Mornye maps three primary directories from the host filesystem into the container:</p>
+        <!-- Volume Mounts Table -->
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">Volume Mounts &amp; POSIX Permissions</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+          Persistent directories on the host filesystem are mapped with strict permission boundaries:
+        </p>
 
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Host Directory</th>
-              <th>Container Path</th>
-              <th>Owner / Permissions</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>./database</code></td>
-              <td><code>/data</code></td>
-              <td><code>1000:1000 (0700)</code></td>
-              <td>SQLite <code>mornye.db</code> database, WAL journals, and virtual folder indices</td>
-            </tr>
-            <tr>
-              <td><code>./storage</code></td>
-              <td><code>/storage</code></td>
-              <td><code>1000:1000 (0700)</code></td>
-              <td>Physical storage repository for uploaded files and audio media</td>
-            </tr>
-            <tr>
-              <td><code>./logs</code></td>
-              <td><code>/logs</code></td>
-              <td><code>1000:1000 (0700)</code></td>
-              <td>WebDAV access logs and daemon runtime logs</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+        <div class="table-wrapper" style="margin-bottom: 3rem;">
+          <table>
+            <thead>
+              <tr>
+                <th>Host Directory</th>
+                <th>Container Mount</th>
+                <th>Owner / Permissions</th>
+                <th>Functional Scope</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>./database</code></td>
+                <td><code>/data</code></td>
+                <td><code>1000:1000 (0700)</code></td>
+                <td>SQLite <code>mornye.db</code> database, WAL journals, and virtual folder collections</td>
+              </tr>
+              <tr>
+                <td><code>./storage</code></td>
+                <td><code>/storage</code></td>
+                <td><code>1000:1000 (0700)</code></td>
+                <td>Encrypted physical file storage for documents, music, and streaming media</td>
+              </tr>
+              <tr>
+                <td><code>./logs</code></td>
+                <td><code>/logs</code></td>
+                <td><code>1000:1000 (0700)</code></td>
+                <td>Access logs, error telemetry, and daemon execution traces</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-      <h2>Quick Docker CLI Commands</h2>
-      <p>Manage the container stack using standard Docker commands or the unified Mornye CLI:</p>
-
-      <pre><code># Start container in background
+        <!-- Docker CLI Control -->
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">Docker CLI Control Commands</h2>
+        <div class="terminal-card" style="margin-bottom: 2.5rem;">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <span class="dot-red"></span>
+              <span class="dot-yellow"></span>
+              <span class="dot-green"></span>
+            </div>
+            <span class="terminal-title">bash — docker-commands</span>
+            <button class="copy-btn" data-target="docker-cli-cmds" aria-label="Copy Docker commands">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Copy</span>
+            </button>
+          </div>
+          <div class="terminal-body">
+            <pre><code id="docker-cli-cmds"># Start container stack in background
 docker compose up -d
 
-# Verify container status and healthcheck
+# Inspect running container and healthcheck state
 docker compose ps
 
-# View live container logs
+# Follow live WebDAV access & daemon logs
 docker compose logs -f mornye-webdav
 
-# Execute diagnostic probe via Mornye CLI
+# Execute integrated health probe via Mornye CLI
 ./mornye.sh docker health</code></pre>
+          </div>
+        </div>
 
-      <div class="callout">
-        <strong>Self-Healing Permissions</strong>
-        <p>If you encounter <code>Permission Denied</code> when mounting volumes, run:</p>
-        <pre><code>./mornye.sh doctor --fix</code></pre>
-        <p>The diagnostic engine will automatically adjust host directory ownership to match the container's unprivileged UID.</p>
-      </div>
+        <div class="callout callout-info">
+          <strong>Self-Healing Permissions Repair</strong>
+          <p>Encountering permission warnings when mounting volumes? Simply execute:</p>
+          <pre style="margin-top: 0.5rem; margin-bottom: 0.5rem;"><code>./mornye.sh doctor --fix</code></pre>
+          <p>The self-healing diagnostic engine automatically creates a safety snapshot and realigns host directory permissions to match unprivileged UID 1000.</p>
+        </div>
 
-      <div class="callout callout-success">
-        <strong>Repository Compose Specification &amp; Setup:</strong>
-        <p>Inspect the production container configuration on GitHub: <a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/compose.yaml" target="_blank" rel="noopener">compose.yaml</a> or follow our comprehensive <a href="../installation/">Installation Guide</a> for automated setup.</p>
-      </div>
-    </article>
+        <!-- Call to Action Banner -->
+        <div class="cta-banner" style="margin-top: 3rem;">
+          <h2>Deploy Rootless Storage in 2 Minutes</h2>
+          <p>Automate your Docker Compose deployment with our guided setup wizard.</p>
+          <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+            <a href="../installation/" class="btn-primary">View Installation Guide &rarr;</a>
+            <a href="../cloudflare/" class="btn-secondary">Configure Cloudflare Tunnel</a>
+          </div>
+        </div>
+      </section>
+    </div>
   </main>
 
   <footer class="site-footer">
     <div class="footer-container">
       <div class="footer-brand">
-        <h4>Mornye Network Storage</h4>
+        <a href="../" class="brand-link" style="margin-bottom: 1rem; display: inline-flex;">
+          <div class="brand-icon-wrapper">
+            <img src="../assets/logo.svg" alt="Mornye Logo" width="28" height="28">
+          </div>
+          <div class="brand-text">
+            <span class="brand-title">Mornye</span>
+            <span class="brand-badge">Storage</span>
+          </div>
+        </a>
         <p>Open-source, self-hosted private cloud storage and WebDAV engine for Linux. Created and maintained by <strong>NavyaXdev</strong>.</p>
       </div>
+
       <div class="footer-col">
         <h5>Product</h5>
         <ul>
@@ -233,6 +295,7 @@ docker compose logs -f mornye-webdav
           <li><a href="../download/">Download</a></li>
         </ul>
       </div>
+
       <div class="footer-col">
         <h5>Resources</h5>
         <ul>
@@ -240,17 +303,22 @@ docker compose logs -f mornye-webdav
           <li><a href="../guides/">Guides &amp; Tutorials</a></li>
           <li><a href="../faq/">FAQ</a></li>
           <li><a href="../about/">About the Creator</a></li>
+          <li><a href="../feed.xml">RSS Feed</a></li>
         </ul>
       </div>
+
       <div class="footer-col">
         <h5>Open Source</h5>
         <ul>
-          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage" target="_blank" rel="noopener">GitHub Repository</a></li>
-          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></li>
-          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/SECURITY.md" target="_blank" rel="noopener">Security Policy</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security Policy</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">Contributing</a></li>
+          <li><a href="../llms.txt">llms.txt</a></li>
         </ul>
       </div>
     </div>
+
     <div class="footer-bottom">
       <p>&copy; 2026 NavyaXdev. Released under the MIT License.</p>
       <p>Official Project Website &bull; Built with semantic HTML &amp; CSS &bull; Zero Trackers</p>
@@ -260,4 +328,3 @@ docker compose logs -f mornye-webdav
   <script src="../assets/main.js"></script>
 </body>
 </html>
-

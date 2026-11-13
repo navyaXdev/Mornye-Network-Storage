@@ -72,9 +72,14 @@
 
   <header class="site-header">
     <div class="nav-container">
-      <a href="../../" class="brand-link">
-        <div class="brand-logo">M</div>
-        <span>Mornye Storage</span>
+      <a href="../../" class="brand-link" aria-label="Mornye Network Storage Homepage">
+        <div class="brand-icon-wrapper">
+          <img src="../../assets/logo.svg" alt="Mornye Network Storage Emblem" width="28" height="28">
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">Mornye</span>
+          <span class="brand-badge">Storage</span>
+        </div>
       </a>
 
       <nav aria-label="Main Navigation">
@@ -92,7 +97,7 @@
 
       <div class="nav-actions">
         <a href="https://github.com/navyaXdev/Mornye-Network-Storage" class="btn-github" target="_blank" rel="noopener noreferrer">
-          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
           <span>GitHub</span>
         </a>
         <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">&#9776;</button>
@@ -100,130 +105,212 @@
     </div>
   </header>
 
-  <main id="main-content" class="container">
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      <a href="../../">Home</a>
-      <span class="divider">/</span>
-      <a href="../../guides/">Guides</a>
-      <span class="divider">/</span>
-      <span class="current">Install on Kali Linux</span>
-    </nav>
+  <main id="main-content">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../../">Home</a>
+        <span class="divider">/</span>
+        <a href="../../guides/">Guides</a>
+        <span class="divider">/</span>
+        <span class="current">Kali Linux</span>
+      </nav>
 
-    <header class="article-header">
-      <h1>How to Install Mornye Network Storage on Kali Linux Step-by-Step</h1>
-      <div class="article-meta">
-        <span>Author: <strong>NavyaXdev</strong></span>
-        <span>&bull;</span>
-        <span>Target: <strong>Kali Linux Rolling (x86_64, Kernel 7.1.5+)</strong></span>
-        <span>&bull;</span>
-        <span>Read Time: <strong>9 min</strong></span>
-      </div>
-    </header>
+      <section class="section" style="padding-top: 1rem;">
+        <div class="section-badge">DISTRIBUTION DEPLOYMENT</div>
+        <h1 style="font-size: clamp(1.85rem, 3.5vw, 2.75rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 1rem;">
+          How to Install Mornye on <br>
+          <span class="gradient-text">Kali Linux Step-by-Step</span>
+        </h1>
+        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 2rem; color: var(--text-muted); font-size: 0.85rem;">
+          <span>Author: <strong style="color: #fff;">NavyaXdev</strong></span>
+          <span>&bull;</span>
+          <span>Platform: <strong style="color: var(--accent-cyan);">Kali Linux Rolling (Kernel 7.1.5+)</strong></span>
+          <span>&bull;</span>
+          <span>Read Time: <strong style="color: #fff;">9 min</strong></span>
+        </div>
 
-    <article class="content-body">
-      <p>Kali Linux is globally recognized as the premiere distribution for security research, digital forensics, and penetration testing. However, security researchers and lab engineers frequently require a secure, self-hosted file vault and media repository on their Kali workstations or headless servers. Setting up cloud storage on Kali has historically been frustrating due to strict upstream Debian package pinning, bleeding-edge kernels (such as Kernel 7.1.5+), and port conflicts with penetration testing listeners (e.g., Metasploit, Burp Suite, or custom HTTP bridges).</p>
+        <div class="luxury-card" style="margin-bottom: 2.5rem;">
+          <p style="color: var(--text-secondary); line-height: 1.8; margin-bottom: 1rem;">
+            Kali Linux is globally recognized as the premiere distribution for security research, digital forensics, and penetration testing. However, security researchers frequently require a secure, self-hosted file vault and media repository on their workstations or remote VPS instances. Setting up cloud storage on Kali has historically been frustrating due to strict upstream Debian package pinning, bleeding-edge kernels (such as Kernel 7.1.5+), and port conflicts with penetration testing listeners (such as Metasploit, Burp Suite, or custom HTTP bridges).
+          </p>
+          <p style="color: var(--text-secondary); line-height: 1.8; margin: 0;">
+            This tutorial demonstrates how to deploy <strong>Mornye Network Storage</strong> on Kali Linux Rolling with non-root Docker UID 1000, host port 8001 coexistence, and automated Cloudflare Tunnels.
+          </p>
+        </div>
 
-      <p>In this comprehensive tutorial, you will learn how to deploy <strong>Mornye Network Storage</strong> on Kali Linux Rolling. We will cover environment preparation, resolving permission issues with unprivileged Docker containers (UID: 1000), configuring port coexistence on port 8001, setting up Argon2id WebDAV authentication, and enabling encrypted Cloudflare Tunnels.</p>
+        <!-- Prerequisites Grid -->
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">Prerequisites &amp; Environment Verification</h2>
+        <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.25rem;">
+            <div style="color: var(--accent-cyan); font-weight: 700; font-size: 0.85rem; margin-bottom: 0.25rem;">DISTRIBUTION</div>
+            <p style="color: #fff; font-weight: 600; margin: 0;">Kali Linux Rolling (2024.x – 2026.x)</p>
+          </div>
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.25rem;">
+            <div style="color: var(--accent-cyan); font-weight: 700; font-size: 0.85rem; margin-bottom: 0.25rem;">ARCHITECTURE</div>
+            <p style="color: #fff; font-weight: 600; margin: 0;">x86_64 (amd64) or ARM64</p>
+          </div>
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.25rem;">
+            <div style="color: var(--accent-cyan); font-weight: 700; font-size: 0.85rem; margin-bottom: 0.25rem;">PRIVILEGES</div>
+            <p style="color: #fff; font-weight: 600; margin: 0;">Sudo or root shell access</p>
+          </div>
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.25rem;">
+            <div style="color: var(--accent-cyan); font-weight: 700; font-size: 0.85rem; margin-bottom: 0.25rem;">STORAGE</div>
+            <p style="color: #fff; font-weight: 600; margin: 0;">At least 2.5 GB free disk space</p>
+          </div>
+        </div>
 
-      <h2>Prerequisites &amp; Environment Verification</h2>
-      <p>Before beginning, ensure your Kali Linux installation meets the following baseline requirements:</p>
+        <!-- Step 1 -->
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">Step 1: Update APT Repositories &amp; Core Tools</h2>
+        <div class="terminal-card" style="margin-bottom: 2.5rem;">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <span class="dot-red"></span>
+              <span class="dot-yellow"></span>
+              <span class="dot-green"></span>
+            </div>
+            <span class="terminal-title">bash — apt-update</span>
+            <button class="copy-btn" data-target="kali-step1" aria-label="Copy Step 1 command">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Copy</span>
+            </button>
+          </div>
+          <div class="terminal-body">
+            <pre><code id="kali-step1">sudo apt update &amp;&amp; sudo apt install -y curl git ca-certificates gnupg lsb-release</code></pre>
+          </div>
+        </div>
 
-      <ul>
-        <li><strong>Distribution:</strong> Kali Linux Rolling (2024.x – 2026.x).</li>
-        <li><strong>Architecture:</strong> <code>x86_64</code> (amd64) or <code>aarch64</code> (e.g. Raspberry Pi Kali build).</li>
-        <li><strong>User Privileges:</strong> Standard user with <code>sudo</code> privileges or root.</li>
-        <li><strong>Available Disk Space:</strong> At least 2.5 GB free disk space.</li>
-      </ul>
-
-      <p>Verify your kernel and architecture in the Kali terminal:</p>
-      <pre><code>uname -srm
-# Example output: Linux 7.1.5+kali-amd64 x86_64</code></pre>
-
-      <h2>Step 1: Update APT Repositories &amp; Install Prerequisites</h2>
-      <p>Mornye includes an automated APT installer (<code>installers/apt.sh</code>), but updating your local package indices ensures seamless Docker Engine installation:</p>
-
-      <pre><code>sudo apt update &amp;&amp; sudo apt install -y curl git ca-certificates gnupg lsb-release</code></pre>
-
-      <h2>Step 2: Clone the Mornye Network Storage Repository</h2>
-      <p>Clone the official GitHub repository created by <strong>NavyaXdev</strong> and enter the project directory:</p>
-
-      <pre><code>git clone https://github.com/navyaXdev/Mornye-Network-Storage.git
+        <!-- Step 2 -->
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">Step 2: Clone the Official Repository</h2>
+        <div class="terminal-card" style="margin-bottom: 2.5rem;">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <span class="dot-red"></span>
+              <span class="dot-yellow"></span>
+              <span class="dot-green"></span>
+            </div>
+            <span class="terminal-title">bash — clone-repo</span>
+            <button class="copy-btn" data-target="kali-step2" aria-label="Copy Step 2 commands">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Copy</span>
+            </button>
+          </div>
+          <div class="terminal-body">
+            <pre><code id="kali-step2">git clone https://github.com/navyaXdev/Mornye-Network-Storage.git
 cd Mornye-Network-Storage
 chmod +x setup.sh mornye.sh</code></pre>
+          </div>
+        </div>
 
-      <h2>Step 3: Launch the 6-Stage Automated Setup Wizard</h2>
-      <p>Launch the interactive Mornye setup engine:</p>
+        <!-- Step 3 -->
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">Step 3: Launch the 6-Stage Automated Setup Wizard</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+          Launch the interactive setup wizard. The script automatically detects Kali Linux via <code>/etc/os-release</code>, installs Docker via native channels, provisions hardened directories, and configures authentication:
+        </p>
+        <div class="terminal-card" style="margin-bottom: 2.5rem;">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <span class="dot-red"></span>
+              <span class="dot-yellow"></span>
+              <span class="dot-green"></span>
+            </div>
+            <span class="terminal-title">bash — mornye-install</span>
+            <button class="copy-btn" data-target="kali-step3" aria-label="Copy Step 3 command">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Copy</span>
+            </button>
+          </div>
+          <div class="terminal-body">
+            <pre><code id="kali-step3">./mornye.sh install</code></pre>
+          </div>
+        </div>
 
-      <pre><code>./mornye.sh install</code></pre>
-
-      <p>The installer will automatically execute the following stages:</p>
-      <ol>
-        <li><strong>System Audit:</strong> Detects Kali Linux via <code>/etc/os-release</code> and routes dependency installation through <code>installers/apt.sh</code>.</li>
-        <li><strong>Docker Verification:</strong> Checks for Docker Engine and the Docker Compose v2 plugin. If missing, it installs the official Kali docker packages (<code>docker.io</code>, <code>docker-compose-plugin</code>).</li>
-        <li><strong>Storage Volume Provisioning:</strong> Creates the host directories (<code>database/</code>, <code>storage/</code>, <code>logs/</code>, <code>backups/</code>) and hardens ownership to UID <code>1000:1000</code> with <code>chmod 700</code>.</li>
-        <li><strong>WebDAV Authentication:</strong> Prompts you to configure WebDAV credentials. You can choose to generate a cryptographically secure random password or specify your own custom secret.</li>
-        <li><strong>Container Build:</strong> Compiles the hardened rootless <code>mornye-webdav</code> image.</li>
-        <li><strong>Ingress Selection:</strong> Choose between Local LAN mode (<code>http://127.0.0.1:8001/dav/</code>), an ephemeral Quick Tunnel, or a permanent Cloudflare Tunnel.</li>
-      </ol>
-
-      <h2>Understanding Kali Linux Port Coexistence (`8001:8000`)</h2>
-      <p>A common pitfall on Kali Linux systems is port collision. Many security researchers run local web hooks, reverse shells, or legacy daemons that occupy TCP port <code>8000</code>. Mornye prevents collisions by binding to <strong>host port 8001</strong> while routing internally to port 8000 within the Docker bridge:</p>
-
-      <pre><code># Check port binding
+        <!-- Port Coexistence Section -->
+        <div class="luxury-card" style="margin-bottom: 2.5rem;">
+          <span class="category-badge">KALI SPECIAL FEATURE</span>
+          <h2 style="font-size: 1.35rem; font-weight: 700; margin: 0.5rem 0;">Protected Port Coexistence (8001:8000)</h2>
+          <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 1rem;">
+            Security professionals running Kali frequently have local testing tools occupying port 8000 (such as local staging hooks, proxy listeners, or debug servers). Mornye maps host port <code>8001</code> to container port <code>8000</code>, ensuring peaceful coexistence without port collisions:
+          </p>
+          <div class="terminal-card" style="margin-bottom: 0;">
+            <div class="terminal-header">
+              <div class="terminal-dots">
+                <span class="dot-red"></span>
+                <span class="dot-yellow"></span>
+                <span class="dot-green"></span>
+              </div>
+              <span class="terminal-title">bash — verify-ports</span>
+            </div>
+            <div class="terminal-body">
+              <pre><code># Check active port binding
 ./mornye.sh ports
-# Output shows: 127.0.0.1:8001 -> container port 8000</code></pre>
+# Output shows: 127.0.0.1:8001 -> container:8000</code></pre>
+            </div>
+          </div>
+        </div>
 
-      <p>This allows Mornye to run simultaneously alongside existing port 8000 processes with zero service termination or interference.</p>
+        <!-- Permission Denied Fix -->
+        <div class="callout callout-info" style="margin-bottom: 2.5rem;">
+          <strong>Self-Healing Fix for Docker Permission Denied:</strong>
+          <p style="margin: 0.5rem 0;">If you previously ran commands with <code>sudo</code>, host directories might be owned by UID 0 (root). To realign permissions to unprivileged UID 1000 automatically:</p>
+          <pre style="margin-bottom: 0.5rem;"><code>./mornye.sh doctor --fix</code></pre>
+          <p style="margin: 0; font-size: 0.85rem;">The doctor creates a safety snapshot and runs <code>chown -R 1000:1000 ./database ./storage ./logs</code> safely.</p>
+        </div>
 
-      <h2>Troubleshooting: Resolving Docker `/data` Permission Denied</h2>
-      <p>On Kali Linux systems where the repository was previously cloned or manipulated with <code>sudo</code>, host directories might mistakenly be owned by <code>root:root (UID 0)</code>. Because Mornye strictly executes as unprivileged user <code>mornye (UID 1000)</code>, this can cause:</p>
-
-      <pre><code>[*] Mornye Container Bootstrapping...
-mkdir: cannot create directory '/data': Permission denied</code></pre>
-
-      <p>To resolve this instantly, use Mornye's automated self-healing diagnostic command:</p>
-
-      <pre><code>./mornye.sh doctor --fix</code></pre>
-
-      <p>The diagnostic engine will inspect the permissions, detect the UID mismatch, create a safety backup, and correctly execute:</p>
-      <pre><code>sudo chown -R 1000:1000 ./database ./storage ./logs
-sudo chmod 700 ./database ./storage ./logs</code></pre>
-
-      <h2>Step 4: End-to-End Service Verification</h2>
-      <p>Verify that your Mornye installation is healthy and ready for file transfers:</p>
-
-      <pre><code># 1. Inspect complete system diagnostic
+        <!-- Step 4 -->
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">Step 4: End-to-End Health Verification</h2>
+        <div class="terminal-card" style="margin-bottom: 3rem;">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <span class="dot-red"></span>
+              <span class="dot-yellow"></span>
+              <span class="dot-green"></span>
+            </div>
+            <span class="terminal-title">bash — health-diagnostics</span>
+            <button class="copy-btn" data-target="kali-step4" aria-label="Copy health commands">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Copy</span>
+            </button>
+          </div>
+          <div class="terminal-body">
+            <pre><code id="kali-step4"># Run complete 11-category system diagnostic
 ./mornye.sh doctor
 
-# 2. Probe the WebDAV HTTP endpoint
+# Probe WebDAV daemon health
 ./mornye.sh health
 
-# 3. Test WebDAV Basic Authentication (Argon2id)
-./mornye.sh webdav test
+# Test WebDAV authentication boundary
+./mornye.sh webdav test</code></pre>
+          </div>
+        </div>
 
-# 4. View real-time container dashboard
-./mornye.sh dashboard</code></pre>
-
-      <h2>Step 5: Accessing Your Storage</h2>
-      <p>You can now connect to your WebDAV storage:</p>
-      <ul>
-        <li><strong>From Kali Linux:</strong> Open Thunar or GNOME Files, press <code>Ctrl+L</code>, and enter: <code>dav://127.0.0.1:8001/dav/</code></li>
-        <li><strong>From Remote Clients (Windows/macOS/Mobile):</strong> Use your Cloudflare Tunnel URL: <code>https://mornye.yourdomain.com/dav/</code></li>
-      </ul>
-
-      <div class="callout callout-success">
-        <strong>Kali Linux Deployment Complete!</strong>
-        <p>Your Mornye Network Storage instance is fully operational with rootless container security, Argon2id encryption, and automated diagnostics.</p>
-      </div>
-    </article>
+        <!-- Call to Action Banner -->
+        <div class="cta-banner">
+          <h2>Connect Your Desktop Devices</h2>
+          <p>Mount your Kali Mornye storage server natively on Windows, macOS, or mobile.</p>
+          <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+            <a href="../../guides/how-to-connect-windows-to-mornye-webdav/" class="btn-primary">Windows WebDAV Setup &rarr;</a>
+            <a href="../../cloudflare/" class="btn-secondary">Configure Cloudflare Tunnel</a>
+          </div>
+        </div>
+      </section>
+    </div>
   </main>
 
   <footer class="site-footer">
     <div class="footer-container">
       <div class="footer-brand">
-        <h4>Mornye Network Storage</h4>
+        <a href="../../" class="brand-link" style="margin-bottom: 1rem; display: inline-flex;">
+          <div class="brand-icon-wrapper">
+            <img src="../../assets/logo.svg" alt="Mornye Logo" width="28" height="28">
+          </div>
+          <div class="brand-text">
+            <span class="brand-title">Mornye</span>
+            <span class="brand-badge">Storage</span>
+          </div>
+        </a>
         <p>Open-source, self-hosted private cloud storage and WebDAV engine for Linux. Created and maintained by <strong>NavyaXdev</strong>.</p>
       </div>
+
       <div class="footer-col">
         <h5>Product</h5>
         <ul>
@@ -234,6 +321,7 @@ sudo chmod 700 ./database ./storage ./logs</code></pre>
           <li><a href="../../download/">Download</a></li>
         </ul>
       </div>
+
       <div class="footer-col">
         <h5>Resources</h5>
         <ul>
@@ -241,17 +329,22 @@ sudo chmod 700 ./database ./storage ./logs</code></pre>
           <li><a href="../../guides/">Guides &amp; Tutorials</a></li>
           <li><a href="../../faq/">FAQ</a></li>
           <li><a href="../../about/">About the Creator</a></li>
+          <li><a href="../../feed.xml">RSS Feed</a></li>
         </ul>
       </div>
+
       <div class="footer-col">
         <h5>Open Source</h5>
         <ul>
-          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage" target="_blank" rel="noopener">GitHub Repository</a></li>
-          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></li>
-          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/SECURITY.md" target="_blank" rel="noopener">Security Policy</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security Policy</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">Contributing</a></li>
+          <li><a href="../../llms.txt">llms.txt</a></li>
         </ul>
       </div>
     </div>
+
     <div class="footer-bottom">
       <p>&copy; 2026 NavyaXdev. Released under the MIT License.</p>
       <p>Official Project Website &bull; Built with semantic HTML &amp; CSS &bull; Zero Trackers</p>
@@ -261,4 +354,3 @@ sudo chmod 700 ./database ./storage ./logs</code></pre>
   <script src="../../assets/main.js"></script>
 </body>
 </html>
-

@@ -72,9 +72,14 @@
 
   <header class="site-header">
     <div class="nav-container">
-      <a href="../../" class="brand-link">
-        <div class="brand-logo">M</div>
-        <span>Mornye Storage</span>
+      <a href="../../" class="brand-link" aria-label="Mornye Network Storage Homepage">
+        <div class="brand-icon-wrapper">
+          <img src="../../assets/logo.svg" alt="Mornye Network Storage Emblem" width="28" height="28">
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">Mornye</span>
+          <span class="brand-badge">Storage</span>
+        </div>
       </a>
 
       <nav aria-label="Main Navigation">
@@ -92,7 +97,7 @@
 
       <div class="nav-actions">
         <a href="https://github.com/navyaXdev/Mornye-Network-Storage" class="btn-github" target="_blank" rel="noopener noreferrer">
-          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
           <span>GitHub</span>
         </a>
         <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">&#9776;</button>
@@ -100,55 +105,92 @@
     </div>
   </header>
 
-  <main id="main-content" class="container">
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      <a href="../../">Home</a>
-      <span class="divider">/</span>
-      <a href="../../guides/">Guides</a>
-      <span class="divider">/</span>
-      <span class="current">Build DIY Linux Storage Server</span>
-    </nav>
+  <main id="main-content">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../../">Home</a>
+        <span class="divider">/</span>
+        <a href="../../guides/">Guides</a>
+        <span class="divider">/</span>
+        <span class="current">Build DIY Linux Storage Server</span>
+      </nav>
 
-    <header class="article-header">
-      <h1>Build a Self-Hosted Linux Network Storage Server with Mornye</h1>
-      <div class="article-meta">
-        <span>Author: <strong>NavyaXdev</strong></span>
-        <span>&bull;</span>
-        <span>Architecture: <strong>Hardware, Linux &amp; Docker</strong></span>
-        <span>&bull;</span>
-        <span>Read Time: <strong>11 min</strong></span>
-      </div>
-    </header>
+      <section class="section" style="padding-top: 1rem;">
+        <div class="section-badge">HARDWARE &amp; ARCHITECTURE</div>
+        <h1 style="font-size: clamp(1.85rem, 3.5vw, 2.75rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 1rem;">
+          Build a Self-Hosted Linux <br>
+          <span class="gradient-text">Network Storage Server with Mornye</span>
+        </h1>
+        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 2rem; color: var(--text-muted); font-size: 0.85rem;">
+          <span>Author: <strong style="color: #fff;">NavyaXdev</strong></span>
+          <span>&bull;</span>
+          <span>Scope: <strong style="color: var(--accent-cyan);">Hardware, Linux &amp; Docker</strong></span>
+          <span>&bull;</span>
+          <span>Read Time: <strong style="color: #fff;">11 min</strong></span>
+        </div>
 
-    <article class="content-body">
-      <p>Commercial network-attached storage (NAS) appliances from vendors such as Synology, QNAP, or Asustor have become increasingly expensive, restrictive, and dependent on proprietary cloud services. Many modern commercial NAS platforms lock users into proprietary disk formats, require registered vendor accounts for remote access, and bundle heavy, closed-source operating systems that consume hardware resources.</p>
+        <div class="luxury-card" style="margin-bottom: 2.5rem;">
+          <p style="color: var(--text-secondary); line-height: 1.8; margin-bottom: 1rem;">
+            Commercial network-attached storage (NAS) appliances from vendors such as Synology, QNAP, or Asustor have become increasingly expensive, restrictive, and dependent on proprietary cloud services. Many modern commercial NAS platforms lock users into proprietary disk formats, require registered vendor accounts for remote access, and bundle heavy, closed-source operating systems that consume hardware resources.
+          </p>
+          <p style="color: var(--text-secondary); line-height: 1.8; margin: 0;">
+            Building your own self-hosted private cloud storage server on Linux offers complete data sovereignty, superior performance, lower total cost of ownership, and ultimate flexibility. By combining standard Linux distributions (Debian, Ubuntu, or Kali), Docker containerization, and <strong>Mornye Network Storage</strong>, you can turn any repurposed office desktop, mini PC (such as an Intel N100), or rackmount home server into an enterprise-grade private storage vault.
+          </p>
+        </div>
 
-      <p>Building your own self-hosted private cloud storage server on Linux offers complete data sovereignty, superior performance, lower total cost of ownership, and ultimate flexibility. By combining standard Linux distributions (Debian, Ubuntu, or Kali), Docker containerization, and <strong>Mornye Network Storage</strong>, you can turn any repurposed office desktop, mini PC (such as an Intel N100), or rackmount home server into an enterprise-grade private storage vault.</p>
+        <!-- Section 1: Hardware Selection -->
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">1. Hardware Selection: Finding the Right Balance</h2>
+        <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem; margin-bottom: 3rem;">
+          <div class="luxury-card">
+            <span class="category-badge">RECOMMENDED</span>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0.5rem 0;">Intel N100 Mini PC</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; margin: 0;">
+              Under 6W idle power consumption. 4 modern cores, 16 GB RAM, dual 2.5GbE LAN ports, and native NVMe/SATA slots for silent, low-power continuous operation.
+            </p>
+          </div>
+          <div class="luxury-card">
+            <span class="category-badge">BUDGET REUSE</span>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0.5rem 0;">Repurposed Desktop</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; margin: 0;">
+              Any older Intel Core i3/i5 (6th gen+) or AMD Ryzen desktop with multiple 3.5" SATA bays for high-capacity multi-terabyte arrays.
+            </p>
+          </div>
+          <div class="luxury-card">
+            <span class="category-badge">SBC CLUSTERS</span>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0.5rem 0;">Raspberry Pi 5 / 4</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; margin: 0;">
+              Pair Raspberry Pi 5 (4GB/8GB) with an NVMe PCIe hat or USB 3.0 enclosure for a compact, ultra-silent private cloud node.
+            </p>
+          </div>
+          <div class="luxury-card">
+            <span class="category-badge">STORAGE MEDIA</span>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0.5rem 0;">NAS-Rated Drives</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; margin: 0;">
+              CMR-based drives (WD Red Plus, Seagate IronWolf) for long-term vibration resistance, or NVMe SSDs for lightning-fast random I/O.
+            </p>
+          </div>
+        </div>
 
-      <h2>1. Hardware Selection: Finding the Right Balance</h2>
-      <p>Because Mornye is exceptionally lean (consuming only ~60 MB to 120 MB of idle RAM), your hardware requirements are remarkably modest compared to heavy setups like TrueNAS or Nextcloud:</p>
-
-      <ul>
-        <li><strong>Budget / Low Power (Recommended):</strong> Intel N100 / N200 / N97 Mini PC (e.g., Beelink, GMKtec). Idle power consumption is under 6 Watts, with 4 modern cores and 16 GB DDR4/DDR5 RAM, easily handling multi-gigabit WebDAV transfers and simultaneous streaming.</li>
-        <li><strong>Repurposed Hardware:</strong> Any old desktop PC or laptop with an Intel Core i3/i5 (6th gen or newer) or AMD Ryzen processor.</li>
-        <li><strong>Single Board Computers (SBCs):</strong> Raspberry Pi 5 or 4 (4GB/8GB) paired with an NVMe PCIe baseboard or USB 3.0 external storage enclosure.</li>
-        <li><strong>Drives:</strong> SATA SSDs or NVMe drives for fast random I/O and silent operation; dedicated NAS-rated HDDs (Seagate IronWolf, WD Red Plus) for high-capacity multi-terabyte arrays.</li>
-      </ul>
-
-      <h2>2. Operating System &amp; Partition Preparation</h2>
-      <p>We recommend a standard minimal installation of <strong>Debian 12 Bookworm</strong> or <strong>Ubuntu Server 24.04 LTS</strong>. Both provide stable long-term kernels, proven package repositories, and native Docker support.</p>
-
-      <h3>Formatting the Dedicated Storage Partition</h3>
-      <p>For dedicated storage disks, <code>ext4</code> is the most battle-tested and reliable choice for general POSIX workloads. Identify your storage disk using <code>lsblk</code> and format it:</p>
-
-      <pre><code># Identify disk (e.g., /dev/sdb)
-lsblk
-
-# Create single primary partition using fdisk
-sudo fdisk /dev/sdb
-# Type 'n', 'p', '1', and press Enter through defaults, then 'w' to write.
-
-# Format partition with ext4
+        <!-- Section 2: Partitioning & Auto-Mount -->
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">2. Storage Partitioning &amp; Auto-Mount in `/etc/fstab`</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+          Format your dedicated storage disk with POSIX-standard <code>ext4</code>:
+        </p>
+        <div class="terminal-card" style="margin-bottom: 2rem;">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <span class="dot-red"></span>
+              <span class="dot-yellow"></span>
+              <span class="dot-green"></span>
+            </div>
+            <span class="terminal-title">bash — format-partition</span>
+            <button class="copy-btn" data-target="guide-format" aria-label="Copy format commands">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Copy</span>
+            </button>
+          </div>
+          <div class="terminal-body">
+            <pre><code id="guide-format"># Format dedicated storage partition with ext4
 sudo mkfs.ext4 -L MornyeStorage /dev/sdb1
 
 # Create mount directory
@@ -156,79 +198,164 @@ sudo mkdir -p /mnt/mornye_data
 
 # Retrieve partition UUID
 sudo blkid /dev/sdb1</code></pre>
+          </div>
+        </div>
 
-      <h3>Configure Persistent Auto-Mount in `/etc/fstab`</h3>
-      <p>Add your storage partition to <code>/etc/fstab</code> to guarantee it mounts automatically on boot:</p>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+          Add the partition to <code>/etc/fstab</code> to guarantee auto-mounting on system boot:
+        </p>
+        <div class="terminal-card" style="margin-bottom: 2.5rem;">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <span class="dot-red"></span>
+              <span class="dot-yellow"></span>
+              <span class="dot-green"></span>
+            </div>
+            <span class="terminal-title">bash — fstab-entry</span>
+          </div>
+          <div class="terminal-body">
+            <pre><code># Append to /etc/fstab:
+UUID=your-uuid-here /mnt/mornye_data ext4 defaults,noatime 0 2
 
-      <pre><code>UUID=your-uuid-here /mnt/mornye_data ext4 defaults,noatime 0 2</code></pre>
-
-      <p>Mount and verify:</p>
-      <pre><code>sudo mount -a
+# Mount and verify
+sudo mount -a
 df -h /mnt/mornye_data</code></pre>
+          </div>
+        </div>
 
-      <h2>3. Hardening Ownership for Non-Root Containers</h2>
-      <p>Mornye runs under unprivileged system user UID <code>1000</code>. Secure the mount point so that only the storage engine has access:</p>
-
-      <pre><code>sudo chown -R 1000:1000 /mnt/mornye_data
+        <!-- Section 3: Hardening Permissions -->
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">3. Hardening Permissions for Rootless Docker (UID 1000)</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+          Ensure that the storage mount is owned by unprivileged UID <code>1000</code>:
+        </p>
+        <div class="terminal-card" style="margin-bottom: 2.5rem;">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <span class="dot-red"></span>
+              <span class="dot-yellow"></span>
+              <span class="dot-green"></span>
+            </div>
+            <span class="terminal-title">bash — chown-mount</span>
+            <button class="copy-btn" data-target="guide-chown-mount" aria-label="Copy permission commands">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Copy</span>
+            </button>
+          </div>
+          <div class="terminal-body">
+            <pre><code id="guide-chown-mount">sudo chown -R 1000:1000 /mnt/mornye_data
 sudo chmod 700 /mnt/mornye_data</code></pre>
+          </div>
+        </div>
 
-      <h2>4. Deploying Mornye Network Storage</h2>
-      <p>Now, deploy the Mornye storage stack using the single-line automated setup engine:</p>
-
-      <pre><code>curl -fsSL https://raw.githubusercontent.com/navyaXdev/Mornye-Network-Storage/main/setup.sh | bash</code></pre>
-
-      <p>Or clone the repository directly into your user's home folder:</p>
-
-      <pre><code>git clone https://github.com/navyaXdev/Mornye-Network-Storage.git ~/mornye
+        <!-- Section 4: Deploying Mornye & Linking Storage -->
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">4. Deploying Mornye &amp; Linking Dedicated Storage</h2>
+        <div class="terminal-card" style="margin-bottom: 2.5rem;">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <span class="dot-red"></span>
+              <span class="dot-yellow"></span>
+              <span class="dot-green"></span>
+            </div>
+            <span class="terminal-title">bash — deploy-and-link</span>
+            <button class="copy-btn" data-target="guide-deploy-link" aria-label="Copy deployment commands">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Copy</span>
+            </button>
+          </div>
+          <div class="terminal-body">
+            <pre><code id="guide-deploy-link"># 1. Clone repository
+git clone https://github.com/navyaXdev/Mornye-Network-Storage.git ~/mornye
 cd ~/mornye
 chmod +x setup.sh mornye.sh
-./mornye.sh install</code></pre>
+./mornye.sh install
 
-      <p>To point Mornye's storage volume to your dedicated drive (<code>/mnt/mornye_data</code>), symlink or bind-mount it into Mornye's storage directory:</p>
-
-      <pre><code># Stop service temporarily
+# 2. Stop service and symlink dedicated partition to storage
 ./mornye.sh stop
-
-# Link dedicated drive
 rm -rf storage
 ln -s /mnt/mornye_data storage
-
-# Restart service
 ./mornye.sh start</code></pre>
+          </div>
+        </div>
 
-      <h2>5. Enabling Zero-Trust Remote Access with Cloudflare</h2>
-      <p>Unlike traditional NAS servers that leave port 443 or port 80 exposed to the internet, Mornye connects out to Cloudflare edge nodes through an encrypted QUIC tunnel. In Mornye, run:</p>
+        <!-- Section 5: Zero-Trust Ingress -->
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">5. Zero-Trust Cloudflare Ingress Setup</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+          Eliminate router port forwarding completely:
+        </p>
+        <div class="terminal-card" style="margin-bottom: 2.5rem;">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <span class="dot-red"></span>
+              <span class="dot-yellow"></span>
+              <span class="dot-green"></span>
+            </div>
+            <span class="terminal-title">bash — tunnel-setup</span>
+            <button class="copy-btn" data-target="guide-diy-tunnel" aria-label="Copy tunnel command">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Copy</span>
+            </button>
+          </div>
+          <div class="terminal-body">
+            <pre><code id="guide-diy-tunnel"># Launch guided tunnel provisioning (auto-configures mornye.yourdomain.com)
+./mornye.sh tunnel setup</code></pre>
+          </div>
+        </div>
 
-      <pre><code>./mornye.sh tunnel setup</code></pre>
-
-      <p>Enter your root domain (e.g. <code>homelab.org</code>). Mornye automatically provisions <code>mornye.homelab.org</code>, establishes edge SSL encryption, and routes traffic through the outbound tunnel to local port 8001.</p>
-
-      <h2>6. Ongoing Operations &amp; Automated Hot Backups</h2>
-      <p>Maintain your server using Mornye's integrated CLI toolkit:</p>
-
-      <pre><code># Run full 11-category system health audit
+        <!-- Section 6: Telemetry & Backups -->
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">6. Ongoing Operations &amp; Automated Hot Backups</h2>
+        <div class="terminal-card" style="margin-bottom: 3rem;">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <span class="dot-red"></span>
+              <span class="dot-yellow"></span>
+              <span class="dot-green"></span>
+            </div>
+            <span class="terminal-title">bash — ops-commands</span>
+            <button class="copy-btn" data-target="guide-diy-ops" aria-label="Copy ops commands">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Copy</span>
+            </button>
+          </div>
+          <div class="terminal-body">
+            <pre><code id="guide-diy-ops"># 1. 11-Category system health audit
 ./mornye.sh doctor
 
-# Check real-time hardware telemetry (CPU, RAM, Disk)
+# 2. Real-time CPU, RAM & container telemetry
 ./mornye.sh monitor
 
-# Create hot online database backup snapshot
-./mornye.sh backup create
+# 3. Create zero-downtime hot online SQLite snapshot
+./mornye.sh backup create</code></pre>
+          </div>
+        </div>
 
-# Verify catalog integrity against SHA-256 hashes
-./mornye.sh music verify</code></pre>
-
-      <h2>Conclusion</h2>
-      <p>You now have a fully sovereign, enterprise-grade Linux network storage server running on your own physical hardware. With rootless containerization, cryptographic Argon2id authentication, RFC 4918 WebDAV compliance, and zero-port-forward Cloudflare Tunnels, your private data remains completely private, ultra-fast, and accessible anywhere in the world.</p>
-    </article>
+        <!-- Call to Action Banner -->
+        <div class="cta-banner">
+          <h2>Deploy Sovereign Storage in Minutes</h2>
+          <p>Get your private cloud server running on modern Linux with our automated 2-minute installer.</p>
+          <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+            <a href="../../installation/" class="btn-primary">View Installation Guide &rarr;</a>
+            <a href="../../documentation/" class="btn-secondary">Technical Documentation</a>
+          </div>
+        </div>
+      </section>
+    </div>
   </main>
 
   <footer class="site-footer">
     <div class="footer-container">
       <div class="footer-brand">
-        <h4>Mornye Network Storage</h4>
+        <a href="../../" class="brand-link" style="margin-bottom: 1rem; display: inline-flex;">
+          <div class="brand-icon-wrapper">
+            <img src="../../assets/logo.svg" alt="Mornye Logo" width="28" height="28">
+          </div>
+          <div class="brand-text">
+            <span class="brand-title">Mornye</span>
+            <span class="brand-badge">Storage</span>
+          </div>
+        </a>
         <p>Open-source, self-hosted private cloud storage and WebDAV engine for Linux. Created and maintained by <strong>NavyaXdev</strong>.</p>
       </div>
+
       <div class="footer-col">
         <h5>Product</h5>
         <ul>
@@ -239,6 +366,7 @@ ln -s /mnt/mornye_data storage
           <li><a href="../../download/">Download</a></li>
         </ul>
       </div>
+
       <div class="footer-col">
         <h5>Resources</h5>
         <ul>
@@ -246,17 +374,22 @@ ln -s /mnt/mornye_data storage
           <li><a href="../../guides/">Guides &amp; Tutorials</a></li>
           <li><a href="../../faq/">FAQ</a></li>
           <li><a href="../../about/">About the Creator</a></li>
+          <li><a href="../../feed.xml">RSS Feed</a></li>
         </ul>
       </div>
+
       <div class="footer-col">
         <h5>Open Source</h5>
         <ul>
-          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage" target="_blank" rel="noopener">GitHub Repository</a></li>
-          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></li>
-          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/SECURITY.md" target="_blank" rel="noopener">Security Policy</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security Policy</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">Contributing</a></li>
+          <li><a href="../../llms.txt">llms.txt</a></li>
         </ul>
       </div>
     </div>
+
     <div class="footer-bottom">
       <p>&copy; 2026 NavyaXdev. Released under the MIT License.</p>
       <p>Official Project Website &bull; Built with semantic HTML &amp; CSS &bull; Zero Trackers</p>
@@ -266,4 +399,3 @@ ln -s /mnt/mornye_data storage
   <script src="../../assets/main.js"></script>
 </body>
 </html>
-

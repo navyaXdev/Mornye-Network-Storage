@@ -1,14 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <rect width="64" height="64" rx="14" fill="#090d16"/>
-  <rect x="2" y="2" width="60" height="60" rx="12" fill="none" stroke="#38bdf8" stroke-width="2" stroke-opacity="0.4"/>
-  <rect x="12" y="14" width="40" height="10" rx="3" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
-  <circle cx="18" cy="19" r="2" fill="#34d399"/>
-  <circle cx="24" cy="19" r="2" fill="#38bdf8"/>
-  <rect x="12" y="27" width="40" height="10" rx="3" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
-  <circle cx="18" cy="32" r="2" fill="#34d399"/>
-  <circle cx="24" cy="32" r="2" fill="#38bdf8"/>
-  <rect x="12" y="40" width="40" height="10" rx="3" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
-  <circle cx="18" cy="45" r="2" fill="#34d399"/>
-  <circle cx="24" cy="45" r="2" fill="#38bdf8"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none">
+  <defs>
+    <linearGradient id="fav-primary" x1="6" y1="6" x2="42" y2="42" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="50%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+  <rect width="48" height="48" rx="12" fill="#030712"/>
+  <rect x="1" y="1" width="46" height="46" rx="11" fill="none" stroke="url(#fav-primary)" stroke-width="1.5" stroke-opacity="0.6"/>
+  
+  <!-- Isometric Cube / Platter -->
+  <path d="M24 7L39 15.5V32.5L24 41L9 32.5V15.5L24 7Z" fill="#090d16" stroke="url(#fav-primary)" stroke-width="1.8" stroke-linejoin="round"/>
+  
+  <!-- Stylized M -->
+  <path d="M16 20L20 15V26L16 28V20Z" fill="#38bdf8"/>
+  <path d="M20 15L24 20L28 15L24 11L20 15Z" fill="#67e8f9"/>
+  <path d="M32 20L28 15V26L32 28V20Z" fill="#38bdf8"/>
+  <path d="M24 20L20 24L24 27L28 24L24 20Z" fill="#2563eb"/>
+  
+  <circle cx="24" cy="11" r="1.5" fill="#ffffff"/>
+  <circle cx="16" cy="20" r="1.2" fill="#34d399"/>
+  <circle cx="32" cy="20" r="1.2" fill="#34d399"/>
 </svg>
-

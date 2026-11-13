@@ -64,9 +64,14 @@
 
   <header class="site-header">
     <div class="nav-container">
-      <a href="../" class="brand-link">
-        <div class="brand-logo">M</div>
-        <span>Mornye Storage</span>
+      <a href="../" class="brand-link" aria-label="Mornye Network Storage Homepage">
+        <div class="brand-icon-wrapper">
+          <img src="../assets/logo.svg" alt="Mornye Network Storage Emblem" width="28" height="28">
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">Mornye</span>
+          <span class="brand-badge">Storage</span>
+        </div>
       </a>
 
       <nav aria-label="Main Navigation">
@@ -84,7 +89,7 @@
 
       <div class="nav-actions">
         <a href="https://github.com/navyaXdev/Mornye-Network-Storage" class="btn-github" target="_blank" rel="noopener noreferrer">
-          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
           <span>GitHub</span>
         </a>
         <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">&#9776;</button>
@@ -92,57 +97,119 @@
     </div>
   </header>
 
-  <main id="main-content" class="container">
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      <a href="../">Home</a>
-      <span class="divider">/</span>
-      <span class="current">About</span>
-    </nav>
+  <main id="main-content">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="../">Home</a>
+        <span class="divider">/</span>
+        <span class="current">About</span>
+      </nav>
 
-    <header class="article-header">
-      <h1>About Mornye Network Storage</h1>
-      <div class="article-meta">
-        <span>Project Background &bull; Creator Vision &bull; Security Commitment</span>
-      </div>
-    </header>
+      <section class="section" style="padding-top: 1rem;">
+        <div class="section-badge">PROJECT ARCHITECTURE &amp; ORIGIN</div>
+        <h1 style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 1rem;">
+          Engineering Vision &amp; <br>
+          <span class="gradient-text">Open Source Sovereign Storage</span>
+        </h1>
+        <p class="section-lead" style="margin-left: 0; text-align: left; max-width: 820px;">
+          Mornye Network Storage is an open-source, community-driven project engineered by <strong>NavyaXdev</strong> to give developers, homelab enthusiasts, and sysadmins complete ownership of their data without proprietary cloud subscription locks.
+        </p>
 
-    <article class="content-body">
-      <p><strong>Mornye Network Storage</strong> is an open-source, community-driven project created and engineered by <strong>NavyaXdev</strong>. It was developed to give developers, sysadmins, audio enthusiasts, and home lab operators complete sovereignty over their data without depending on closed proprietary cloud ecosystems.</p>
+        <!-- Three Core Tenets -->
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-top: 2.5rem; margin-bottom: 1.5rem;">Core Engineering Tenets</h2>
+        <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+          <div class="luxury-card">
+            <div class="card-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">Radical Simplicity</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin: 0;">
+              Zero bloat. No complex web apps, no heavy PHP interpreters, and no unnecessary tracking scripts. Just pure, RFC 4918-compliant WebDAV streaming natively into your operating system's file manager.
+            </p>
+          </div>
 
-      <h2>The Engineering Vision</h2>
-      <p>Modern cloud storage solutions have become increasingly bloated, complex, and invasive. Users often need only a reliable, fast, and encrypted private server to store files, sync documents, and stream high-resolution audio libraries across devices. Mornye was designed with three core engineering tenets:</p>
+          <div class="luxury-card">
+            <div class="card-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">Uncompromising Security</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin: 0;">
+              Hardened rootless Docker containerization (UID 1000), OWASP Argon2id password hashing, binary MIME signature inspection, and zero open inbound router ports via Cloudflare Tunnels.
+            </p>
+          </div>
 
-      <ul>
-        <li><strong>Radical Simplicity:</strong> No heavy web dashboards, no complex database clusters, and no unnecessary background analytics. A lightweight, RFC 4918-compliant WebDAV engine that integrates directly into your operating system's native file explorer.</li>
-        <li><strong>Uncompromising Security:</strong> Rootless containers (UID 1000), Argon2id key derivation, binary MIME type enforcement, and zero router port forwarding via Cloudflare Tunnels.</li>
-        <li><strong>Operator Autonomy:</strong> Fully self-contained management through POSIX Bash, hot online backups, and self-healing diagnostic commands.</li>
-      </ul>
+          <div class="luxury-card">
+            <div class="card-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">Operator Autonomy</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin: 0;">
+              Full control via a unified POSIX CLI (<code>./mornye.sh</code>). Zero-downtime hot SQLite database snapshots, automated self-healing repair mechanisms, and full uninstaller safety guarantees.
+            </p>
+          </div>
+        </div>
 
-      <h2>About the Creator &amp; Maintainer: NavyaXdev</h2>
-      <p><strong>NavyaXdev</strong> is an independent software developer focused on systems engineering, Linux infrastructure, network protocols, and privacy-preserving open-source tools. Navya created and actively maintains Mornye Network Storage as a free, transparent, MIT-licensed open-source project.</p>
+        <!-- Creator Profile Card -->
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">About the Creator &amp; Maintainer</h2>
+        <div class="luxury-card" style="margin-bottom: 3rem; display: flex; gap: 2rem; align-items: center; flex-wrap: wrap;">
+          <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800; color: #fff; box-shadow: 0 0 30px rgba(37,99,235,0.4); flex-shrink: 0;">
+            N
+          </div>
+          <div style="flex: 1; min-width: 280px;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+              <h3 style="font-size: 1.35rem; font-weight: 700; margin: 0;">NavyaXdev</h3>
+              <span class="category-badge">LEAD ARCHITECT &amp; AUTHOR</span>
+            </div>
+            <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 1rem;">
+              <strong>NavyaXdev</strong> is an independent software engineer specializing in systems engineering, Linux kernel tools, zero-trust network protocols, and privacy-preserving distributed infrastructure. Navya authored Mornye Network Storage from the ground up and maintains it as a free, transparent, MIT-licensed open-source project.
+            </p>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <a href="https://github.com/navyaXdev" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="font-size: 0.85rem; padding: 0.4rem 0.9rem;">
+                GitHub Profile &rarr;
+              </a>
+              <a href="https://github.com/navyaXdev/Mornye-Network-Storage" target="_blank" rel="noopener noreferrer" class="btn-primary" style="font-size: 0.85rem; padding: 0.4rem 0.9rem;">
+                View Repository
+              </a>
+            </div>
+          </div>
+        </div>
 
-      <h2>Distinct Project Identity (Mornye Network Storage vs Mornye Music App)</h2>
-      <p><strong>Mornye Network Storage</strong> is an open-source Linux self-hosted network storage system and RFC 4918 WebDAV server engineered and maintained by <strong>NavyaXdev</strong>. It is completely independent and separate from the desktop music player application named Mornye (mornyeapp) developed using Flutter and Rust. Mornye Network Storage focuses entirely on server-side private cloud storage infrastructure, rootless Docker containers, POSIX CLI system administration, and Cloudflare Zero-Trust WAN tunneling.</p>
+        <!-- Distinct Project Identity Box -->
+        <div class="callout callout-info" style="margin-bottom: 3rem;">
+          <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Distinct Project Identity</h3>
+          <p style="margin: 0; line-height: 1.7;">
+            <strong>Mornye Network Storage</strong> is an open-source Linux self-hosted network storage system and RFC 4918 WebDAV server engineered and maintained by <strong>NavyaXdev</strong>. It is completely independent and separate from the desktop music player application named Mornye (mornyeapp) developed using Flutter and Rust. Mornye Network Storage focuses entirely on server-side private cloud storage infrastructure, rootless Docker containers, POSIX CLI system administration, and Cloudflare Zero-Trust WAN tunneling.
+          </p>
+        </div>
 
-      <div class="callout">
-        <strong>Connect with the Project &amp; Creator:</strong>
-        <p>Follow development, report issues, and contribute on GitHub:</p>
-        <p style="margin-top: 0.5rem;"><a href="https://github.com/navyaXdev/Mornye-Network-Storage" target="_blank" rel="noopener">github.com/navyaXdev/Mornye-Network-Storage &rarr;</a></p>
-      </div>
-
-      <div class="callout callout-success">
-        <strong>Deploy Mornye Network Storage:</strong>
-        <p>Explore our step-by-step <a href="../installation/">Installation Guide</a>, browse the <a href="../documentation/">Documentation Hub</a>, or inspect the rootless container setup in the <a href="../docker/">Docker Guide</a>.</p>
-      </div>
-    </article>
+        <!-- Call to Action Banner -->
+        <div class="cta-banner">
+          <h2>Ready to Deploy Mornye?</h2>
+          <p>Get started with our automated installation guide and experience sovereign storage today.</p>
+          <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+            <a href="../installation/" class="btn-primary">View Installation Guide &rarr;</a>
+            <a href="../features/" class="btn-secondary">Explore All Features</a>
+          </div>
+        </div>
+      </section>
+    </div>
   </main>
 
   <footer class="site-footer">
     <div class="footer-container">
       <div class="footer-brand">
-        <h4>Mornye Network Storage</h4>
+        <a href="../" class="brand-link" style="margin-bottom: 1rem; display: inline-flex;">
+          <div class="brand-icon-wrapper">
+            <img src="../assets/logo.svg" alt="Mornye Logo" width="28" height="28">
+          </div>
+          <div class="brand-text">
+            <span class="brand-title">Mornye</span>
+            <span class="brand-badge">Storage</span>
+          </div>
+        </a>
         <p>Open-source, self-hosted private cloud storage and WebDAV engine for Linux. Created and maintained by <strong>NavyaXdev</strong>.</p>
       </div>
+
       <div class="footer-col">
         <h5>Product</h5>
         <ul>
@@ -153,6 +220,7 @@
           <li><a href="../download/">Download</a></li>
         </ul>
       </div>
+
       <div class="footer-col">
         <h5>Resources</h5>
         <ul>
@@ -160,17 +228,22 @@
           <li><a href="../guides/">Guides &amp; Tutorials</a></li>
           <li><a href="../faq/">FAQ</a></li>
           <li><a href="../about/">About the Creator</a></li>
+          <li><a href="../feed.xml">RSS Feed</a></li>
         </ul>
       </div>
+
       <div class="footer-col">
         <h5>Open Source</h5>
         <ul>
-          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage" target="_blank" rel="noopener">GitHub Repository</a></li>
-          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></li>
-          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/SECURITY.md" target="_blank" rel="noopener">Security Policy</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security Policy</a></li>
+          <li><a href="https://github.com/navyaXdev/Mornye-Network-Storage/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">Contributing</a></li>
+          <li><a href="../llms.txt">llms.txt</a></li>
         </ul>
       </div>
     </div>
+
     <div class="footer-bottom">
       <p>&copy; 2026 NavyaXdev. Released under the MIT License.</p>
       <p>Official Project Website &bull; Built with semantic HTML &amp; CSS &bull; Zero Trackers</p>
@@ -180,4 +253,3 @@
   <script src="../assets/main.js"></script>
 </body>
 </html>
-
