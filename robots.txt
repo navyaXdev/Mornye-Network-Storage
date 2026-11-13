@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+# Canonical Sitemap
+Sitemap: https://mornye-network-project.navya.dpdns.org/sitemap.xml
+

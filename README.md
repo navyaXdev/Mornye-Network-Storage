@@ -6,7 +6,7 @@
 
 ### Open-Source Linux Self-Hosted Network Storage & RFC 4918 WebDAV Server
 
-[![Official Website](https://img.shields.io/badge/Website-navyaxdev.github.io-blue.svg)](https://navyaxdev.github.io/Mornye-Network-Storage/)
+[![Official Website](https://img.shields.io/badge/Website-mornye--network--project.navya.dpdns.org-blue.svg)](https://mornye-network-project.navya.dpdns.org/)
 [![GitHub Release](https://img.shields.io/github/v/release/navyaXdev/Mornye-Network-Storage?color=blue)](https://github.com/navyaXdev/Mornye-Network-Storage/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![CI Workflow](https://github.com/navyaXdev/Mornye-Network-Storage/actions/workflows/ci.yml/badge.svg)](https://github.com/navyaXdev/Mornye-Network-Storage/actions)
@@ -16,7 +16,7 @@
 [![Auth: Argon2id](https://img.shields.io/badge/Auth-Argon2id-emerald.svg)](SECURITY.md)
 [![Zero-Trust Tunnel](https://img.shields.io/badge/Cloudflare-Zero--Trust%20Tunnel-F38020.svg)](docs/CLOUDFLARE_TUNNEL.md)
 
-[**Official Website**](https://navyaxdev.github.io/Mornye-Network-Storage/) • [**GitHub Repository**](https://github.com/navyaXdev/Mornye-Network-Storage) • [**Documentation**](docs/README.md) • [**Installation Guide**](docs/INSTALLATION.md) • [**Guides & Tutorials**](https://navyaxdev.github.io/Mornye-Network-Storage/guides/) • [**Changelog**](CHANGELOG.md) • [**Security**](SECURITY.md)
+[**Official Website**](https://mornye-network-project.navya.dpdns.org/) • [**GitHub Repository**](https://github.com/navyaXdev/Mornye-Network-Storage) • [**Documentation**](docs/README.md) • [**Installation Guide**](docs/INSTALLATION.md) • [**Guides & Tutorials**](https://mornye-network-project.navya.dpdns.org/guides/) • [**Changelog**](CHANGELOG.md) • [**Security**](SECURITY.md)
 
 </div>
 
@@ -66,7 +66,7 @@ chmod +x setup.sh mornye.sh
 
 The installer automatically audits prerequisites, provisions storage volumes with hardened `chmod 700` permissions, configures WebDAV authentication, builds the container image, provisions Cloudflare Tunnels (if selected), and validates end-to-end service health.
 
-For comprehensive prerequisites and distribution-specific flags, explore the [Online Installation Guide](https://navyaxdev.github.io/Mornye-Network-Storage/installation/) and [docs/INSTALLATION.md](docs/INSTALLATION.md).
+For comprehensive prerequisites and distribution-specific flags, explore the [Online Installation Guide](https://mornye-network-project.navya.dpdns.org/installation/) and [docs/INSTALLATION.md](docs/INSTALLATION.md).
 
 ---
 
@@ -225,7 +225,7 @@ Connect your desktop and mobile devices via RFC 4918 WebDAV:
 | **Android (Symfonium / VLC)** | Add Media Provider &rarr; WebDAV &rarr; URL & Auth | SSL / TLS enabled |
 | **iOS / iPadOS Files** | Files app &rarr; Connect to Server &rarr; WebDAV URL | High-speed Wi-Fi sync |
 
-*Read the step-by-step tutorial: [How to Connect Windows to Mornye WebDAV](https://navyaxdev.github.io/Mornye-Network-Storage/guides/how-to-connect-windows-to-mornye-webdav/).*
+*Read the step-by-step tutorial: [How to Connect Windows to Mornye WebDAV](https://mornye-network-project.navya.dpdns.org/guides/how-to-connect-windows-to-mornye-webdav/).*
 
 ---
 
@@ -243,12 +243,12 @@ Connect your desktop and mobile devices via RFC 4918 WebDAV:
 | **Search Engine Setup** | Webmaster indexing, Google Search Console, and Bing | [docs/seo/search-engine-setup.md](docs/seo/search-engine-setup.md) |
 
 ### In-Depth Web Tutorials
-- [What is Mornye Network Storage? Architecture & Comparative Analysis](https://navyaxdev.github.io/Mornye-Network-Storage/guides/what-is-mornye-network-storage/)
-- [How to Install Mornye on Kali Linux Step-by-Step](https://navyaxdev.github.io/Mornye-Network-Storage/guides/how-to-install-mornye-on-kali-linux/)
-- [How to Deploy Mornye Using Rootless Docker](https://navyaxdev.github.io/Mornye-Network-Storage/guides/how-to-deploy-mornye-using-docker/)
-- [How to Configure Cloudflare Tunnel Subdomains for Mornye](https://navyaxdev.github.io/Mornye-Network-Storage/guides/how-to-configure-cloudflare-tunnel-for-mornye/)
-- [How to Connect Windows 11 & 10 to Mornye WebDAV](https://navyaxdev.github.io/Mornye-Network-Storage/guides/how-to-connect-windows-to-mornye-webdav/)
-- [How to Build a Self-Hosted Linux Network Storage Server](https://navyaxdev.github.io/Mornye-Network-Storage/guides/build-self-hosted-network-storage-server-linux/)
+- [What is Mornye Network Storage? Architecture & Comparative Analysis](https://mornye-network-project.navya.dpdns.org/guides/what-is-mornye-network-storage/)
+- [How to Install Mornye on Kali Linux Step-by-Step](https://mornye-network-project.navya.dpdns.org/guides/how-to-install-mornye-on-kali-linux/)
+- [How to Deploy Mornye Using Rootless Docker](https://mornye-network-project.navya.dpdns.org/guides/how-to-deploy-mornye-using-docker/)
+- [How to Configure Cloudflare Tunnel Subdomains for Mornye](https://mornye-network-project.navya.dpdns.org/guides/how-to-configure-cloudflare-tunnel-for-mornye/)
+- [How to Connect Windows 11 & 10 to Mornye WebDAV](https://mornye-network-project.navya.dpdns.org/guides/how-to-connect-windows-to-mornye-webdav/)
+- [How to Build a Self-Hosted Linux Network Storage Server](https://mornye-network-project.navya.dpdns.org/guides/build-self-hosted-network-storage-server-linux/)
 
 ---
 
@@ -279,7 +279,7 @@ Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTIN
 Created, engineered, and maintained by **NavyaXdev**:
 - GitHub Profile: [@navyaXdev](https://github.com/navyaXdev)
 - Official GitHub Repository: [https://github.com/navyaXdev/Mornye-Network-Storage](https://github.com/navyaXdev/Mornye-Network-Storage)
-- Official Website: [https://navyaxdev.github.io/Mornye-Network-Storage/](https://navyaxdev.github.io/Mornye-Network-Storage/)
+- Official Website: [https://mornye-network-project.navya.dpdns.org/](https://mornye-network-project.navya.dpdns.org/)
 
 To cite Mornye Network Storage in academic research, technical papers, or open-source indexes, refer to [CITATION.cff](CITATION.cff).
 

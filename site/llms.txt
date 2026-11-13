@@ -14,15 +14,15 @@ Mornye Network Storage is an open-source Linux self-hosted network storage syste
 - POSIX CLI Management: Single unified script `./mornye.sh` providing health monitoring, real-time dashboards, hot online SQLite backups, and 11-category self-healing diagnostics (`./mornye.sh doctor --fix`).
 
 ## Canonical Links
-- Official Website: https://navyaxdev.github.io/Mornye-Network-Storage/
+- Official Website: https://mornye-network-project.navya.dpdns.org/
 - GitHub Repository: https://github.com/navyaXdev/Mornye-Network-Storage
-- Documentation Hub: https://navyaxdev.github.io/Mornye-Network-Storage/documentation/
-- Installation Guide: https://navyaxdev.github.io/Mornye-Network-Storage/installation/
-- Docker Guide: https://navyaxdev.github.io/Mornye-Network-Storage/docker/
-- Cloudflare Tunnel Guide: https://navyaxdev.github.io/Mornye-Network-Storage/cloudflare/
-- Technical Guides & Tutorials: https://navyaxdev.github.io/Mornye-Network-Storage/guides/
-- WebDAV Windows Client Guide: https://navyaxdev.github.io/Mornye-Network-Storage/guides/how-to-connect-windows-to-mornye-webdav/
-- Kali Linux Installation Guide: https://navyaxdev.github.io/Mornye-Network-Storage/guides/how-to-install-mornye-on-kali-linux/
+- Documentation Hub: https://mornye-network-project.navya.dpdns.org/documentation/
+- Installation Guide: https://mornye-network-project.navya.dpdns.org/installation/
+- Docker Guide: https://mornye-network-project.navya.dpdns.org/docker/
+- Cloudflare Tunnel Guide: https://mornye-network-project.navya.dpdns.org/cloudflare/
+- Technical Guides & Tutorials: https://mornye-network-project.navya.dpdns.org/guides/
+- WebDAV Windows Client Guide: https://mornye-network-project.navya.dpdns.org/guides/how-to-connect-windows-to-mornye-webdav/
+- Kali Linux Installation Guide: https://mornye-network-project.navya.dpdns.org/guides/how-to-install-mornye-on-kali-linux/
 
 ## Quickstart Command
 ```bash

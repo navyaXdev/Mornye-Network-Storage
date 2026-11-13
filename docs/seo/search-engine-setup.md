@@ -1,6 +1,6 @@
 # Search Engine Registration & Global Indexing Setup Guide
 
-This guide provides instructions for the project administrator (**NavyaXdev**) to register and verify the official Mornye Network Storage website (`https://navyaxdev.github.io/Mornye-Network-Storage/`) across major search engines and developer discovery platforms.
+This guide provides instructions for the project administrator (**NavyaXdev**) to register and verify the official Mornye Network Storage website (`https://mornye-network-project.navya.dpdns.org/`) across major search engines and developer discovery platforms.
 
 ---
 
@@ -18,7 +18,7 @@ Google Search Console (GSC) is the primary tool for monitoring organic search pe
 2. Click **Add Property** in the property dropdown.
 3. Select **URL prefix** and enter:
    ```text
-   https://navyaxdev.github.io/Mornye-Network-Storage/
+   https://mornye-network-project.navya.dpdns.org/
    ```
 4. Click **Continue**.
 
@@ -44,16 +44,16 @@ Choose one of the following methods supported by GitHub Pages:
    ```text
    sitemap.xml
    ```
-   *(Full URL: `https://navyaxdev.github.io/Mornye-Network-Storage/sitemap.xml`)*
+   *(Full URL: `https://mornye-network-project.navya.dpdns.org/sitemap.xml`)*
 3. Click **Submit**. Verify that the status shows **Success**.
 
 ### Step 4: Validate Rich Results
 Test structured data with Google's official tool:
 - [Google Rich Results Test](https://search.google.com/test/rich-results)
 - Test URLs:
-  - Homepage: `https://navyaxdev.github.io/Mornye-Network-Storage/` (Validates `SoftwareApplication`, `Person`, `WebSite`)
-  - FAQ: `https://navyaxdev.github.io/Mornye-Network-Storage/faq/` (Validates `FAQPage`)
-  - Guides: `https://navyaxdev.github.io/Mornye-Network-Storage/guides/what-is-mornye-network-storage/` (Validates `TechArticle`, `BreadcrumbList`)
+  - Homepage: `https://mornye-network-project.navya.dpdns.org/` (Validates `SoftwareApplication`, `Person`, `WebSite`)
+  - FAQ: `https://mornye-network-project.navya.dpdns.org/faq/` (Validates `FAQPage`)
+  - Guides: `https://mornye-network-project.navya.dpdns.org/guides/what-is-mornye-network-storage/` (Validates `TechArticle`, `BreadcrumbList`)
 
 ---
 
@@ -63,14 +63,14 @@ Bing Webmaster Tools powers search results for Microsoft Bing, Yahoo Search, and
 
 ### Step 1: Add Property or Import from GSC
 1. Navigate to [Bing Webmaster Tools](https://www.bing.com/webmasters).
-2. Sign in and select **Import from Google Search Console** (fastest and automatic) or select **Add your site manually** using `https://navyaxdev.github.io/Mornye-Network-Storage/`.
+2. Sign in and select **Import from Google Search Console** (fastest and automatic) or select **Add your site manually** using `https://mornye-network-project.navya.dpdns.org/`.
 3. If adding manually, add the Bing verification meta tag to `site/index.html`.
 
 ### Step 2: Submit Sitemap
 1. Navigate to **Sitemaps** &rarr; **Submit sitemap**.
 2. Submit:
    ```text
-   https://navyaxdev.github.io/Mornye-Network-Storage/sitemap.xml
+   https://mornye-network-project.navya.dpdns.org/sitemap.xml
    ```
 
 ### Step 3: Instant Indexing via IndexNow
@@ -82,12 +82,12 @@ IndexNow enables instant crawling of updated content across Bing, Yandex, and Se
    curl -X POST "https://api.indexnow.org/indexnow" \
      -H "Content-Type: application/json; charset=utf-8" \
      -d '{
-       "host": "navyaxdev.github.io",
+       "host": "mornye-network-project.navya.dpdns.org",
        "key": "<YOUR_INDEXNOW_KEY>",
-       "keyLocation": "https://navyaxdev.github.io/Mornye-Network-Storage/<key>.txt",
+       "keyLocation": "https://mornye-network-project.navya.dpdns.org/<key>.txt",
        "urlList": [
-         "https://navyaxdev.github.io/Mornye-Network-Storage/",
-         "https://navyaxdev.github.io/Mornye-Network-Storage/download/"
+         "https://mornye-network-project.navya.dpdns.org/",
+         "https://mornye-network-project.navya.dpdns.org/download/"
        ]
      }'
    ```
@@ -104,7 +104,7 @@ GitHub's internal search algorithm indexes repository metadata, topics, README c
   ```text
   Mornye Network Storage is an open-source Linux self-hosted network storage & RFC 4918 WebDAV server created by NavyaXdev. Features rootless Docker, Argon2id security, zero-port-forward Cloudflare Tunnels, and automated multi-distro installation.
   ```
-- [x] **Repository Homepage URL**: `https://navyaxdev.github.io/Mornye-Network-Storage/`
+- [x] **Repository Homepage URL**: `https://mornye-network-project.navya.dpdns.org/`
 - [x] **Topics (20)**: `mornye`, `mornye-network-storage`, `webdav`, `webdav-server`, `self-hosted`, `network-storage`, `linux`, `docker`, `docker-compose`, `rootless-docker`, `cloudflare-tunnel`, `zero-trust`, `argon2id`, `private-cloud`, `nas`, `storage-server`, `kali-linux`, `debian`, `ubuntu`, `python`.
 - [x] **Target Search Queries**:
   - `Mornye Network Storage GitHub`

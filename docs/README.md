@@ -9,7 +9,7 @@ Welcome to the official technical documentation directory for **Mornye Network S
 
 ## 1. Quick Links
 
-- [Official Documentation Website](https://navyaxdev.github.io/Mornye-Network-Storage/)
+- [Official Documentation Website](https://mornye-network-project.navya.dpdns.org/)
 - [GitHub Repository](https://github.com/navyaXdev/Mornye-Network-Storage)
 - [Release Notes](releases/v3.3.0-release-notes.md)
 - [Search Engine & SEO Setup Guide](seo/search-engine-setup.md)

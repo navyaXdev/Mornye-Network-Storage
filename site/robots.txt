@@ -2,5 +2,5 @@ User-agent: *
 Allow: /
 
 # Canonical Sitemap
-Sitemap: https://navyaxdev.github.io/Mornye-Network-Storage/sitemap.xml
+Sitemap: https://mornye-network-project.navya.dpdns.org/sitemap.xml
 
